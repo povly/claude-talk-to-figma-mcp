@@ -16,6 +16,10 @@ Complete reference of the tools Claude can use to interact with Figma.
 | `get_styles` | Document styles | Color and text style audit |
 | `join_channel` | Connect to Figma | Establish communication |
 | `export_node_as_image` | Export assets | Generate design assets |
+| `get_component_properties` | Component property definitions | Inspect variants and props on components/instances |
+| `get_bound_variables` | Bound variables audit | See design tokens applied to a node |
+| `get_css` | CSS from Inspect panel | Extract CSS for pixel-perfect matching |
+| `find_nodes` | Search nodes by criteria | Find elements by name/type without IDs |
 | `get_pages` | List pages | View all document pages |
 | `create_page` | Create page | Add a new page to the document |
 | `delete_page` | Delete page | Remove a specific page |
@@ -31,6 +35,7 @@ Complete reference of the tools Claude can use to interact with Figma.
 | `replace_image_fill` | Swap images | Update assets, placeholders |
 | `apply_image_transform` | Adjust image position/scale/rotation | Pan, zoom, rotate image inside node |
 | `set_image_filters` | Apply color/light adjustments | Brightness, contrast, saturation, etc. |
+| `get_image_bytes` | Export image bytes | Download assets as base64 (PNG/JPG/SVG) |
 
 **⚠️ Known Limitations:**
 - **URL images**: Must be whitelisted in `manifest.json` (`allowedDomains`). Use base64 (`sourceType: "base64"`) for no restrictions.
@@ -68,6 +73,7 @@ Complete reference of the tools Claude can use to interact with Figma.
 | `set_auto_layout` | Flexbox-like layout | Component spacing |
 | `set_effects` | Shadows/blurs | Visual finishing |
 | `set_effect_style_id` | Apply effect styles | Consistent shadows |
+| `set_constraints` | Resize constraints | Control responsive resize behavior |
 
 ## Text tools
 
@@ -107,6 +113,18 @@ Complete reference of the tools Claude can use to interact with Figma.
 | `create_shape_with_text` | Create labeled shape | Flowchart nodes, process boxes, decision diamonds |
 | `create_connector` | Draw connector arrow | Link stickies or shapes with flow arrows |
 | `create_section` | Create section region | Group and organise content areas on the board |
+
+## Variable tools
+
+| Command | Purpose | Usage example |
+|---------|---------|---------------|
+| `get_variable_defs` | Design tokens (CSS var format) | Extract tokens for a subtree or entire file |
+
+## Style tools
+
+| Command | Purpose | Usage example |
+|---------|---------|---------------|
+| `create_grid_style` | Grid style creation | Reusable layout grid configurations |
 
 ## Understanding coordinate systems
 

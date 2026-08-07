@@ -7,6 +7,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — Figma Fidelity Improvements
+
+### Added
+- **filterFigmaNode** extended: now returns 50+ additional properties per node (auto-layout, constraints, effects, opacity, blendMode, component properties, geometry, Dev Mode metadata, and more)
+- **VECTOR nodes** now return a minimal stub instead of null (id, name, type, fills, strokes, opacity, visible, etc.)
+- **get_document_info** fixed: now calls loadAllPagesAsync() and returns all pages with metadata
+- **get_component_properties** tool: read componentPropertyDefinitions and currentValues for components/instances
+- **get_bound_variables** tool: read boundVariables, resolvedModes, and variable details
+- **get_variable_defs** tool: design tokens in CSS var(--name, value) format, grouped by type
+- **get_css** tool: wrapper over node.getCSSAsync() for direct CSS extraction
+- **set_constraints** tool: set horizontal/vertical constraints for responsive behavior
+- **find_nodes** tool: search nodes by name, type, or substring without knowing IDs
+- **get_image_bytes** tool: restored and fixed using exportAsync instead of getImageByHash
+- **create_grid_style** tool: create reusable grid style configurations
+- **read_design_strategy** prompt: rewritten with multi-step fidelity workflow and Auto Layout→CSS mapping table
+- **verify_design_fidelity** prompt: closed-loop verification workflow (generate → screenshot → compare → fix)
+- 8 missing commands added to FigmaCommand type union (set_text_align, set_reactions, get_reactions, detach_instance, create_text_style, create_paint_style, create_effect_style, get_nodes_info)
+- jest.config.cjs: added moduleNameMapper for .js→.ts ESM resolution
+- 63 new tests (9 integration test files + 1 unit test file)
+
+### Changed
+- **get_styles** enriched: returns full paint arrays (not just paints[0]), complete text properties, effects array, layoutGrids array, remote/description flags
+- **image-tools.ts** error handling unified: all throw statements replaced with return-error pattern (isError: true)
+- boundVariables and imageRef no longer stripped from fills/strokes in filterFigmaNode
+
 ## [1.0.0] - 2026-04-18
 
 ### Added
