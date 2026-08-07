@@ -310,6 +310,8 @@ async function handleCommand(command, params) {
       return await applyVariableToNode(params);
     case "switch_variable_mode":
       return await switchVariableMode(params);
+    case "get_variable_defs":
+      return await getVariableDefs(params);
     // ── FigJam commands ──────────────────────────────────────────────────
     case "get_figjam_elements":
       return await getFigJamElements();
@@ -1052,36 +1054,66 @@ async function deleteNode(params) {
 }
 
 async function getStyles() {
-  const styles = {
-    colors: await figma.getLocalPaintStylesAsync(),
-    texts: await figma.getLocalTextStylesAsync(),
-    effects: await figma.getLocalEffectStylesAsync(),
-    grids: await figma.getLocalGridStylesAsync(),
-  };
+  const [colors, texts, effects, grids] = await Promise.all([
+    figma.getLocalPaintStylesAsync(),
+    figma.getLocalTextStylesAsync(),
+    figma.getLocalEffectStylesAsync(),
+    figma.getLocalGridStylesAsync(),
+  ]);
 
   return {
-    colors: styles.colors.map((style) => ({
+    colors: colors.map((style) => ({
       id: style.id,
       name: style.name,
       key: style.key,
-      paint: style.paints[0],
+      remote: style.remote,
+      description: style.description,
+      paints: style.paints.map((paint) => {
+        const p = { ...paint };
+        if (p.color) {
+          const r = Math.round(p.color.r * 255);
+          const g = Math.round(p.color.g * 255);
+          const b = Math.round(p.color.b * 255);
+          p.colorHex = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+        }
+        return p;
+      }),
     })),
-    texts: styles.texts.map((style) => ({
+    texts: texts.map((style) => ({
       id: style.id,
       name: style.name,
       key: style.key,
+      remote: style.remote,
+      description: style.description,
       fontSize: style.fontSize,
       fontName: style.fontName,
+      fontWeight: style.fontWeight,
+      lineHeight: style.lineHeight,
+      letterSpacing: style.letterSpacing,
+      textCase: style.textCase,
+      textDecoration: style.textDecoration,
+      textAlignHorizontal: style.textAlignHorizontal,
+      textAlignVertical: style.textAlignVertical,
+      textAutoResize: style.textAutoResize,
+      paragraphSpacing: style.paragraphSpacing,
+      paragraphIndent: style.paragraphIndent,
+      fills: style.fills,
     })),
-    effects: styles.effects.map((style) => ({
+    effects: effects.map((style) => ({
       id: style.id,
       name: style.name,
       key: style.key,
+      remote: style.remote,
+      description: style.description,
+      effects: style.effects,
     })),
-    grids: styles.grids.map((style) => ({
+    grids: grids.map((style) => ({
       id: style.id,
       name: style.name,
       key: style.key,
+      remote: style.remote,
+      description: style.description,
+      layoutGrids: style.layoutGrids,
     })),
   };
 }
@@ -5554,6 +5586,142 @@ async function switchVariableMode(params) {
     modeId: mode.modeId,
     modeName: mode.name
   };
+}
+
+async function getVariableDefs(params) {
+  const nodeId = params && params.nodeId;
+  const tokens = { colors: [], spacing: [], typography: [], radius: [], others: [] };
+  const seenIds = new Set();
+
+  // Helper: resolve a variable to its value for a consumer node
+  async function resolveVariable(variable, node) {
+    if (seenIds.has(variable.id)) return null;
+    seenIds.add(variable.id);
+
+    // Sanitize name for CSS custom property: replace ./ with -
+    const cssName = variable.name.replace(/[./]/g, "-").replace(/[^a-zA-Z0-9-]/g, "").toLowerCase();
+
+    let resolvedValue;
+    try {
+      if (node) {
+        resolvedValue = variable.resolveForConsumer(node);
+      } else {
+        resolvedValue = variable.valuesPerMode;
+      }
+    } catch (e) {
+      resolvedValue = variable.valuesPerMode;
+    }
+
+    // Get the first mode value as display value
+    const modeValues = Object.values(resolvedValue || {});
+    const rawValue = modeValues.length > 0 ? modeValues[0] : undefined;
+
+    let valueStr = "";
+    let tokenType = "others";
+
+    if (variable.resolvedType === "COLOR" && rawValue && typeof rawValue === "object") {
+      const r = Math.round((rawValue.r || 0) * 255);
+      const g = Math.round((rawValue.g || 0) * 255);
+      const b = Math.round((rawValue.b || 0) * 255);
+      const a = rawValue.a !== undefined ? rawValue.a : 1;
+      valueStr = a < 1
+        ? `rgba(${r}, ${g}, ${b}, ${a})`
+        : `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+      tokenType = "colors";
+    } else if (variable.resolvedType === "FLOAT") {
+      valueStr = String(rawValue);
+      // Heuristic: check name for spacing/radius
+      if (/space|gap|padding|margin/i.test(variable.name)) tokenType = "spacing";
+      else if (/radius|corner/i.test(variable.name)) tokenType = "radius";
+      else tokenType = "others";
+    } else if (variable.resolvedType === "STRING") {
+      valueStr = String(rawValue || "");
+      tokenType = "typography";
+    } else if (variable.resolvedType === "BOOLEAN") {
+      valueStr = String(rawValue);
+      tokenType = "others";
+    }
+
+    const cssVar = `var(--${cssName}, ${valueStr})`;
+
+    return {
+      name: variable.name,
+      cssName: cssName,
+      cssVar: cssVar,
+      value: valueStr,
+      type: variable.resolvedType,
+      codeSyntax: variable.codeSyntax || {},
+      tokenType: tokenType,
+    };
+  }
+
+  // Collect variables
+  let variablesToResolve = [];
+
+  if (nodeId) {
+    // Node-specific: find all bound variables in the subtree
+    const node = await getNodeByIdSafe(nodeId);
+    if (!node) {
+      throw new Error(`Node not found with ID: ${nodeId}`);
+    }
+
+    const varIds = new Set();
+    function collectVarIds(obj) {
+      if (!obj || typeof obj !== "object") return;
+      if (obj.type === "VARIABLE_ALIAS" && obj.id) {
+        varIds.add(obj.id);
+      }
+      for (const key of Object.keys(obj)) {
+        const val = obj[key];
+        if (Array.isArray(val)) {
+          val.forEach(collectVarIds);
+        } else if (val && typeof val === "object") {
+          collectVarIds(val);
+        }
+      }
+    }
+
+    // Traverse subtree collecting bound variable IDs
+    node.findAll((n) => {
+      if (n.boundVariables) {
+        collectVarIds(n.boundVariables);
+      }
+      return false;
+    });
+
+    for (const varId of varIds) {
+      try {
+        const v = await figma.variables.getVariableByIdAsync(varId);
+        if (v) variablesToResolve.push({ variable: v, consumerNode: node });
+      } catch (e) {}
+    }
+  } else {
+    // File-wide: iterate all collections
+    const collections = await figma.variables.getLocalVariableCollectionsAsync();
+    for (const col of collections) {
+      for (const varId of col.variableIds) {
+        try {
+          const v = await figma.variables.getVariableByIdAsync(varId);
+          if (v) variablesToResolve.push({ variable: v, consumerNode: null });
+        } catch (e) {}
+      }
+    }
+  }
+
+  // Resolve all collected variables
+  for (const { variable, consumerNode } of variablesToResolve) {
+    const token = await resolveVariable(variable, consumerNode);
+    if (token && tokens[token.tokenType]) {
+      tokens[token.tokenType].push(token);
+    } else if (token) {
+      tokens.others.push(token);
+    }
+  }
+
+  const totalCount = Object.values(tokens).reduce((sum, arr) => sum + arr.length, 0);
+  console.log(`getVariableDefs: tokens=${totalCount} colors=${tokens.colors.length} spacing=${tokens.spacing.length} typography=${tokens.typography.length} radius=${tokens.radius.length}`);
+
+  return tokens;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

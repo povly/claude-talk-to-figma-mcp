@@ -101,7 +101,7 @@ Example Login Screen Structure:
   // Read Design Strategy Prompt
   server.prompt(
     "read_design_strategy",
-    "Best practices for reading Figma designs",
+    "Comprehensive multi-step workflow for pixel-perfect reading and reproducing Figma designs",
     (extra) => {
       return {
         messages: [
@@ -109,20 +109,87 @@ Example Login Screen Structure:
             role: "assistant",
             content: {
               type: "text",
-              text: `When reading Figma designs, follow these best practices:
+              text: `# Comprehensive Figma Design Reading Strategy
 
-1. Start with selection:
-   - First use get_selection() to understand the current selection
-   - If no selection ask user to select single or multiple nodes
+A multi-step workflow to extract maximum fidelity from a Figma design before reproducing it in code. Use every relevant tool to capture layout, tokens, components, and vector data.
 
-2. Get node infos of the selected nodes:
-   - Use get_nodes_info() to get the information of the selected nodes
-   - If no selection ask user to select single or multiple nodes
-`,
+## 1. Multi-Step Reading Workflow
+
+1. Identify the selection:
+   - Call get_selection() to see what's currently selected
+   - If nothing is selected, ask the user to select a node
+
+2. Read full node structure:
+   - Call get_node_info(nodeId) with the depth parameter for the tree structure
+   - This returns auto-layout, constraints, effects, opacity, blendMode,
+     component properties, and 50+ other properties per node
+
+3. Read design tokens (if the design uses variables):
+   - Call get_bound_variables(nodeId) to see which properties are tokenized
+   - Call get_variable_defs(nodeId) to get tokens in var(--name, value) format
+
+4. Read component properties (for components/instances):
+   - Call get_component_properties(nodeId) to see variant definitions and current values
+
+5. Get visual reference:
+   - Call export_node_as_image(nodeId, format: "PNG", scale: 2) for a high-res reference
+
+6. For vector content (icons, illustrations):
+   - Call get_svg(nodeId) to get path data for precise vector reproduction
+
+## 2. Auto Layout to CSS Mapping
+
+When converting Auto Layout to CSS, use this mapping:
+
+| Figma Property               | CSS Property                              |
+|------------------------------|-------------------------------------------|
+| layoutMode: HORIZONTAL       | flex-direction: row                       |
+| layoutMode: VERTICAL         | flex-direction: column                    |
+| primaryAxisAlignItems        | justify-content                           |
+|   MIN / MAX / CENTER         | flex-start / flex-end / center            |
+| counterAxisAlignItems        | align-items                               |
+|   MIN / MAX / CENTER         | flex-start / flex-end / center            |
+| itemSpacing                  | gap                                       |
+| paddingTop/Right/Bottom/Left | padding-top/right/bottom/left             |
+| layoutSizingHorizontal: FILL | flex-grow: 1 / width: 100%                |
+| layoutSizingHorizontal: HUG  | width: fit-content / width: auto          |
+| layoutSizingVertical: FILL   | align-self: stretch                       |
+| layoutWrap: WRAP             | flex-wrap: wrap                           |
+| layoutPositioning: ABSOLUTE  | position: absolute                        |
+| layoutPositioning: AUTO      | position: relative (default)              |
+| constraints.horizontal       | left/right or flex rules                  |
+| constraints.vertical         | top/bottom or flex rules                  |
+
+## 3. Property Source Priority
+
+When determining the final value for a property, check sources in this order:
+
+1. Code Connect / documentation links (most authoritative)
+2. Component property definitions (for instances)
+3. Design tokens (bound variables, semantic and maintainable)
+4. Raw property values (explicit colors, sizes)
+5. Visual screenshot (fallback for context)
+
+## 4. Critical Fidelity Checklist
+
+Before generating code, verify you have captured:
+
+- [ ] Layout structure (auto-layout params, nesting)
+- [ ] Colors (fills, strokes, check for bound variables/tokens)
+- [ ] Typography (font family, size, weight, line-height, letter-spacing)
+- [ ] Spacing (padding, item-spacing, absolute positions)
+- [ ] Effects (shadows, blurs: type, offset, radius, color)
+- [ ] Corner radii (individual corners if asymmetric)
+- [ ] Opacity and blend modes
+- [ ] Constraints (for non-auto-layout positioning)
+- [ ] Component properties (variants, boolean props)
+- [ ] Design tokens (var(--name, value) format)
+
+Capturing all of these ensures the reproduced code matches the Figma source at pixel fidelity.`,
             },
           },
         ],
-        description: "Best practices for reading Figma designs",
+        description: "Comprehensive multi-step workflow for pixel-perfect reading and reproducing Figma designs",
       };
     }
   );
@@ -277,7 +344,7 @@ export function registerDesignStrategyPrompt(server: McpServer): void {
 export function registerReadDesignStrategyPrompt(server: McpServer): void {
   server.prompt(
     "read_design_strategy",
-    "Best practices for reading Figma designs",
+    "Comprehensive multi-step workflow for pixel-perfect reading and reproducing Figma designs",
     (extra) => {
       // Implementation is the same as above
       // This function is exported for individual usage if needed

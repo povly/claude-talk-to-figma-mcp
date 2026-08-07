@@ -124,6 +124,7 @@ export type FigmaCommand =
   | "set_variable"
   | "apply_variable_to_node"
   | "switch_variable_mode"
+  | "get_variable_defs"
   | "get_figjam_elements"
   | "create_sticky"
   | "set_sticky_text"

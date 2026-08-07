@@ -157,4 +157,28 @@ export function registerVariableTools(server: McpServer): void {
       }
     }
   );
+
+  // Get Variable Defs (Design Tokens in CSS var() format)
+  server.tool(
+    "get_variable_defs",
+    "Get design tokens in CSS var(--name, value) format for a node subtree or the entire file. Returns tokens grouped by type (colors, spacing, typography, radius).",
+    {
+      nodeId: z.string().optional().describe("Node ID to extract tokens from (if omitted, scans entire file)"),
+    },
+    async ({ nodeId }) => {
+      try {
+        const result = await sendCommandToFigma("get_variable_defs", { nodeId });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: `Error getting variable defs: ${error instanceof Error ? error.message : String(error)}`,
+          }],
+        };
+      }
+    }
+  );
 }
