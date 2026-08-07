@@ -947,4 +947,34 @@ export function registerModificationTools(server: McpServer): void {
       }
     }
   );
+
+  // Set Constraints Tool
+  server.tool(
+    "set_constraints",
+    "Set horizontal and/or vertical constraints on a node. Constraints control how a node resizes relative to its parent.",
+    {
+      nodeId: z.string().describe("The ID of the node to modify"),
+      horizontal: z.enum(["MIN", "CENTER", "MAX", "STRETCH", "SCALE"]).optional().describe("Horizontal constraint"),
+      vertical: z.enum(["MIN", "CENTER", "MAX", "STRETCH", "SCALE"]).optional().describe("Vertical constraint"),
+    },
+    async ({ nodeId, horizontal, vertical }) => {
+      try {
+        const result = await sendCommandToFigma("set_constraints", { nodeId, horizontal, vertical });
+        const typedResult = result as { nodeId: string; constraints: { horizontal: string; vertical: string } };
+        return {
+          content: [{
+            type: "text",
+            text: `Set constraints on node ${typedResult.nodeId}: horizontal=${typedResult.constraints.horizontal}, vertical=${typedResult.constraints.vertical}`,
+          }],
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: `Error setting constraints: ${error instanceof Error ? error.message : String(error)}`,
+          }],
+        };
+      }
+    }
+  );
 }

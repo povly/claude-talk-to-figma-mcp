@@ -186,6 +186,59 @@ export function registerDocumentTools(server: McpServer): void {
     }
   );
 
+  // Get CSS Tool
+  server.tool(
+    "get_css",
+    "Get CSS properties for a node directly from Figma's Inspect panel. Returns the raw CSS that Figma generates.",
+    {
+      nodeId: z.string().describe("The ID of the node to get CSS for"),
+    },
+    async ({ nodeId }) => {
+      try {
+        const result = await sendCommandToFigma("get_css", { nodeId });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: `Error getting CSS: ${error instanceof Error ? error.message : String(error)}`,
+          }],
+        };
+      }
+    }
+  );
+
+  // Find Nodes Tool
+  server.tool(
+    "find_nodes",
+    "Search for nodes in the Figma document by name, type, or other criteria. Returns matching nodes with basic metadata (call get_node_info for full details on specific results).",
+    {
+      nodeId: z.string().optional().describe("Root node to search in (default: current page)"),
+      name: z.string().optional().describe("Exact name match"),
+      nameContains: z.string().optional().describe("Substring match for node name"),
+      types: z.array(z.string()).optional().describe("Filter by node types (e.g., ['FRAME', 'TEXT', 'COMPONENT'])"),
+      maxDepth: z.number().int().min(0).optional().describe("Maximum tree depth to search"),
+      limit: z.number().int().min(1).max(200).default(50).describe("Maximum number of results"),
+    },
+    async ({ nodeId, name, nameContains, types, maxDepth, limit }) => {
+      try {
+        const result = await sendCommandToFigma("find_nodes", { nodeId, name, nameContains, types, maxDepth, limit });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: `Error finding nodes: ${error instanceof Error ? error.message : String(error)}`,
+          }],
+        };
+      }
+    }
+  );
+
   // Get Styles Tool
   server.tool(
     "get_styles",

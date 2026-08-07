@@ -150,6 +150,13 @@ async function handleCommand(command, params) {
         throw new Error("Missing nodeId parameter");
       }
       return await getBoundVariables(params.nodeId);
+    case "get_css":
+      if (!params || !params.nodeId) {
+        throw new Error("Missing nodeId parameter");
+      }
+      return await getCSS(params.nodeId);
+    case "find_nodes":
+      return await findNodes(params);
     case "create_rectangle":
       return await createRectangle(params);
     case "create_frame":
@@ -263,9 +270,8 @@ async function handleCommand(command, params) {
       return await getImageFromNode(params);
     case "replace_image_fill":
       return await replaceImageFill(params);
-    // COMMENTED OUT: get_image_bytes - Issues pending investigation
-    // case "get_image_bytes":
-    //   return await getImageBytes(params);
+    case "get_image_bytes":
+      return await getImageBytes(params);
     case "apply_image_transform":
       return await applyImageTransform(params);
     case "set_image_filters":
@@ -274,6 +280,11 @@ async function handleCommand(command, params) {
       return await rotateNode(params);
     case "set_node_properties":
       return await setNodeProperties(params);
+    case "set_constraints":
+      if (!params || !params.nodeId) {
+        throw new Error("Missing nodeId parameter");
+      }
+      return await setConstraints(params);
     case "reorder_node":
       return await reorderNode(params);
     case "duplicate_page":
@@ -528,6 +539,109 @@ async function getBoundVariables(nodeId) {
     resolvedModes: resolvedModes,
     explicitVariableModes: explicitVariableModes,
     variableDetails: variableDetails,
+  };
+}
+
+async function getCSS(nodeId) {
+  const node = await getNodeByIdSafe(nodeId);
+  if (!node) {
+    throw new Error(`Node not found with ID: ${nodeId}`);
+  }
+
+  let css;
+  if (typeof node.getCSSAsync === "function") {
+    css = await node.getCSSAsync();
+  } else {
+    css = {};
+  }
+
+  const cssString = Object.entries(css)
+    .map(([prop, value]) => `${prop}: ${value};`)
+    .join(" ");
+
+  return {
+    nodeId: node.id,
+    nodeType: node.type,
+    css: css,
+    cssString: cssString,
+  };
+}
+
+async function findNodes(params) {
+  const root = params.nodeId
+    ? await getNodeByIdSafe(params.nodeId)
+    : figma.currentPage;
+
+  if (!root) {
+    throw new Error(`Root node not found with ID: ${params.nodeId}`);
+  }
+
+  const limit = Math.min(params.limit || 50, 200);
+  const results = [];
+  let allMatches = [];
+
+  function matches(node) {
+    if (params.name && node.name !== params.name) return false;
+    if (params.nameContains && !node.name.includes(params.nameContains)) return false;
+    if (params.types && params.types.length > 0 && !params.types.includes(node.type)) return false;
+    return true;
+  }
+
+  function buildPath(node) {
+    const parts = [];
+    let current = node;
+    while (current && current.parent && current.parent.type !== "DOCUMENT" && current.parent.type !== "PAGE") {
+      parts.unshift(current.name);
+      current = current.parent;
+    }
+    parts.unshift(current.name);
+    return parts.join("/");
+  }
+
+  if (typeof root.findAll === "function") {
+    if (params.types && params.types.length > 0 && typeof root.findAllWithCriteria === "function") {
+      allMatches = root.findAllWithCriteria({ types: params.types });
+      allMatches = allMatches.filter(matches);
+    } else {
+      allMatches = root.findAll(matches);
+    }
+
+    if (params.maxDepth !== undefined) {
+      const rootDepth = "depth" in root ? root.depth || 0 : 0;
+      allMatches = allMatches.filter((n) => {
+        if (!("depth" in n)) return true;
+        return (n.depth - rootDepth) <= params.maxDepth;
+      });
+    }
+
+    for (const node of allMatches) {
+      if (results.length >= limit) break;
+      const bounds = "absoluteBoundingBox" in node ? node.absoluteBoundingBox : null;
+      if (bounds) {
+        results.push({
+          id: node.id,
+          name: node.name,
+          type: node.type,
+          absoluteBoundingBox: { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height },
+          path: buildPath(node),
+        });
+      } else {
+        results.push({
+          id: node.id,
+          name: node.name,
+          type: node.type,
+          path: buildPath(node),
+        });
+      }
+    }
+  }
+
+  console.log(`findNodes: found=${results.length} truncated=${results.length >= limit}`);
+
+  return {
+    results: results,
+    total: results.length,
+    truncated: allMatches.length > limit,
   };
 }
 
@@ -4419,58 +4533,49 @@ async function replaceImageFill(params) {
 
 // COMMENTED OUT: getImageBytes - Issues pending investigation
 // Known issues: 400 errors, inconsistent behavior (black images), file save path needs discussion
-/*
 async function getImageBytes(params) {
-  try {
-    const { imageHash, nodeId } = params || {};
+  const { nodeId, format, scale } = params || {};
 
-    if (!imageHash && !nodeId) {
-      throw new Error("Either imageHash or nodeId must be provided");
-    }
-    let image;
-
-    if (imageHash) {
-      image = figma.getImageByHash(imageHash);
-      if (!image) {
-        throw new Error(`Image not found with hash: ${imageHash}`);
-      }
-    } else {
-      const node = await figma.getNodeByIdAsync(nodeId);
-      if (!node) {
-        throw new Error(`Node not found with ID: ${nodeId}`);
-      }
-
-      if (!("fills" in node)) {
-        throw new Error(`Node type ${node.type} does not support fills`);
-      }
-
-      const fills = Array.isArray(node.fills) ? node.fills : [];
-      const imageFill = fills.find(fill => fill.type === "IMAGE");
-
-      if (!imageFill) {
-        throw new Error(`Node does not have an image fill`);
-      }
-
-      image = figma.getImageByHash(imageFill.imageHash);
-      if (!image) {
-        throw new Error(`Image not found for node`);
-      }
-    }
-
-    const bytes = await image.getBytesAsync();
-    const base64 = customBase64Encode(bytes);
-
-    return {
-      imageData: base64,
-      mimeType: "image/png",
-      size: bytes.length,
-    };
-  } catch (error) {
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    throw new Error(`Error getting image bytes: ${errorMsg}`);
+  if (!nodeId) {
+    throw new Error("Missing nodeId parameter");
   }
+
+  const node = await getNodeByIdSafe(nodeId);
+  if (!node) {
+    throw new Error(`Node not found with ID: ${nodeId}`);
+  }
+
+  const exportFormat = format || "PNG";
+  const exportScale = scale || 1;
+
+  const exportSettings = {
+    format: exportFormat,
+    constraint: { type: "SCALE", value: exportScale },
+  };
+
+  const bytes = await node.exportAsync(exportSettings);
+
+  let base64;
+  if (typeof bytes === "object" && bytes !== null) {
+    base64 = customBase64Encode(bytes);
+  } else {
+    base64 = bytes;
+  }
+
+  const mimeType = exportFormat === "PNG" ? "image/png"
+    : exportFormat === "JPG" ? "image/jpeg"
+    : exportFormat === "SVG" ? "image/svg+xml"
+    : "image/png";
+
+  console.log(`getImageBytes: node=${nodeId} format=${exportFormat} bytes=${base64.length}`);
+
+  return {
+    nodeId: node.id,
+    format: exportFormat,
+    base64: base64,
+    mimeType: mimeType,
+  };
 }
-*/
 
 async function applyImageTransform(params) {
   try {
@@ -4673,6 +4778,30 @@ async function setNodeProperties(params) {
     visible: node.visible,
     locked: node.locked,
     opacity: "opacity" in node ? node.opacity : undefined
+  };
+}
+
+async function setConstraints(params) {
+  const node = await getNodeByIdSafe(params.nodeId);
+  if (!node) {
+    throw new Error(`Node not found with ID: ${params.nodeId}`);
+  }
+
+  if (!("constraints" in node)) {
+    throw new Error(`Node type ${node.type} does not support constraints (only Frame/Component/Instance/Rectangle/Ellipse nodes support constraints)`);
+  }
+
+  const current = node.constraints || { horizontal: "MIN", vertical: "MIN" };
+  const newConstraints = {
+    horizontal: params.horizontal || current.horizontal,
+    vertical: params.vertical || current.vertical,
+  };
+
+  node.constraints = newConstraints;
+
+  return {
+    nodeId: node.id,
+    constraints: newConstraints,
   };
 }
 

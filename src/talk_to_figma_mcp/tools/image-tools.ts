@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
-import fs from "fs";
-import path from "path";
-import os from "os";
 
 /**
  * Register image manipulation tools to the MCP server
@@ -131,62 +128,36 @@ export function registerImageTools(server: McpServer): void {
     }
   );
 
-  // COMMENTED OUT: get_image_bytes - Issues pending investigation
-  // Known issues: 400 errors, inconsistent behavior (black images), file save path needs discussion
-  /*
+  // Get Image Bytes Tool
   server.tool(
     "get_image_bytes",
-    "Download image from Figma and save to local file",
+    "Export a node as image bytes (base64 encoded). Useful for downloading image assets or analyzing image content.",
     {
-      imageHash: z.string().optional().describe("Image hash to download"),
-      nodeId: z.string().optional().describe("Node ID to get image from (alternative to imageHash)"),
+      nodeId: z.string().describe("The ID of the node to export"),
+      format: z.enum(["PNG", "JPG", "SVG"]).default("PNG").describe("Export format"),
+      scale: z.number().positive().default(1).describe("Export scale factor"),
     },
-    async ({ imageHash, nodeId }) => {
+    async ({ nodeId, format, scale }) => {
       try {
-        if (!imageHash && !nodeId) {
-          throw new Error("Either imageHash or nodeId must be provided");
-        }
-
-        const result = await sendCommandToFigma("get_image_bytes", {
-          imageHash,
-          nodeId,
-        }, 120000); // 120 second timeout for download
-
-        const typedResult = result as {
-          imageData: string;
-          mimeType: string;
-          size: number;
-        };
-
-        const imageBuffer = Buffer.from(typedResult.imageData, "base64");
-        const ext = typedResult.mimeType === "image/png" ? "png" : "jpg";
-        const hashOrId = imageHash?.substring(0, 8) || nodeId?.replace(/:/g, "-") || "unknown";
-        const filename = `figma-${hashOrId}-${Date.now()}.${ext}`;
-        const filepath = path.join(os.tmpdir(), filename);
-
-        fs.writeFileSync(filepath, imageBuffer);
-
+        const result = await sendCommandToFigma("get_image_bytes", { nodeId, format, scale });
+        const typedResult = result as { nodeId: string; format: string; base64: string; mimeType: string };
         return {
-          content: [
-            {
-              type: "text",
-              text: `Image saved successfully!\n\nFile: ${filepath}\nSize: ${typedResult.size} bytes\nMIME: ${typedResult.mimeType}\n\nUse Read tool to view the image.`,
-            },
-          ],
+          content: [{
+            type: "image",
+            data: typedResult.base64,
+            mimeType: typedResult.mimeType || "image/png",
+          }],
         };
       } catch (error) {
         return {
-          content: [
-            {
-              type: "text",
-              text: `Error getting image bytes: ${error instanceof Error ? error.message : String(error)}`,
-            },
-          ],
+          content: [{
+            type: "text",
+            text: `Error getting image bytes: ${error instanceof Error ? error.message : String(error)}`,
+          }],
         };
       }
     }
   );
-  */
 
   // Apply Image Transform Tool
   server.tool(

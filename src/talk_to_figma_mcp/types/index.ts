@@ -101,11 +101,12 @@ export type FigmaCommand =
   | "set_image_fill"
   | "get_image_from_node"
   | "replace_image_fill"
-  // | "get_image_bytes" // COMMENTED OUT: Issues pending investigation
+  | "get_image_bytes"
   | "apply_image_transform"
   | "set_image_filters"
   | "rotate_node"
   | "set_node_properties"
+  | "set_constraints"
   | "reorder_node"
   | "duplicate_page"
   | "convert_to_frame"
@@ -132,4 +133,6 @@ export type FigmaCommand =
   | "create_connector"
   | "create_section"
   | "get_component_properties"
-  | "get_bound_variables";
+  | "get_bound_variables"
+  | "get_css"
+  | "find_nodes";
