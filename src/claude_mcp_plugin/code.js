@@ -271,7 +271,7 @@ async function handleCommand(command, params) {
     case "replace_image_fill":
       return await replaceImageFill(params);
     case "get_image_bytes":
-      return await getImageBytes(params);
+      return await exportNodeBytes(params);
     case "apply_image_transform":
       return await applyImageTransform(params);
     case "set_image_filters":
@@ -4533,9 +4533,7 @@ async function replaceImageFill(params) {
   }
 }
 
-// COMMENTED OUT: getImageBytes - Issues pending investigation
-// Known issues: 400 errors, inconsistent behavior (black images), file save path needs discussion
-async function getImageBytes(params) {
+async function exportNodeBytes(params) {
   const { nodeId, format, scale } = params || {};
 
   if (!nodeId) {
@@ -4569,7 +4567,7 @@ async function getImageBytes(params) {
     : exportFormat === "SVG" ? "image/svg+xml"
     : "image/png";
 
-  console.log(`getImageBytes: node=${nodeId} format=${exportFormat} bytes=${base64.length}`);
+  console.log(`exportNodeBytes: node=${nodeId} format=${exportFormat} bytes=${base64.length}`);
 
   return {
     nodeId: node.id,
