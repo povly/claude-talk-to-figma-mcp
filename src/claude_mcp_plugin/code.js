@@ -140,6 +140,16 @@ async function handleCommand(command, params) {
         throw new Error("Missing or invalid nodeIds parameter");
       }
       return await getNodesInfo(params.nodeIds);
+    case "get_component_properties":
+      if (!params || !params.nodeId) {
+        throw new Error("Missing nodeId parameter");
+      }
+      return await getComponentProperties(params.nodeId);
+    case "get_bound_variables":
+      if (!params || !params.nodeId) {
+        throw new Error("Missing nodeId parameter");
+      }
+      return await getBoundVariables(params.nodeId);
     case "create_rectangle":
       return await createRectangle(params);
     case "create_frame":
@@ -436,6 +446,87 @@ async function getNodesInfo(nodeIds) {
   } catch (error) {
     throw new Error(`Error getting nodes info: ${error.message}`);
   }
+}
+
+async function getComponentProperties(nodeId) {
+  const node = await getNodeByIdSafe(nodeId);
+  if (!node) {
+    throw new Error(`Node not found with ID: ${nodeId}`);
+  }
+
+  const nodeType = node.type;
+  const result = {
+    nodeId: node.id,
+    nodeType: nodeType,
+  };
+
+  if (nodeType === "INSTANCE") {
+    result.componentId = node.mainComponent ? node.mainComponent.id : undefined;
+    result.componentKey = node.mainComponent ? node.mainComponent.key : undefined;
+    result.currentValues = node.componentProperties || {};
+  } else if (nodeType === "COMPONENT" || nodeType === "COMPONENT_SET") {
+    result.componentKey = node.key;
+    result.propertyDefinitions = node.componentPropertyDefinitions || {};
+  } else {
+    result.error = `Node type ${nodeType} is not a component, instance, or component set`;
+  }
+
+  return result;
+}
+
+async function getBoundVariables(nodeId) {
+  const node = await getNodeByIdSafe(nodeId);
+  if (!node) {
+    throw new Error(`Node not found with ID: ${nodeId}`);
+  }
+
+  const boundVariables = node.boundVariables || {};
+  const resolvedModes = node.resolvedVariableModes || {};
+  const explicitVariableModes = node.explicitVariableModes || {};
+
+  // Collect all unique variable IDs from boundVariables
+  const variableIds = new Set();
+  function collectVarIds(obj) {
+    if (!obj || typeof obj !== "object") return;
+    if (obj.type === "VARIABLE_ALIAS" && obj.id) {
+      variableIds.add(obj.id);
+    }
+    for (const key of Object.keys(obj)) {
+      const val = obj[key];
+      if (Array.isArray(val)) {
+        val.forEach(collectVarIds);
+      } else if (val && typeof val === "object") {
+        collectVarIds(val);
+      }
+    }
+  }
+  collectVarIds(boundVariables);
+
+  // Resolve each variable alias to get name, type, codeSyntax
+  const variableDetails = [];
+  for (const varId of variableIds) {
+    try {
+      const variable = await figma.variables.getVariableByIdAsync(varId);
+      if (variable) {
+        variableDetails.push({
+          id: variable.id,
+          name: variable.name,
+          resolvedType: variable.resolvedType,
+          codeSyntax: variable.codeSyntax || {},
+        });
+      }
+    } catch (e) {
+      // Skip unresolved variables
+    }
+  }
+
+  return {
+    nodeId: node.id,
+    boundVariables: boundVariables,
+    resolvedModes: resolvedModes,
+    explicitVariableModes: explicitVariableModes,
+    variableDetails: variableDetails,
+  };
 }
 
 async function createRectangle(params) {

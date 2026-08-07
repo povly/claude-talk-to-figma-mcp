@@ -43,6 +43,7 @@ export type FigmaCommand =
   | "get_document_info"
   | "get_selection"
   | "get_node_info"
+  | "get_nodes_info"
   | "create_rectangle"
   | "create_frame"
   | "create_text"
@@ -128,4 +129,6 @@ export type FigmaCommand =
   | "set_sticky_text"
   | "create_shape_with_text"
   | "create_connector"
-  | "create_section";
+  | "create_section"
+  | "get_component_properties"
+  | "get_bound_variables";

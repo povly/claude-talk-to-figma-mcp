@@ -138,6 +138,54 @@ export function registerDocumentTools(server: McpServer): void {
     }
   );
 
+  // Get Component Properties Tool
+  server.tool(
+    "get_component_properties",
+    "Get component property definitions and current values for a component, instance, or component set",
+    {
+      nodeId: z.string().describe("The ID of the node to inspect"),
+    },
+    async ({ nodeId }) => {
+      try {
+        const result = await sendCommandToFigma("get_component_properties", { nodeId });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: `Error getting component properties: ${error instanceof Error ? error.message : String(error)}`,
+          }],
+        };
+      }
+    }
+  );
+
+  // Get Bound Variables Tool
+  server.tool(
+    "get_bound_variables",
+    "Get variables bound to a node's properties, along with resolved modes and variable details",
+    {
+      nodeId: z.string().describe("The ID of the node to inspect for bound variables"),
+    },
+    async ({ nodeId }) => {
+      try {
+        const result = await sendCommandToFigma("get_bound_variables", { nodeId });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: "text",
+            text: `Error getting bound variables: ${error instanceof Error ? error.message : String(error)}`,
+          }],
+        };
+      }
+    }
+  );
+
   // Get Styles Tool
   server.tool(
     "get_styles",
