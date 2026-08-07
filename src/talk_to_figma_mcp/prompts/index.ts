@@ -327,6 +327,125 @@ Remember that text is never just text—it's a core design element that must wor
       };
     }
   );
+
+  // Verify Design Fidelity Prompt
+  server.prompt(
+    "verify_design_fidelity",
+    "Closed-loop verification workflow for matching generated code to Figma design. Guides through screenshot comparison, property checking, and iterative correction.",
+    (extra) => {
+      return {
+        messages: [
+          {
+            role: "assistant",
+            content: {
+              type: "text",
+              text: `# Design Fidelity Verification Loop
+
+This workflow ensures generated code or Figma modifications match the original design at pixel fidelity. Run this loop after ANY design creation or modification to catch and fix discrepancies.
+
+## Workflow Overview
+1. Capture reference screenshot
+2. Read all properties from the modified node
+3. Compare against the original design
+4. Fix discrepancies
+5. Re-export and verify
+6. Repeat until all checks pass
+
+## Step 1: Capture Reference
+- After modifying or creating a node in Figma:
+  export_node_as_image(nodeId, format: "PNG", scale: 2)
+- This gives you the current state as a high-resolution image
+- If reproducing from an external design, also export the original for side-by-side comparison
+
+## Step 2: Read All Properties
+- Call get_node_info(nodeId) to get the full property tree
+- For tokens: get_bound_variables(nodeId) and get_variable_defs(nodeId)
+- For components: get_component_properties(nodeId)
+- For CSS: get_css(nodeId)
+
+## Step 3: Compare Properties
+Check each category against the design source:
+
+### Layout Verification
+- [ ] Auto Layout mode (HORIZONTAL/VERTICAL) matches
+- [ ] Axis alignment (primaryAxisAlignItems, counterAxisAlignItems) matches
+- [ ] Spacing (itemSpacing, paddingTop/Right/Bottom/Left) matches
+- [ ] Sizing mode (FILL/HUG/FIXED) matches
+- [ ] Wrap behavior matches
+
+### Color Verification
+- [ ] Fill colors match (check hex values)
+- [ ] Fill opacity matches
+- [ ] Gradient stops match (position, color, opacity)
+- [ ] Stroke color and weight match
+- [ ] Design tokens are correctly bound (if applicable)
+
+### Typography Verification
+- [ ] Font family matches
+- [ ] Font size matches
+- [ ] Font weight matches
+- [ ] Line height matches (value and unit)
+- [ ] Letter spacing matches (value and unit)
+- [ ] Text alignment matches (horizontal and vertical)
+- [ ] Text case matches (uppercase, lowercase, title, etc.)
+- [ ] Text decoration matches (underline, strikethrough)
+
+### Spacing and Dimensions
+- [ ] Width and height match (or sizing mode is correct)
+- [ ] Position (x, y) matches
+- [ ] Padding matches on all sides
+- [ ] Gap/spacing between children matches
+- [ ] Min/max dimensions match
+
+### Effects Verification
+- [ ] Drop shadows match (offset, radius, spread, color, opacity)
+- [ ] Inner shadows match
+- [ ] Layer blur matches
+- [ ] Background blur matches
+
+### Visual Details
+- [ ] Corner radius matches (including individual corners)
+- [ ] Corner smoothing matches
+- [ ] Opacity matches
+- [ ] Blend mode matches
+- [ ] Clip content flag matches
+
+## Step 4: Fix Discrepancies
+For each mismatch found:
+1. Identify the correct value from the design
+2. Apply the fix using the appropriate modification tool:
+   - Colors: set_fill_color, set_stroke_color
+   - Text: set_font_size, set_font_weight, set_line_height, etc.
+   - Layout: set_auto_layout
+   - Effects: set_effects
+   - Corners: set_corner_radius
+   - Size/position: resize_node, move_node
+3. Re-export the node to verify the fix:
+   export_node_as_image(nodeId, format: "PNG", scale: 2)
+
+## Step 5: Final Verification
+After all fixes:
+1. Export the final state at scale 2
+2. Visually compare with the original design
+3. If discrepancies remain, return to Step 3
+4. When satisfied, run get_node_info one final time to confirm all properties
+
+## Iteration Guidelines
+- Maximum 3 iterations: if significant discrepancies remain after 3 rounds, the issue may be structural (wrong layout approach, wrong component structure)
+- Focus on the most visible discrepancies first (layout, colors, typography) before minor details (corner smoothing, blend modes)
+- When in doubt, trust the screenshot comparison over property-by-property checking, as some rendering differences are subtle
+- Common pitfalls:
+  * Auto Layout not matching because padding is applied on wrong sides
+  * Text not matching because line-height unit differs (PIXELS vs AUTO vs PERCENT)
+  * Colors not matching because of opacity/blend-mode interaction
+  * Spacing not matching because of constraints vs Auto Layout conflict`,
+            },
+          },
+        ],
+        description: "Closed-loop verification workflow for matching generated code to Figma design.",
+      };
+    }
+  );
 }
 
 // Export individual prompt registration functions
@@ -356,6 +475,17 @@ export function registerTextReplacementStrategyPrompt(server: McpServer): void {
   server.prompt(
     "text_replacement_strategy",
     "Systematic approach for replacing text in Figma designs",
+    (extra) => {
+      // Implementation is the same as above
+      // This function is exported for individual usage if needed
+    }
+  );
+}
+
+export function registerVerifyDesignFidelityPrompt(server: McpServer): void {
+  server.prompt(
+    "verify_design_fidelity",
+    "Closed-loop verification workflow for matching generated code to Figma design. Guides through screenshot comparison, property checking, and iterative correction.",
     (extra) => {
       // Implementation is the same as above
       // This function is exported for individual usage if needed

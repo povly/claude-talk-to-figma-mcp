@@ -178,4 +178,51 @@ export function registerStyleTools(server: McpServer): void {
       }
     }
   );
+
+  server.tool(
+    "create_grid_style",
+    "Create a new grid style in the Figma document. Grid styles define reusable layout grid configurations.",
+    {
+      name: z.string().describe("Name for the new grid style"),
+      grids: z.array(z.object({
+        pattern: z.enum(["COLUMNS", "ROWS", "GRID"]),
+        sectionSize: z.number().optional().describe("Spacing between grid lines (for COLUMNS/ROWS) or grid size (for GRID)"),
+        visible: z.boolean().default(true).describe("Whether the grid is visible"),
+        color: z.object({
+          r: z.number().min(0).max(1),
+          g: z.number().min(0).max(1),
+          b: z.number().min(0).max(1),
+          a: z.number().min(0).max(1).optional().default(1),
+        }).optional().describe("Grid line color (RGBA, 0-1)"),
+        count: z.number().optional().describe("Number of columns/rows (for COLUMNS/ROWS pattern)"),
+        offset: z.number().optional().describe("Offset from the start (for COLUMNS/ROWS)"),
+        gutter: z.number().optional().describe("Gutter between columns/rows"),
+        alignment: z.enum(["MIN", "MAX", "STRETCH", "CENTER"]).optional().describe("Alignment for COLUMNS/ROWS"),
+      })).describe("Array of grid configurations"),
+    },
+    async ({ name, grids }) => {
+      try {
+        const result = await sendCommandToFigma("create_grid_style", { name, grids });
+        const typedResult = result as { id: string; name: string; key: string };
+        return {
+          content: [
+            {
+              type: "text",
+              text: `✅ Created grid style "${typedResult.name}"\nID: ${typedResult.id}\nKey: ${typedResult.key}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `❌ Error creating grid style: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+  );
 }

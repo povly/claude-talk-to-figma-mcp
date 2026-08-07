@@ -348,6 +348,8 @@ async function handleCommand(command, params) {
       return await createPaintStyle(params);
     case "create_effect_style":
       return await createEffectStyle(params);
+    case "create_grid_style":
+      return await createGridStyle(params);
     default:
       throw new Error(`Unknown command: ${command}`);
   }
@@ -6627,6 +6629,47 @@ async function createEffectStyle(params) {
     name: style.name,
     key: style.key,
     effectCount: style.effects.length,
+  };
+}
+
+/**
+ * Create a reusable grid style in Figma
+ */
+async function createGridStyle(params) {
+  const { name, grids } = params || {};
+
+  const style = figma.createGridStyle();
+  style.name = name;
+
+  style.layoutGrids = (grids || []).map((grid) => {
+    const layoutGrid = {
+      pattern: grid.pattern,
+      visible: grid.visible !== undefined ? grid.visible : true,
+    };
+
+    if (grid.sectionSize !== undefined) layoutGrid.sectionSize = grid.sectionSize;
+    if (grid.color) {
+      layoutGrid.color = {
+        r: grid.color.r,
+        g: grid.color.g,
+        b: grid.color.b,
+        a: grid.color.a !== undefined ? grid.color.a : 1,
+      };
+    }
+    if (grid.count !== undefined) layoutGrid.count = grid.count;
+    if (grid.offset !== undefined) layoutGrid.offset = grid.offset;
+    if (grid.gutter !== undefined) layoutGrid.gutter = grid.gutter;
+    if (grid.alignment !== undefined) layoutGrid.alignment = grid.alignment;
+
+    return layoutGrid;
+  });
+
+  console.log(`createGridStyle: name=${name} grids=${(grids || []).length}`);
+
+  return {
+    id: style.id,
+    name: style.name,
+    key: style.key,
   };
 }
 

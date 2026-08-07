@@ -78,6 +78,7 @@ export type FigmaCommand =
   | "set_paragraph_spacing"
   | "set_text_case"
   | "set_text_decoration"
+  | "set_text_align"
   | "get_styled_text_segments"
   | "load_font_async"
   | "get_remote_components"
@@ -91,6 +92,9 @@ export type FigmaCommand =
   | "create_component_from_node"
   | "create_component_set"
   | "set_instance_variant"
+  | "set_reactions"
+  | "get_reactions"
+  | "detach_instance"
   | "create_page"
   | "delete_page"
   | "rename_page"
@@ -135,4 +139,8 @@ export type FigmaCommand =
   | "get_component_properties"
   | "get_bound_variables"
   | "get_css"
-  | "find_nodes";
+  | "find_nodes"
+  | "create_text_style"
+  | "create_paint_style"
+  | "create_effect_style"
+  | "create_grid_style";
