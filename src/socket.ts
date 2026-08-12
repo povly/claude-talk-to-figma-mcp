@@ -575,6 +575,9 @@ const server = Bun.serve({
     });
   },
   websocket: {
+    // get_node_info on complex frames can exceed Bun's 16 MB default and force-close (code 1006).
+    maxPayloadLength: 128 * 1024 * 1024,   // 128 MB
+    perMessageDeflate: true,                // permessage-deflate — compresses frames, effectively extends usable payload
     open: handleConnection,
     message(ws: ServerWebSocket<any>, message: string | Buffer) {
       try {
