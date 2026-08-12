@@ -32,6 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **image-tools.ts** error handling unified: all throw statements replaced with return-error pattern (isError: true)
 - boundVariables and imageRef no longer stripped from fills/strokes in filterFigmaNode
 
+### Fixed
+- **WebSocket payload limit**: `Bun.serve()` default `maxPayloadLength` (16 MB) was exceeded by `get_node_info` responses on complex frames, force-closing the socket with code 1006 ("Received too big message"). Raised to 128 MB and enabled `perMessageDeflate` for compression.
+- **Plugin WebSocket auto-reconnect**: plugin's WS client now retries with exponential backoff (1s → 2s → 4s → 8s → 16s, capped at 30s, max 5 attempts) when the relay disconnects unexpectedly. Previously, any relay restart left the plugin permanently disconnected until the user clicked Connect manually.
+- **Plugin-side export timeouts**: `get_image_bytes` and `get_svg` now wrap `node.exportAsync` in a 60-second `Promise.race` matching `export_node_as_image`. Previously they could hang silently on large nodes until the relay's 120s safety-net timeout fired.
+
 ## [1.0.0] - 2026-04-18
 
 ### Added
