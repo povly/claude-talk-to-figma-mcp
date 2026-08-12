@@ -3180,7 +3180,8 @@ async function getRemoteComponents() {
     }
 
     // Check if figma.teamLibrary.getAvailableComponentsAsync exists
-    if (!figma.teamLibrary.getAvailableComponentsAsync) {
+    const teamLib = figma.teamLibrary as unknown as Record<string, unknown>;
+    if (!teamLib.getAvailableComponentsAsync) {
       console.error("Error: figma.teamLibrary.getAvailableComponentsAsync is not available");
       throw new Error("The getAvailableComponentsAsync method is not available");
     }
@@ -3196,7 +3197,7 @@ async function getRemoteComponents() {
     });
 
     // Execute the request with a manual timeout
-    const fetchPromise = figma.teamLibrary.getAvailableComponentsAsync();
+    const fetchPromise = (teamLib.getAvailableComponentsAsync as Function)();
 
     // Use Promise.race to implement the timeout
     const teamComponents = await Promise.race([fetchPromise, timeoutPromise])
