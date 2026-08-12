@@ -316,16 +316,51 @@
         }
 
         /**
-         * Update the connection status UI
+         * Update the connection status UI.
+         *
+         * [FIX:xss] Safe DOM construction — never innerHTML with caller-supplied strings.
+         * Static fallback messages are hard-coded here; dynamic content is added via
+         * textContent / createElement. The optional channelName is rendered into a
+         * styled span without string interpolation so HTML metacharacters are inert.
+         *
+         * @param {boolean} isConnected
+         * @param {string}  [message]     Plain text status message (no HTML allowed).
+         * @param {object}  [options]
+         * @param {string}  [options.channelName]  Channel id to render as a styled span.
          */
-        updateStatus(isConnected, message) {
+        updateStatus(isConnected, message, options) {
           this.state.connected = isConnected;
-          this.ui.connectionStatus.innerHTML =
-            message ||
-            (isConnected
-              ? "Connected to Claude MCP server"
-              : "Not connected to Claude MCP server");
-          
+          const status = this.ui.connectionStatus;
+
+          const fallback = isConnected
+            ? "Connected to Claude MCP server"
+            : "Not connected to Claude MCP server";
+
+          // Rebuild content via safe DOM APIs. innerHTML is never assigned a
+          // caller-supplied string — that was the XSS vector (channel name and
+          // server messages could inject markup).
+          status.innerHTML = "";
+
+          const channelName = options && options.channelName;
+          if (channelName != null) {
+            // Structured status: "<message><br>Copy the channel ID: <span>..."
+            status.appendChild(document.createTextNode(message || ""));
+            status.appendChild(document.createElement("br"));
+            status.appendChild(document.createTextNode("Copy the channel ID: "));
+            const span = document.createElement("span");
+            span.className = "mcp-plugin__channel-name";
+            span.title = "Click to copy";
+            // textContent is XSS-safe — any HTML in channelName is treated as text.
+            span.textContent = channelName;
+            status.appendChild(span);
+            if (window.LOG_FIX) {
+              console.log("[FIX:xss] Rendered channel name via textContent");
+            }
+          } else {
+            // Plain text status — textContent is XSS-safe for any string.
+            status.textContent = message || fallback;
+          }
+
           this.ui.connectionStatus.className = `mcp-plugin__connection-status ${
             isConnected ? "connected" : (message && message.includes("Connecting") ? "info" : "disconnected")
           }`;
@@ -382,9 +417,12 @@
                   if (data.message && data.message.result) {
                     this.state.connected = true;
                     const channelName = data.channel;
+                    // [FIX:xss] channelName is passed as a structured option, not
+                    // interpolated into an HTML string — see updateStatus.
                     this.updateStatus(
                       true,
-                      `Connected on port ${port}!<br>Copy the channel ID: <span class="mcp-plugin__channel-name" title="Click to copy">${channelName}</span>`
+                      `Connected on port ${port}!`,
+                      { channelName }
                     );
 
                     parent.postMessage(
