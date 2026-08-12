@@ -139,7 +139,7 @@ async function handleCommand(command, params) {
       if (!params || !params.nodeId) {
         throw new Error("Missing nodeId parameter");
       }
-      return await getNodeInfo(params.nodeId);
+      return await getNodeInfo(params.nodeId, params.depth);
     case "get_nodes_info":
       if (!params || !params.nodeIds || !Array.isArray(params.nodeIds)) {
         throw new Error("Missing or invalid nodeIds parameter");
@@ -409,7 +409,39 @@ async function getSelection() {
   };
 }
 
-async function getNodeInfo(nodeId) {
+/**
+ * Depth-aware pruning of a JSON_REST_V1 tree. Mutates in place.
+ * Nodes beyond maxDepth keep only {id, name, type, _childrenTruncated} stubs.
+ *
+ * Semantics (matches filterFigmaNode on the MCP side):
+ *   maxDepth=0 → root only, children become stubs
+ *   maxDepth=1 → root + direct children full, grandchildren stubs
+ *   maxDepth=N → N levels of full detail below the root
+ *
+ * Stubs let the AI agent discover child IDs and call get_node_info on them
+ * for progressive disclosure.
+ */
+function pruneTreeAtDepth(node, maxDepth, currentDepth = 0) {
+  if (!node || typeof node !== "object") return node;
+  if (!Array.isArray(node.children) || node.children.length === 0) return node;
+
+  if (currentDepth >= maxDepth) {
+    node._childrenTruncated = true;
+    node.children = node.children.map(child => ({
+      id: child.id,
+      name: child.name,
+      type: child.type,
+      _childrenTruncated: true,
+    }));
+  } else {
+    node.children = node.children.map(child =>
+      pruneTreeAtDepth(child, maxDepth, currentDepth + 1)
+    );
+  }
+  return node;
+}
+
+async function getNodeInfo(nodeId, depth) {
   const node = await getNodeByIdSafe(nodeId);
 
   if (!node) {
@@ -420,15 +452,26 @@ async function getNodeInfo(nodeId) {
     format: "JSON_REST_V1",
   });
 
+  const document = response.document;
+
+  // Plugin-side depth pruning — reduces WS payload size.
+  // MCP-side filterFigmaNode still runs on the pruned tree (defensive backwards-compat layer).
+  const pruned = typeof depth === "number" && depth >= 0
+    ? pruneTreeAtDepth(document, depth)
+    : document;
+
   // Add local coordinates if node supports positioning
   if ("x" in node && "y" in node) {
-    response.document.localPosition = {
+    pruned.localPosition = {
       x: node.x,
       y: node.y
     };
   }
 
-  return response.document;
+  const payloadBytes = JSON.stringify(pruned).length;
+  console.log(`[getNodeInfo] node=${nodeId} depth=${depth ?? "none"} payloadBytes=${payloadBytes}`);
+
+  return pruned;
 }
 
 async function getNodesInfo(nodeIds) {
