@@ -7,6 +7,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — R2 Schema Hardening
+
+### Hardened
+- **`.max()` bounds on user-supplied strings** — все 63 оставшихся unbounded `z.string()` для user-supplied content получили explicit length caps. Text content: 100K chars. Image source (base64/URL): 10MB. Names/labels: 500. Non-nodeId IDs: 200. Misc strings: 1000. Closes DoS surface где LLM мог сгенерировать multi-MB payload через WS relay.
+
+- **`z.enum()` для known enum fields** — 7 полей раньше принимали arbitrary strings, теперь валидируются как enums:
+  - `blendMode` (set_effects, create_effect_style): 16 Figma blend modes
+  - `trigger.type` (set_reactions): 9 trigger types (ON_CLICK, ON_HOVER, ON_PRESS, ON_DRAG, AFTER_TIMEOUT, MOUSE_ENTER/LEAVE/UP/DOWN)
+  - `action.type`: NODE/BACK/CLOSE/URL
+  - `action.navigation`: NAVIGATE/SWAP/OVERLAY/SCROLL_TO/CHANGE_TO
+  - `transition.type`: DISSOLVE/SMART_ANIMATE/MOVE_IN/MOVE_OUT/PUSH/SLIDE_IN/SLIDE_OUT
+  - `transition.easing.type`: EASE_IN/EASE_OUT/EASE_IN_AND_OUT/LINEAR
+
+- **Discriminated union для `set_variable`** — `value: z.any()` заменён на `z.union([rgbaColorSchema, z.number(), z.string().max(10_000), z.boolean()])`. Дополнительно, handler-level typeCheck валидирует что `typeof value` соответствует `resolvedType` (COLOR→object, FLOAT→number, STRING→string, BOOLEAN→boolean). Invalid combinations отклоняются до отправки в plugin, с clear error message.
+
+### Added (Tests)
+- `tests/unit/r2-schema-hardening.test.ts` — 20 cases: blendModeSchema accepts/rejects + boundary tests для .max() bounds.
+- `tests/integration/r2-schema-hardening.test.ts` — 6 cases: set_variable success paths (STRING/FLOAT/BOOLEAN/COLOR) + type-mismatch rejection paths.
+
+### Operational Notes
+- All bounds выбраны generous чтобы не сломать existing MCP clients.
+- Enum values соответствуют Figma plugin API contract — если Figma добавит новые blendMode, потребуется schema update.
+- `set_variable` handler typeCheck message "value type X does not match resolvedType Y (expected Z)" помогает LLM self-correct.
+- Cross-field `.refine()` не использован потому что MCP SDK `server.tool()` принимает `ZodRawShapeCompat` (plain shape), не `ZodEffects`.
+
 ## [Unreleased] — R1 Refactor: Shared Schemas + isError Standardization
 
 ### Refactored
