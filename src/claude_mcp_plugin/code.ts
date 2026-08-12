@@ -1299,11 +1299,11 @@ async function getStyles() {
       description: style.description,
       paints: style.paints.map((paint) => {
         const p = { ...paint };
-        if (p.color) {
+        if (p.type === "SOLID" && p.color) {
           const r = Math.round(p.color.r * 255);
           const g = Math.round(p.color.g * 255);
           const b = Math.round(p.color.b * 255);
-          p.colorHex = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+          (p as Record<string, unknown>).colorHex = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
         }
         return p;
       }),
