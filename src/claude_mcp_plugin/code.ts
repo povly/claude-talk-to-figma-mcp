@@ -6177,7 +6177,7 @@ async function createSticky(params) {
   try {
     sticky.x = x;
     sticky.y = y;
-    try { sticky.isWide = isWide; } catch (e) { /* isWide may not be settable in all FigJam versions */ }
+    try { (sticky as Record<string, unknown>).isWide = isWide; } catch (e) { /* isWide may not be settable in all FigJam versions */ }
     if (name) { sticky.name = name; }
     try {
       // Prefer the native NodeColor API (uses FigJam's exact palette colours).
@@ -6210,7 +6210,7 @@ async function createSticky(params) {
     width: sticky.width,
     height: sticky.height,
     text: sticky.text ? sticky.text.characters : "",
-    isWide: sticky.isWide,
+    isWide: (sticky as Record<string, unknown>).isWide,
     fills: resultFills,
     parentId: sticky.parent ? sticky.parent.id : undefined,
   };
