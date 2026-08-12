@@ -5051,8 +5051,9 @@ async function convertToFrame(params) {
     throw new Error(`Node is already a ${node.type}. No conversion needed.`);
   }
 
-  if (node.type === "PAGE" || node.type === "DOCUMENT") {
-    throw new Error(`Cannot convert ${node.type} to a frame`);
+  const baseNode = node as unknown as BaseNode;
+  if (baseNode.type === "PAGE" || baseNode.type === "DOCUMENT") {
+    throw new Error(`Cannot convert ${baseNode.type} to a frame`);
   }
 
   const parent = node.parent;
@@ -5305,8 +5306,9 @@ async function getSvg(params) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
 
-  if (!("exportAsync" in node)) {
-    throw new Error(`Node type ${node.type} does not support export`);
+  const baseNode = node as unknown as BaseNode;
+  if (!("exportAsync" in baseNode)) {
+    throw new Error(`Node type ${baseNode.type} does not support export`);
   }
 
   const svgString = await withExportTimeout(
@@ -5778,8 +5780,9 @@ async function applyVariableToNode(params) {
   }
 
   // Apply the variable binding
-  if (!("setBoundVariable" in node)) {
-    throw new Error(`Node type ${node.type} does not support variable bindings`);
+  const baseNode = node as unknown as BaseNode;
+  if (!("setBoundVariable" in baseNode)) {
+    throw new Error(`Node type ${baseNode.type} does not support variable bindings`);
   }
 
   // Handle paint-level bindings (fills/N/color, strokes/N/color)
@@ -5838,8 +5841,9 @@ async function switchVariableMode(params) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
 
-  if (!("setExplicitVariableModeForCollection" in node)) {
-    throw new Error(`Node type ${node.type} does not support variable mode switching`);
+  const baseNode = node as unknown as BaseNode;
+  if (!("setExplicitVariableModeForCollection" in baseNode)) {
+    throw new Error(`Node type ${baseNode.type} does not support variable mode switching`);
   }
 
   const collection = await figma.variables.getVariableCollectionByIdAsync(collectionId);
