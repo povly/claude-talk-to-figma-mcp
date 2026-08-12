@@ -269,11 +269,20 @@ export function sendCommandToFigma(
     }
 
     const id = uuidv4();
+    const isJoin = command === "join";
+    // P2 task 4: when the operator sets FIGMA_RELAY_TOKEN on the relay,
+    // the MCP client must echo it back in the join payload or be rejected.
+    // Read once per process; the env var is not expected to change at runtime.
+    const RELAY_TOKEN = process.env.FIGMA_RELAY_TOKEN;
     const request = {
       id,
-      type: command === "join" ? "join" : "message",
-      ...(command === "join"
-        ? { channel: (params as any).channel, sessionId }
+      type: isJoin ? "join" : "message",
+      ...(isJoin
+        ? {
+            channel: (params as any).channel,
+            sessionId,
+            ...(RELAY_TOKEN ? { token: RELAY_TOKEN } : {}),
+          }
         : { channel: currentChannel }),
       message: {
         id,

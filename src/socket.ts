@@ -564,6 +564,17 @@ function generateSecureSessionId(): string {
   return `mcp_${randomBytes(16).toString("hex")}`;
 }
 
+// P2 task 4: optional shared-secret handshake. When FIGMA_RELAY_TOKEN is set
+// in the environment, the relay requires every join to include the same token.
+// Default (unset) preserves open-relay behaviour for backwards compatibility
+// and local dev. The token is never logged.
+const REQUIRED_TOKEN = process.env.FIGMA_RELAY_TOKEN;
+if (REQUIRED_TOKEN) {
+  logger.info("FIGMA_RELAY_TOKEN set — enforcing plugin identity handshake");
+} else {
+  logger.info("FIGMA_RELAY_TOKEN not set — open relay (dev mode)");
+}
+
 const server = Bun.serve({
   port: 3055,
   // uncomment this to allow connections in windows wsl
@@ -672,6 +683,26 @@ const server = Bun.serve({
             stats.blockedCommands++;
             stats.messagesSent++;
             return;
+          }
+
+          // P2 task 4: shared-secret handshake. If FIGMA_RELAY_TOKEN is set,
+          // every join must include the matching token; otherwise the socket
+          // is closed with policy-violation code 1008. Backwards compat: when
+          // the env var is unset, the join proceeds as before (open relay).
+          if (REQUIRED_TOKEN) {
+            const providedToken = typeof data.token === "string" ? data.token : "";
+            if (providedToken !== REQUIRED_TOKEN) {
+              logger.warn(`Client ${clientId} join rejected: missing or invalid token`);
+              stats.blockedCommands++;
+              try {
+                ws.send(JSON.stringify({
+                  type: "error",
+                  message: "Authentication required. Set FIGMA_RELAY_TOKEN in plugin/MCP config.",
+                }));
+                ws.close(1008, "Auth required");
+              } catch {}
+              return;
+            }
           }
 
           // Session deduplication: if this client sends a sessionId (MCP agents do),

@@ -275,6 +275,9 @@
             reconnectAttempts: 0,
             maxReconnectAttempts: 5,
             reconnectTimer: null,
+            // P2 task 4: in-memory only — see prompt-and-retry logic on join auth
+            // error. Cleared on plugin close.
+            relayToken: null,
             intentionalDisconnect: false,
           };
 
@@ -404,6 +407,10 @@
                 JSON.stringify({
                   type: "join",
                   channel: channelName.trim(),
+                  // P2 task 4: include the relay token if the operator entered
+                  // one. The relay ignores this field when FIGMA_RELAY_TOKEN is
+                  // unset on the server side.
+                  ...(this.state.relayToken ? { token: this.state.relayToken } : {}),
                 })
               );
             };
@@ -437,6 +444,25 @@
                   }
                 } else if (data.type === "error") {
                   console.error("Error:", data.message);
+                  // P2 task 4: if the relay rejects the join for auth, prompt
+                  // the operator for the FIGMA_RELAY_TOKEN, stash it in
+                  // memory, and retry the connect. Token is never logged or
+                  // persisted to disk — closing the plugin clears it.
+                  const authNeeded =
+                    typeof data.message === "string" &&
+                    data.message.includes("Authentication required");
+                  if (authNeeded && !this.state.relayToken) {
+                    const entered = window.prompt(
+                      "Relay authentication required.\nEnter the FIGMA_RELAY_TOKEN value configured on the relay:"
+                    );
+                    if (entered) {
+                      this.state.relayToken = entered.trim();
+                      this.updateStatus(false, "Retrying with token...");
+                      try { this.state.socket.close(); } catch {}
+                      this.connect(port);
+                      return;
+                    }
+                  }
                   this.updateStatus(false, `Error: ${data.message}`);
                   this.state.socket.close();
                 }
