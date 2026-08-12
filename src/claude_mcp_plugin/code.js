@@ -4533,6 +4533,31 @@ async function replaceImageFill(params) {
   }
 }
 
+/**
+ * Wraps node.exportAsync(...) with a 60s timeout. Mirrors exportNodeAsImage (~L1411-1423).
+ * Skip JSON_REST_V1 exports (getNodeInfo/getNodesInfo) — metadata is fast, not worth wrapping.
+ *
+ * @param {Promise<*>} exportPromise - already-invoked node.exportAsync(...) call
+ * @param {string} nodeId - for timeout error message
+ * @param {string} format - for timeout error message
+ * @returns {Promise<*>}
+ */
+const EXPORT_TIMEOUT_MS = 60_000; // matches exportNodeAsImage
+
+async function withExportTimeout(exportPromise, nodeId, format) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`Export timed out after ${EXPORT_TIMEOUT_MS / 1000}s for node ${nodeId} (${format})`));
+    }, EXPORT_TIMEOUT_MS);
+  });
+  try {
+    return await Promise.race([exportPromise, timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 async function exportNodeBytes(params) {
   const { nodeId, format, scale } = params || {};
 
@@ -4553,7 +4578,11 @@ async function exportNodeBytes(params) {
     constraint: { type: "SCALE", value: exportScale },
   };
 
-  const bytes = await node.exportAsync(exportSettings);
+  const bytes = await withExportTimeout(
+    node.exportAsync(exportSettings),
+    nodeId,
+    exportFormat
+  );
 
   let base64;
   if (typeof bytes === "object" && bytes !== null) {
@@ -5166,7 +5195,11 @@ async function getSvg(params) {
     throw new Error(`Node type ${node.type} does not support export`);
   }
 
-  const svgString = await node.exportAsync({ format: "SVG_STRING" });
+  const svgString = await withExportTimeout(
+    node.exportAsync({ format: "SVG_STRING" }),
+    nodeId,
+    "SVG_STRING"
+  );
 
   return {
     svgString: svgString,
