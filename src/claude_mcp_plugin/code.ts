@@ -5391,10 +5391,10 @@ async function setGrid(params) {
   }
 
   const layoutGrids = grids.map(grid => {
-    const layoutGrid: LayoutGrid = {
+    const layoutGrid: Record<string, unknown> = {
       pattern: grid.pattern,
       visible: grid.visible !== undefined ? grid.visible : true
-    } as LayoutGrid;
+    };
 
     // Ensure required fields have defaults per pattern type to prevent Figma from hanging
     if (grid.pattern === "GRID") {
@@ -6527,17 +6527,18 @@ async function setReactions(params) {
               }
               info.targetType = targetNode.type;
               info.hasOverlayPositionType = "overlayPositionType" in targetNode;
-              info.beforePositionType = targetNode.overlayPositionType;
-              info.beforeBgInteraction = targetNode.overlayBackgroundInteraction;
+              const t = targetNode as unknown as Record<string, unknown>;
+              info.beforePositionType = t.overlayPositionType;
+              info.beforeBgInteraction = t.overlayBackgroundInteraction;
               try {
-                targetNode.overlayPositionType = a.overlayPositionType || "CENTER";
-                info.afterPositionType = targetNode.overlayPositionType;
+                t.overlayPositionType = a.overlayPositionType || "CENTER";
+                info.afterPositionType = t.overlayPositionType;
               } catch (e) {
                 info.positionTypeError = e.message || String(e);
               }
               try {
-                targetNode.overlayBackgroundInteraction = a.overlayBackgroundInteraction || "CLOSE_ON_CLICK_OUTSIDE";
-                info.afterBgInteraction = targetNode.overlayBackgroundInteraction;
+                t.overlayBackgroundInteraction = a.overlayBackgroundInteraction || "CLOSE_ON_CLICK_OUTSIDE";
+                info.afterBgInteraction = t.overlayBackgroundInteraction;
               } catch (e) {
                 info.bgInteractionError = e.message || String(e);
               }
@@ -6553,7 +6554,7 @@ async function setReactions(params) {
 
   // Build reactions array for the Figma API
   const reactions = params.reactions.map((r) => {
-    const reaction = {};
+    const reaction: Record<string, unknown> = {};
 
     // Set trigger
     if (r.trigger) {
