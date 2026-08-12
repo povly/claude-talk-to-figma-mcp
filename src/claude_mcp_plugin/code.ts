@@ -4620,7 +4620,7 @@ async function replaceImageFill(params) {
       throw new Error(`Invalid sourceType: ${sourceType}`);
     }
 
-    const newImageFill = {
+    const newImageFill: Record<string, unknown> = {
       type: "IMAGE" as const,
       imageHash: newImage.hash,
     };
