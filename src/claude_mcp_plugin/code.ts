@@ -1725,7 +1725,7 @@ async function setTextContent(params) {
   }
 
   try {
-    await figma.loadFontAsync(node.fontName);
+    await figma.loadFontAsync(node.fontName as FontName);
 
     await setCharacters(node, text);
 
@@ -2814,7 +2814,7 @@ async function setFontSize(params) {
   }
 
   try {
-    await figma.loadFontAsync(node.fontName);
+    await figma.loadFontAsync(node.fontName as FontName);
     node.fontSize = fontSize;
     return {
       id: node.id,
@@ -2889,7 +2889,7 @@ async function setLetterSpacing(params) {
   }
 
   try {
-    await figma.loadFontAsync(node.fontName);
+    await figma.loadFontAsync(node.fontName as FontName);
     node.letterSpacing = { value: letterSpacing, unit };
     return {
       id: node.id,
@@ -2917,7 +2917,7 @@ async function setLineHeight(params) {
   }
 
   try {
-    await figma.loadFontAsync(node.fontName);
+    await figma.loadFontAsync(node.fontName as FontName);
     node.lineHeight = { value: lineHeight, unit };
     return {
       id: node.id,
@@ -2945,7 +2945,7 @@ async function setParagraphSpacing(params) {
   }
 
   try {
-    await figma.loadFontAsync(node.fontName);
+    await figma.loadFontAsync(node.fontName as FontName);
     node.paragraphSpacing = paragraphSpacing;
     return {
       id: node.id,
@@ -2978,7 +2978,7 @@ async function setTextCase(params) {
   }
 
   try {
-    await figma.loadFontAsync(node.fontName);
+    await figma.loadFontAsync(node.fontName as FontName);
     node.textCase = textCase;
     return {
       id: node.id,
@@ -3011,7 +3011,7 @@ async function setTextDecoration(params) {
   }
 
   try {
-    await figma.loadFontAsync(node.fontName);
+    await figma.loadFontAsync(node.fontName as FontName);
     node.textDecoration = textDecoration;
     return {
       id: node.id,
@@ -3054,7 +3054,7 @@ async function setTextAlign(params) {
   }
 
   try {
-    await figma.loadFontAsync(node.fontName);
+    await figma.loadFontAsync(node.fontName as FontName);
     if (textAlignHorizontal) {
       node.textAlignHorizontal = textAlignHorizontal;
     }
