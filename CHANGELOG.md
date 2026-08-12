@@ -37,6 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Plugin WebSocket auto-reconnect**: plugin's WS client now retries with exponential backoff (1s → 2s → 4s → 8s → 16s, capped at 30s, max 5 attempts) when the relay disconnects unexpectedly. Previously, any relay restart left the plugin permanently disconnected until the user clicked Connect manually.
 - **Plugin-side export timeouts**: `get_image_bytes` and `get_svg` now wrap `node.exportAsync` in a 60-second `Promise.race` matching `export_node_as_image`. Previously they could hang silently on large nodes until the relay's 120s safety-net timeout fired.
 
+### Performance
+- **`figma.skipInvisibleInstanceChildren = true`**: plugin now skips invisible component instance subtrees during `findAll`/`exportAsync`. Hundreds of times faster on large documents with hidden component states. Borrowed from style-scan reference.
+- **Plugin-side depth pruning in `get_node_info`**: `getNodeInfo(nodeId, depth)` now prunes the JSON_REST_V1 tree before sending it over WebSocket. Children beyond `depth` become `{id, name, type, _childrenTruncated: true}` stubs. Previously the full subtree crossed the wire even when `depth=1` was requested (filterFigmaNode ran after the WS hop). Reduces typical payload 5-10×.
+- **`maxPayloadSeen` metric**: relay `/status` endpoint now exposes the largest WS message observed (bytes), with INFO-level log on each new record. Validates depth-pruning effect and warns before payload-limit regressions.
+
+### Changed
+- **Manifest security hardening**: `enableProposedApi: false` (stability guarantee), `networkAccess.allowedDomains: "none"` (was `https://google.com` — unexplained artifact), removed `permissions: ["teamlibrary"]` and deprecated `enablePrivatePluginApi`. Aligns with style-scan plugin posture.
+
 ## [1.0.0] - 2026-04-18
 
 ### Added
