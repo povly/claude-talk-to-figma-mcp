@@ -6620,7 +6620,7 @@ async function setReactions(params) {
   console.log("setReactionsAsync input:", debugJson);
 
   try {
-    await node.setReactionsAsync(reactions);
+    await (node as unknown as { setReactionsAsync: Function }).setReactionsAsync(reactions);
   } catch (e) {
     // Try with singular "action" format (older Figma API)
     try {
@@ -6628,7 +6628,7 @@ async function setReactions(params) {
         trigger: r.trigger,
         action: r.actions ? r.actions[0] : r.action,
       }));
-      await node.setReactionsAsync(reactionsOldFormat);
+      await (node as unknown as { setReactionsAsync: Function }).setReactionsAsync(reactionsOldFormat);
     } catch (e2) {
       const errStr = e ? (e.message || e.toString() || JSON.stringify(e)) : "unknown";
       const errStr2 = e2 ? (e2.message || e2.toString() || JSON.stringify(e2)) : "unknown";
