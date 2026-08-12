@@ -135,7 +135,7 @@ export function registerCreationTools(server: McpServer): void {
     {
       x: z.coerce.number().describe("X position (local coordinates, relative to parent)"),
       y: z.coerce.number().describe("Y position (local coordinates, relative to parent)"),
-      text: z.string().describe("Text content"),
+      text: z.string().max(100_000).describe("Text content"),
       fontSize: z.coerce.number().optional().describe("Font size (default: 14)"),
       fontWeight: z
         .coerce.number()

@@ -15,7 +15,7 @@ export function registerImageTools(server: McpServer): void {
     "Apply image to node from URL or base64 data",
     {
       nodeId: nodeIdSchema.describe("The ID of the node to apply image to"),
-      imageSource: z.string().describe("Image URL or base64 data string"),
+      imageSource: z.string().max(10_000_000).describe("Image URL or base64 data string"),
       sourceType: z.enum(["url", "base64"]).describe("Source type: 'url' for image URL, 'base64' for base64 encoded data"),
       scaleMode: z.enum(["FILL", "FIT", "CROP", "TILE"]).optional().describe("Image scaling mode (default: FILL)"),
     },
@@ -108,7 +108,7 @@ export function registerImageTools(server: McpServer): void {
     "Replace existing image on node with new image while preserving transform",
     {
       nodeId: nodeIdSchema.describe("The ID of the node with image to replace"),
-      newImageSource: z.string().describe("New image URL or base64 data"),
+      newImageSource: z.string().max(10_000_000).describe("New image URL or base64 data"),
       sourceType: z.enum(["url", "base64"]).describe("Source type: 'url' or 'base64'"),
       preserveTransform: z.boolean().optional().describe("Preserve existing image transform (default: true)"),
     },

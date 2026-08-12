@@ -51,3 +51,27 @@ export const nodeIdSchema = z.string().min(1).max(200);
  * validation. Replaces 9 inline `z.string().optional()` duplicates.
  */
 export const parentIdSchema = z.string().min(1).max(200).optional();
+
+/**
+ * Figma blend mode enum. Values match Figma's BlendMode API.
+ * Used by set_effects, create_effect_style, and any field that controls
+ * layer compositing. Replaces 2 inline `z.string()` duplicates.
+ */
+export const blendModeSchema = z.enum([
+  "NORMAL",
+  "DARKEN",
+  "MULTIPLY",
+  "COLOR_BURN",
+  "LIGHTEN",
+  "SCREEN",
+  "COLOR_DODGE",
+  "OVERLAY",
+  "SOFT_LIGHT",
+  "HARD_LIGHT",
+  "DIFFERENCE",
+  "EXCLUSION",
+  "HUE",
+  "SATURATION",
+  "COLOR",
+  "LUMINOSITY",
+]);

@@ -64,7 +64,7 @@ export function registerFigJamTools(server: McpServer): void {
     {
       x: z.number().describe("X position on the canvas"),
       y: z.number().describe("Y position on the canvas"),
-      text: z.string().describe("Text content of the sticky note"),
+      text: z.string().max(100_000).describe("Text content of the sticky note"),
       color: z
         .enum([
           "yellow",
@@ -86,9 +86,10 @@ export function registerFigJamTools(server: McpServer): void {
         .boolean()
         .optional()
         .describe("Whether the sticky note should be wide format (default: false)"),
-      name: z.string().optional().describe("Optional name/label for the node"),
+      name: z.string().max(500).optional().describe("Optional name/label for the node"),
       parentId: z
         .string()
+        .max(200)
         .optional()
         .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
@@ -133,7 +134,7 @@ export function registerFigJamTools(server: McpServer): void {
     "Update the text content of an existing FigJam sticky note.",
     {
       nodeId: nodeIdSchema.describe("The ID of the sticky note node to update"),
-      text: z.string().describe("The new text content"),
+      text: z.string().max(100_000).describe("The new text content"),
     },
     async ({ nodeId, text }) => {
       try {
@@ -187,13 +188,14 @@ export function registerFigJamTools(server: McpServer): void {
         ])
         .optional()
         .describe("The shape type (default: ROUNDED_RECTANGLE)"),
-      text: z.string().optional().describe("Text to display inside the shape"),
+      text: z.string().max(100_000).optional().describe("Text to display inside the shape"),
       fillColor: rgbaColorSchema
         .optional()
         .describe("Fill color in RGBA format (0-1 range each component)"),
-      name: z.string().optional().describe("Optional name for the node"),
+      name: z.string().max(500).optional().describe("Optional name for the node"),
       parentId: z
         .string()
+        .max(200)
         .optional()
         .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
@@ -241,6 +243,7 @@ export function registerFigJamTools(server: McpServer): void {
     {
       startNodeId: z
         .string()
+        .max(200)
         .optional()
         .describe("ID of the node where the connector starts (omit to use startX/startY)"),
       startX: z
@@ -253,6 +256,7 @@ export function registerFigJamTools(server: McpServer): void {
         .describe("Y position of the connector start point (used when startNodeId is not provided)"),
       endNodeId: z
         .string()
+        .max(200)
         .optional()
         .describe("ID of the node where the connector ends (omit to use endX/endY)"),
       endX: z
@@ -279,9 +283,10 @@ export function registerFigJamTools(server: McpServer): void {
         .optional()
         .describe("Stroke color in RGBA format"),
       strokeWeight: z.number().positive().optional().describe("Stroke weight / line thickness"),
-      name: z.string().optional().describe("Optional name for the connector node"),
+      name: z.string().max(500).optional().describe("Optional name for the connector node"),
       parentId: z
         .string()
+        .max(200)
         .optional()
         .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
@@ -349,12 +354,13 @@ export function registerFigJamTools(server: McpServer): void {
       y: z.number().describe("Y position on the canvas"),
       width: z.number().optional().describe("Width of the section (default: 800)"),
       height: z.number().optional().describe("Height of the section (default: 600)"),
-      name: z.string().optional().describe("Label / name for the section"),
+      name: z.string().max(500).optional().describe("Label / name for the section"),
       fillColor: rgbaColorSchema
         .optional()
         .describe("Background fill color in RGBA format"),
       parentId: z
         .string()
+        .max(200)
         .optional()
         .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },

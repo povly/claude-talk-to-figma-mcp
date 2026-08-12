@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
-import { nodeIdSchema } from "../utils/schema-helpers";
+import { nodeIdSchema, rgbaColorSchema } from "../utils/schema-helpers";
 
 /**
  * Register variable tools to the MCP server
@@ -45,15 +45,38 @@ export function registerVariableTools(server: McpServer): void {
     "set_variable",
     "Create or update a variable in a Figma variable collection. Creates the collection if collectionName is provided and it doesn't exist.",
     {
-      collectionId: z.string().optional().describe("ID of an existing variable collection"),
-      collectionName: z.string().optional().describe("Name for a new collection (used if collectionId not provided)"),
-      name: z.string().describe("Variable name"),
+      collectionId: z.string().max(200).optional().describe("ID of an existing variable collection"),
+      collectionName: z.string().max(500).optional().describe("Name for a new collection (used if collectionId not provided)"),
+      name: z.string().max(500).describe("Variable name"),
       resolvedType: z.enum(["COLOR", "FLOAT", "STRING", "BOOLEAN"]).describe("Variable type"),
-      value: z.any().describe("Variable value. COLOR: {r,g,b,a} (0-1). FLOAT: number. STRING: string. BOOLEAN: boolean."),
-      modeId: z.string().optional().describe("Mode ID to set the value for (uses default mode if omitted)"),
+      value: z.union([
+        rgbaColorSchema,
+        z.number(),
+        z.string().max(10_000),
+        z.boolean(),
+      ]).describe("Variable value — type must match resolvedType: COLOR→{r,g,b,a}, FLOAT→number, STRING→string, BOOLEAN→boolean"),
+      modeId: z.string().max(200).optional().describe("Mode ID to set the value for (uses default mode if omitted)"),
     },
     async ({ collectionId, collectionName, name, resolvedType, value, modeId }) => {
       try {
+        const valueType = Array.isArray(value) ? "array" : typeof value;
+        const expectedMap: Record<string, string> = {
+          COLOR: "object",
+          FLOAT: "number",
+          STRING: "string",
+          BOOLEAN: "boolean",
+        };
+        const expected = expectedMap[resolvedType];
+        if (expected && valueType !== expected) {
+          return {
+            content: [{
+              type: "text",
+              text: `Error setting variable: value type "${valueType}" does not match resolvedType "${resolvedType}" (expected ${expected})`,
+            }],
+            isError: true,
+          };
+        }
+
         const result = await sendCommandToFigma("set_variable", {
           collectionId,
           collectionName,
@@ -91,8 +114,8 @@ export function registerVariableTools(server: McpServer): void {
     "Bind a variable to a node property in Figma. Call once per field — for multiple fields, call multiple times.",
     {
       nodeId: nodeIdSchema.describe("The ID of the node to bind the variable to"),
-      variableId: z.string().describe("The ID of the variable to bind"),
-      field: z.string().describe("The node property field to bind (e.g., 'fills/0/color', 'opacity', 'width', 'height')"),
+      variableId: z.string().max(200).describe("The ID of the variable to bind"),
+      field: z.string().max(1_000).describe("The node property field to bind (e.g., 'fills/0/color', 'opacity', 'width', 'height')"),
     },
     async ({ nodeId, variableId, field }) => {
       try {
@@ -130,8 +153,8 @@ export function registerVariableTools(server: McpServer): void {
     "Switch the variable mode on a node for a specific collection. This changes which mode's values are used for bound variables.",
     {
       nodeId: nodeIdSchema.describe("The ID of the node to switch mode on"),
-      collectionId: z.string().describe("The ID of the variable collection"),
-      modeId: z.string().describe("The ID of the mode to switch to"),
+      collectionId: z.string().max(200).describe("The ID of the variable collection"),
+      modeId: z.string().max(200).describe("The ID of the mode to switch to"),
     },
     async ({ nodeId, collectionId, modeId }) => {
       try {

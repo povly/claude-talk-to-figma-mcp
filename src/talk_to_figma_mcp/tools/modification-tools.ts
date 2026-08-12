@@ -3,7 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
 import { applyColorDefaults, applyDefault, FIGMA_DEFAULTS } from "../utils/defaults";
 import { Color } from "../types/color";
-import { coerceJson, coerceBoolean, rgbaColorSchema, nodeIdSchema } from "../utils/schema-helpers";
+import { coerceJson, coerceBoolean, rgbaColorSchema, nodeIdSchema, blendModeSchema } from "../utils/schema-helpers";
 
 /**
  * Register modification tools to the MCP server
@@ -373,7 +373,7 @@ export function registerModificationTools(server: McpServer): void {
           radius: z.coerce.number().optional().describe("Effect radius"),
           spread: z.coerce.number().optional().describe("Shadow spread (for shadows)"),
           visible: z.boolean().optional().describe("Whether the effect is visible"),
-          blendMode: z.string().optional().describe("Blend mode")
+          blendMode: blendModeSchema.optional().describe("Blend mode")
         })
       )).describe("Array of effects to apply")
     },
@@ -414,7 +414,7 @@ export function registerModificationTools(server: McpServer): void {
     "Apply an effect style to a node in Figma",
     {
       nodeId: nodeIdSchema.describe("The ID of the node to modify"),
-      effectStyleId: z.string().describe("The ID of the effect style to apply")
+      effectStyleId: z.string().max(200).describe("The ID of the effect style to apply")
     },
     async ({ nodeId, effectStyleId }) => {
       try {
@@ -772,7 +772,7 @@ export function registerModificationTools(server: McpServer): void {
     "set_guide",
     "Set guides on a page in Figma. Replaces all existing guides on the page.",
     {
-      pageId: z.string().describe("The ID of the page to add guides to"),
+      pageId: z.string().max(200).describe("The ID of the page to add guides to"),
       guides: coerceJson(z.array(
         z.object({
           axis: z.enum(["X", "Y"]).describe("Guide axis: X for vertical, Y for horizontal"),
@@ -811,7 +811,7 @@ export function registerModificationTools(server: McpServer): void {
     "get_guide",
     "Read guides from a page in Figma",
     {
-      pageId: z.string().describe("The ID of the page to read guides from"),
+      pageId: z.string().max(200).describe("The ID of the page to read guides from"),
     },
     async ({ pageId }) => {
       try {
@@ -845,7 +845,7 @@ export function registerModificationTools(server: McpServer): void {
     "Add an annotation label to a node in Figma. Uses the proposed Annotations API — requires Figma Desktop with enableProposedApi.",
     {
       nodeId: nodeIdSchema.describe("The ID of the node to annotate"),
-      label: z.string().describe("The annotation label text"),
+      label: z.string().max(1_000).describe("The annotation label text"),
     },
     async ({ nodeId, label }) => {
       try {
@@ -912,7 +912,7 @@ export function registerModificationTools(server: McpServer): void {
     "Rename a node (frame, component, group, etc.) in Figma",
     {
       nodeId: nodeIdSchema.describe("The ID of the node to rename"),
-      name: z.string().describe("The new name for the node"),
+      name: z.string().max(500).describe("The new name for the node"),
     },
     async ({ nodeId, name }) => {
       try {

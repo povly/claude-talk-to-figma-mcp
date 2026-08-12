@@ -428,7 +428,7 @@ export function registerDocumentTools(server: McpServer): void {
     "join_channel",
     "Join a specific channel to communicate with Figma",
     {
-      channel: z.string().describe("The name of the channel to join"),
+      channel: z.string().max(1_000).describe("The name of the channel to join"),
     },
     async ({ channel }) => {
       try {
@@ -522,7 +522,7 @@ export function registerDocumentTools(server: McpServer): void {
     "create_page",
     "Create a new page in the current Figma document",
     {
-      name: z.string().describe("Name for the new page"),
+      name: z.string().max(500).describe("Name for the new page"),
     },
     async ({ name }) => {
       try {
@@ -555,7 +555,7 @@ export function registerDocumentTools(server: McpServer): void {
     "delete_page",
     "Delete a page from the current Figma document",
     {
-      pageId: z.string().describe("ID of the page to delete"),
+      pageId: z.string().max(200).describe("ID of the page to delete"),
     },
     async ({ pageId }) => {
       try {
@@ -588,8 +588,8 @@ export function registerDocumentTools(server: McpServer): void {
     "rename_page",
     "Rename an existing page in the Figma document",
     {
-      pageId: z.string().describe("ID of the page to rename"),
-      name: z.string().describe("New name for the page"),
+      pageId: z.string().max(200).describe("ID of the page to rename"),
+      name: z.string().max(500).describe("New name for the page"),
     },
     async ({ pageId, name }) => {
       try {
@@ -652,7 +652,7 @@ export function registerDocumentTools(server: McpServer): void {
     "set_current_page",
     "DEPRECATED — this stateful command is blocked by the relay server. Instead, pass the target page's node ID as parentId on creation commands (e.g., create_rectangle, create_frame). Use get_pages to discover page IDs.",
     {
-      pageId: z.string().describe("ID of the page to switch to"),
+      pageId: z.string().max(200).describe("ID of the page to switch to"),
     },
     async ({ pageId }) => {
       try {
@@ -685,8 +685,8 @@ export function registerDocumentTools(server: McpServer): void {
     "duplicate_page",
     "Duplicate an existing page in the Figma document, creating a complete copy of all its contents",
     {
-      pageId: z.string().describe("ID of the page to duplicate"),
-      name: z.string().optional().describe("Optional name for the duplicated page (defaults to 'Original Name (Copy)')"),
+      pageId: z.string().max(200).describe("ID of the page to duplicate"),
+      name: z.string().max(500).optional().describe("Optional name for the duplicated page (defaults to 'Original Name (Copy)')"),
     },
     async ({ pageId, name }) => {
       try {

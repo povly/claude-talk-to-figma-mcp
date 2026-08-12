@@ -16,7 +16,7 @@ export function registerSvgTools(server: McpServer): void {
       svgString: z.string().max(500_000).describe("SVG markup string (max 500KB). Must contain a valid <svg> element."),
       x: z.coerce.number().optional().describe("X position for the imported SVG (default: 0)"),
       y: z.coerce.number().optional().describe("Y position for the imported SVG (default: 0)"),
-      name: z.string().optional().describe("Optional name for the imported node"),
+      name: z.string().max(500).optional().describe("Optional name for the imported node"),
       parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({ svgString, x, y, name, parentId }) => {

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
-import { coerceJson, rgbaColorSchema } from "../utils/schema-helpers";
+import { coerceJson, rgbaColorSchema, blendModeSchema } from "../utils/schema-helpers";
 
 /**
  * Register style creation tools to the MCP server
@@ -13,9 +13,9 @@ export function registerStyleTools(server: McpServer): void {
     "create_text_style",
     "Create a reusable text style (typography) in Figma's local styles. This is useful for design system consistency.",
     {
-      name: z.string().describe("Name for the style (e.g., 'Heading/H1' or 'Body/Large')"),
-      fontFamily: z.string().describe("Font family name (e.g., 'Inter', 'Roboto')"),
-      fontStyle: z.string().optional().describe("Font style (e.g., 'Regular', 'Bold', 'Italic'). Defaults to 'Regular'."),
+      name: z.string().max(500).describe("Name for the style (e.g., 'Heading/H1' or 'Body/Large')"),
+      fontFamily: z.string().max(500).describe("Font family name (e.g., 'Inter', 'Roboto')"),
+      fontStyle: z.string().max(500).optional().describe("Font style (e.g., 'Regular', 'Bold', 'Italic'). Defaults to 'Regular'."),
       fontSize: z.number().positive().describe("Font size in pixels"),
       letterSpacing: z.number().optional().describe("Letter spacing value (defaults to 0)"),
       letterSpacingUnit: z.enum(["PIXELS", "PERCENT"]).optional().describe("Letter spacing unit (PIXELS or PERCENT, defaults to PIXELS)"),
@@ -77,7 +77,7 @@ export function registerStyleTools(server: McpServer): void {
     "create_paint_style",
     "Create a reusable color/paint style (SOLID) in Figma's local styles.",
     {
-      name: z.string().describe("Name for the style (e.g., 'Brand/Primary' or 'UI/Background')"),
+      name: z.string().max(500).describe("Name for the style (e.g., 'Brand/Primary' or 'UI/Background')"),
       r: rgbaColorSchema.shape.r.describe("Red component (0-1)"),
       g: rgbaColorSchema.shape.g.describe("Green component (0-1)"),
       b: rgbaColorSchema.shape.b.describe("Blue component (0-1)"),
@@ -120,7 +120,7 @@ export function registerStyleTools(server: McpServer): void {
     "create_effect_style",
     "Create a reusable effect style (shadows, blurs) in Figma's local styles.",
     {
-      name: z.string().describe("Name for the style (e.g., 'Shadow/Medium' or 'Glass/Blur')"),
+      name: z.string().max(500).describe("Name for the style (e.g., 'Shadow/Medium' or 'Glass/Blur')"),
       effects: coerceJson(
         z.array(
           z.object({
@@ -138,7 +138,7 @@ export function registerStyleTools(server: McpServer): void {
               .describe("Effect color"),
             visible: z.boolean().optional().describe("Whether effect is visible"),
             spread: z.number().optional().describe("Spread radius for shadows"),
-            blendMode: z.string().optional().describe("Blend mode (e.g., 'NORMAL', 'MULTIPLY')"),
+            blendMode: blendModeSchema.optional().describe("Blend mode"),
           })
         )
       ).describe("Array of effects to apply and store in the style"),
@@ -177,7 +177,7 @@ export function registerStyleTools(server: McpServer): void {
     "create_grid_style",
     "Create a new grid style in the Figma document. Grid styles define reusable layout grid configurations.",
     {
-      name: z.string().describe("Name for the new grid style"),
+      name: z.string().max(500).describe("Name for the new grid style"),
       grids: z.array(z.object({
         pattern: z.enum(["COLUMNS", "ROWS", "GRID"]),
         sectionSize: z.number().optional().describe("Spacing between grid lines (for COLUMNS/ROWS) or grid size (for GRID)"),

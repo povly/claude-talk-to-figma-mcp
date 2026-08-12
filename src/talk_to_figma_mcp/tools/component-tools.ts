@@ -14,7 +14,7 @@ export function registerComponentTools(server: McpServer): void {
     "create_component_instance",
     "Create an instance of a component in Figma",
     {
-      componentKey: z.string().describe("Key of the component to instantiate"),
+      componentKey: z.string().max(200).describe("Key of the component to instantiate"),
       x: z.coerce.number().describe("X position (local coordinates, relative to parent)"),
       y: z.coerce.number().describe("Y position (local coordinates, relative to parent)"),
       parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
@@ -56,7 +56,7 @@ export function registerComponentTools(server: McpServer): void {
     "Convert an existing node (frame, group, etc.) into a reusable component in Figma",
     {
       nodeId: nodeIdSchema.describe("The ID of the node to convert into a component"),
-      name: z.string().optional().describe("Optional new name for the component"),
+      name: z.string().max(500).optional().describe("Optional new name for the component"),
       parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({ nodeId, name, parentId }) => {
@@ -95,7 +95,7 @@ export function registerComponentTools(server: McpServer): void {
     "Create a component set (variants) from multiple component nodes in Figma",
     {
       componentIds: coerceJson(z.array(z.string())).describe("Array of component node IDs to combine into a component set"),
-      name: z.string().optional().describe("Optional name for the component set"),
+      name: z.string().max(500).optional().describe("Optional name for the component set"),
       parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({ componentIds, name, parentId }) => {
@@ -177,10 +177,8 @@ export function registerComponentTools(server: McpServer): void {
             trigger: z
               .object({
                 type: z
-                  .string()
-                  .describe(
-                    "Trigger type: ON_CLICK, ON_HOVER, ON_PRESS, ON_DRAG, AFTER_TIMEOUT, MOUSE_ENTER, MOUSE_LEAVE, MOUSE_UP, MOUSE_DOWN"
-                  ),
+                  .enum(["ON_CLICK","ON_HOVER","ON_PRESS","ON_DRAG","AFTER_TIMEOUT","MOUSE_ENTER","MOUSE_LEAVE","MOUSE_UP","MOUSE_DOWN"])
+                  .describe("Trigger type"),
                 delay: z
                   .number()
                   .optional()
@@ -191,32 +189,26 @@ export function registerComponentTools(server: McpServer): void {
               .array(
                 z.object({
                   type: z
-                    .string()
-                    .describe("Action type: NODE, BACK, CLOSE, URL"),
+                    .enum(["NODE","BACK","CLOSE","URL"])
+                    .describe("Action type"),
                   destinationId: z
                     .string()
                     .optional()
                     .describe("Target node ID (for NODE type)"),
                   navigation: z
-                    .string()
+                    .enum(["NAVIGATE","SWAP","OVERLAY","SCROLL_TO","CHANGE_TO"])
                     .optional()
-                    .describe(
-                      "Navigation type: NAVIGATE, SWAP, OVERLAY, SCROLL_TO, CHANGE_TO"
-                    ),
+                    .describe("Navigation type"),
                   transition: z
                     .object({
                       type: z
-                        .string()
+                        .enum(["DISSOLVE","SMART_ANIMATE","MOVE_IN","MOVE_OUT","PUSH","SLIDE_IN","SLIDE_OUT"])
                         .optional()
-                        .describe(
-                          "Transition type: DISSOLVE, SMART_ANIMATE, MOVE_IN, MOVE_OUT, PUSH, SLIDE_IN, SLIDE_OUT"
-                        ),
+                        .describe("Transition type"),
                       easing: z
-                        .object({ type: z.string() })
+                        .object({ type: z.enum(["EASE_IN","EASE_OUT","EASE_IN_AND_OUT","LINEAR"]).describe("Easing type") })
                         .optional()
-                        .describe(
-                          "Easing: EASE_IN, EASE_OUT, EASE_IN_AND_OUT, LINEAR"
-                        ),
+                        .describe("Transition easing"),
                       duration: z.number().optional().describe("Duration in seconds"),
                     })
                     .optional()
@@ -314,7 +306,7 @@ export function registerComponentTools(server: McpServer): void {
     "detach_instance",
     "Detach a component instance, converting it into a regular frame. This breaks the link with the main component.",
     {
-      instanceId: z.string().describe("The ID of the instance to detach"),
+      instanceId: z.string().max(200).describe("The ID of the instance to detach"),
     },
     async ({ instanceId }) => {
       try {

@@ -15,7 +15,7 @@ export function registerTextTools(server: McpServer): void {
     "Set the text content of an existing text node in Figma",
     {
       nodeId: nodeIdSchema.describe("The ID of the text node to modify"),
-      text: z.string().describe("New text content"),
+      text: z.string().max(100_000).describe("New text content"),
     },
     async ({ nodeId, text }) => {
       try {
@@ -57,7 +57,7 @@ export function registerTextTools(server: McpServer): void {
         .array(
           z.object({
             nodeId: nodeIdSchema.describe("The ID of the text node"),
-            text: z.string().describe("The replacement text"),
+            text: z.string().max(100_000).describe("The replacement text"),
           })
         ))
         .describe("Array of text node IDs and their replacement texts"),
@@ -160,8 +160,8 @@ export function registerTextTools(server: McpServer): void {
     "Set the font name and style of a text node in Figma",
     {
       nodeId: nodeIdSchema.describe("The ID of the text node to modify"),
-      family: z.string().describe("Font family name"),
-      style: z.string().optional().describe("Font style (e.g., 'Regular', 'Bold', 'Italic')"),
+      family: z.string().max(500).describe("Font family name"),
+      style: z.string().max(500).optional().describe("Font style (e.g., 'Regular', 'Bold', 'Italic')"),
     },
     async ({ nodeId, family, style }) => {
       try {
@@ -510,7 +510,7 @@ export function registerTextTools(server: McpServer): void {
     "Apply a text style to a text node in Figma",
     {
       nodeId: nodeIdSchema.describe("The ID of the text node to modify"),
-      textStyleId: z.string().describe("The ID of the text style to apply"),
+      textStyleId: z.string().max(200).describe("The ID of the text style to apply"),
     },
     async ({ nodeId, textStyleId }) => {
       try {
@@ -546,8 +546,8 @@ export function registerTextTools(server: McpServer): void {
     "load_font_async",
     "Load a font asynchronously in Figma",
     {
-      family: z.string().describe("Font family name"),
-      style: z.string().optional().describe("Font style (e.g., 'Regular', 'Bold', 'Italic')"),
+      family: z.string().max(500).describe("Font family name"),
+      style: z.string().max(500).optional().describe("Font style (e.g., 'Regular', 'Bold', 'Italic')"),
     },
     async ({ family, style }) => {
       try {
