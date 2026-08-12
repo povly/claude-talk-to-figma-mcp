@@ -47,6 +47,7 @@ export function registerFigJamTools(server: McpServer): void {
               text: `Error getting FigJam elements: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -118,6 +119,7 @@ export function registerFigJamTools(server: McpServer): void {
               text: `Error creating sticky note: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -155,6 +157,7 @@ export function registerFigJamTools(server: McpServer): void {
               text: `Error updating sticky note text: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -223,6 +226,7 @@ export function registerFigJamTools(server: McpServer): void {
               text: `Error creating shape with text: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -328,6 +332,7 @@ export function registerFigJamTools(server: McpServer): void {
               text: `Error creating connector: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -380,6 +385,7 @@ export function registerFigJamTools(server: McpServer): void {
               text: `Error creating section: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }

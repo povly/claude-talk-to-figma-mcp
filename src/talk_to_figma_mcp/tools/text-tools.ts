@@ -40,6 +40,7 @@ export function registerTextTools(server: McpServer): void {
               text: `Error setting text content: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -147,6 +148,7 @@ export function registerTextTools(server: McpServer): void {
               text: `Error setting multiple text contents: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -182,9 +184,10 @@ export function registerTextTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error setting font name: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+              text: `Error setting font name: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -219,8 +222,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting font size: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -255,8 +259,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting font weight: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -293,8 +298,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting letter spacing: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -331,8 +337,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting line height: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -367,8 +374,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting paragraph spacing: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -403,8 +411,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting text case: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -439,8 +448,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting text decoration: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -486,8 +496,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error getting styled text segments: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -522,8 +533,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting text style: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -558,8 +570,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error loading font: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -596,8 +609,9 @@ export function registerTextTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting text alignment: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }

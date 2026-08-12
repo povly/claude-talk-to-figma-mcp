@@ -57,6 +57,7 @@ export function registerCreationTools(server: McpServer): void {
               text: `Error creating rectangle: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -121,6 +122,7 @@ export function registerCreationTools(server: McpServer): void {
               text: `Error creating frame: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -193,6 +195,7 @@ export function registerCreationTools(server: McpServer): void {
               text: `Error creating text: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -245,9 +248,10 @@ export function registerCreationTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error creating ellipse: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+              text: `Error creating ellipse: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -303,8 +307,9 @@ export function registerCreationTools(server: McpServer): void {
             {
               type: "text",
               text: `Error creating polygon: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -362,8 +367,9 @@ export function registerCreationTools(server: McpServer): void {
             {
               type: "text",
               text: `Error creating star: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -405,8 +411,9 @@ export function registerCreationTools(server: McpServer): void {
             {
               type: "text",
               text: `Error grouping nodes: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -443,8 +450,9 @@ export function registerCreationTools(server: McpServer): void {
             {
               type: "text",
               text: `Error ungrouping node: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -478,8 +486,9 @@ export function registerCreationTools(server: McpServer): void {
             {
               type: "text",
               text: `Error cloning node: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -523,8 +532,9 @@ export function registerCreationTools(server: McpServer): void {
             {
               type: "text",
               text: `Error inserting child node: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -561,8 +571,9 @@ export function registerCreationTools(server: McpServer): void {
             {
               type: "text",
               text: `Error flattening node: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -601,6 +612,7 @@ export function registerCreationTools(server: McpServer): void {
               text: `Error performing boolean operation: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }

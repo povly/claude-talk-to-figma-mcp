@@ -44,6 +44,7 @@ export function registerComponentTools(server: McpServer): void {
               text: `Error creating component instance: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -82,6 +83,7 @@ export function registerComponentTools(server: McpServer): void {
               text: `Error creating component from node: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -120,6 +122,7 @@ export function registerComponentTools(server: McpServer): void {
               text: `Error creating component set: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -156,6 +159,7 @@ export function registerComponentTools(server: McpServer): void {
               text: `Error setting instance variant: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -262,6 +266,7 @@ export function registerComponentTools(server: McpServer): void {
               }`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -298,6 +303,7 @@ export function registerComponentTools(server: McpServer): void {
               }`,
             },
           ],
+        isError: true,
         };
       }
     }

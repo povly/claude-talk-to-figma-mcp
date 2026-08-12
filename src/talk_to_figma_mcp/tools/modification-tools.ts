@@ -49,6 +49,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error setting fill color: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -96,6 +97,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error setting stroke color: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -140,6 +142,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error setting selection colors: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -174,6 +177,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error moving node: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -212,6 +216,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error resizing node: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -243,6 +248,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error deleting node: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -287,6 +293,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error setting corner radius: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -340,9 +347,10 @@ export function registerModificationTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error setting auto layout: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+              text: `Error setting auto layout: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -392,8 +400,9 @@ export function registerModificationTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting effects: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -430,8 +439,9 @@ export function registerModificationTools(server: McpServer): void {
             {
               type: "text",
               text: `Error setting effect style: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -470,6 +480,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error rotating node: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -514,6 +525,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error setting node properties: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -552,6 +564,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error reordering node: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -584,6 +597,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error converting to frame: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -630,6 +644,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error setting gradient: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -668,6 +683,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error setting image fill: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -712,6 +728,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error setting layout grids: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -744,6 +761,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error getting layout grids: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -782,6 +800,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error setting guides: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -814,6 +833,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error getting guides: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -847,6 +867,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error setting annotation: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -879,6 +900,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error getting annotations: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -915,6 +937,7 @@ export function registerModificationTools(server: McpServer): void {
               text: `Error renaming node: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -945,6 +968,7 @@ export function registerModificationTools(server: McpServer): void {
             type: "text",
             text: `Error setting constraints: ${error instanceof Error ? error.message : String(error)}`,
           }],
+        isError: true,
         };
       }
     }

@@ -96,6 +96,7 @@ export function registerImageTools(server: McpServer): void {
               text: `Error getting image from node: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -167,6 +168,7 @@ export function registerImageTools(server: McpServer): void {
             type: "text",
             text: `Error getting image bytes: ${error instanceof Error ? error.message : String(error)}`,
           }],
+        isError: true,
         };
       }
     }

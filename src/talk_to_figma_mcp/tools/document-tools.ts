@@ -34,6 +34,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error getting document info: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -63,6 +64,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error getting selection: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -110,6 +112,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error getting node info: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -139,9 +142,10 @@ export function registerDocumentTools(server: McpServer): void {
           content: [
             {
               type: "text",
-              text: `Error getting nodes info: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+              text: `Error getting nodes info: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -166,6 +170,7 @@ export function registerDocumentTools(server: McpServer): void {
             type: "text",
             text: `Error getting component properties: ${error instanceof Error ? error.message : String(error)}`,
           }],
+        isError: true,
         };
       }
     }
@@ -190,6 +195,7 @@ export function registerDocumentTools(server: McpServer): void {
             type: "text",
             text: `Error getting bound variables: ${error instanceof Error ? error.message : String(error)}`,
           }],
+        isError: true,
         };
       }
     }
@@ -214,6 +220,7 @@ export function registerDocumentTools(server: McpServer): void {
             type: "text",
             text: `Error getting CSS: ${error instanceof Error ? error.message : String(error)}`,
           }],
+        isError: true,
         };
       }
     }
@@ -243,6 +250,7 @@ export function registerDocumentTools(server: McpServer): void {
             type: "text",
             text: `Error finding nodes: ${error instanceof Error ? error.message : String(error)}`,
           }],
+        isError: true,
         };
       }
     }
@@ -272,6 +280,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error getting styles: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -301,6 +310,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error getting local components: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -328,8 +338,9 @@ export function registerDocumentTools(server: McpServer): void {
             {
               type: "text",
               text: `Error getting remote components: ${error instanceof Error ? error.message : String(error)}`
-            }
-          ]
+            },
+          ],
+        isError: true,
         };
       }
     }
@@ -406,6 +417,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error scanning text nodes: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -455,6 +467,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error joining channel: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -498,6 +511,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error exporting node as image: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -530,6 +544,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error creating page: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -562,6 +577,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error deleting page: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -595,6 +611,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error renaming page: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -624,6 +641,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error getting pages: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -656,6 +674,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error switching page: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -689,6 +708,7 @@ export function registerDocumentTools(server: McpServer): void {
               text: `Error duplicating page: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }

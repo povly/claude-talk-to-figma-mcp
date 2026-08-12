@@ -34,6 +34,7 @@ export function registerVariableTools(server: McpServer): void {
               text: `Error getting variables: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -78,6 +79,7 @@ export function registerVariableTools(server: McpServer): void {
               text: `Error setting variable: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -116,6 +118,7 @@ export function registerVariableTools(server: McpServer): void {
               text: `Error applying variable to node: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -154,6 +157,7 @@ export function registerVariableTools(server: McpServer): void {
               text: `Error switching variable mode: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -178,6 +182,7 @@ export function registerVariableTools(server: McpServer): void {
             type: "text",
             text: `Error getting variable defs: ${error instanceof Error ? error.message : String(error)}`,
           }],
+        isError: true,
         };
       }
     }

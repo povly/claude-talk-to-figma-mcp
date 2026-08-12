@@ -45,6 +45,7 @@ export function registerSvgTools(server: McpServer): void {
               text: `Error importing SVG: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
@@ -77,6 +78,7 @@ export function registerSvgTools(server: McpServer): void {
               text: `Error exporting SVG: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
+        isError: true,
         };
       }
     }
