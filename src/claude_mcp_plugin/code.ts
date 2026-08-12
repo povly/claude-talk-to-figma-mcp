@@ -6194,7 +6194,7 @@ async function createSticky(params) {
       }
     }
     if (text) {
-      await figma.loadFontAsync(sticky.text.fontName);
+      await figma.loadFontAsync(sticky.text.fontName as FontName);
       sticky.text.characters = text;
     }
   } catch (propErr) {
@@ -6240,7 +6240,7 @@ async function setStickyText(params) {
     throw new Error(`Node ${nodeId} is not a sticky note (type: ${node.type})`);
   }
 
-  await figma.loadFontAsync(node.text.fontName);
+  await figma.loadFontAsync(node.text.fontName as FontName);
   node.text.characters = text;
 
   return {
@@ -6298,7 +6298,7 @@ async function createShapeWithText(params) {
 
   // Set text via the text sub-layer
   if (text) {
-    await figma.loadFontAsync(shape.text.fontName);
+    await figma.loadFontAsync(shape.text.fontName as FontName);
     shape.text.characters = text;
   }
 
