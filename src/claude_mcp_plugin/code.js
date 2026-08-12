@@ -60,6 +60,11 @@ function sendProgressUpdate(commandId, commandType, status, progress, totalItems
   return update;
 }
 
+// Performance: skip invisible instance children during traversal/export.
+// Hundreds of times faster on large documents with hidden component states.
+// Must be set before any findAll/exportAsync call (effectively: first line).
+figma.skipInvisibleInstanceChildren = true;
+
 // Show UI
 figma.showUI(__html__, { width: 300, height: 220 });
 
