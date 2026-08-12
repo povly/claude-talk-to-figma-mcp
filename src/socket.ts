@@ -508,6 +508,27 @@ function handleConnection(ws: ServerWebSocket<any>) {
 
 // ─── Server ────────────────────────────────────────────────────────────────
 
+// ─── P2: Security hardening ────────────────────────────────────────────────
+// Allowed WS upgrade origins. Browser clients must match this set; non-browser
+// clients (curl, Figma plugin direct WS, MCP server) omit the Origin header
+// entirely and are always allowed.
+const ALLOWED_ORIGINS = new Set([
+  "null",                  // non-browser clients send literal "null"
+  "file://",               // Figma plugin iframe origin
+  "http://localhost",
+  "http://127.0.0.1",
+  "http://localhost:3055",
+  "http://127.0.0.1:3055",
+]);
+
+function isOriginAllowed(req: Request): boolean {
+  const origin = req.headers.get("origin");
+  if (!origin) return true;            // non-browser clients
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  if (origin.startsWith("file://")) return true;   // Figma plugin sandbox variants
+  return false;
+}
+
 const server = Bun.serve({
   port: 3055,
   // uncomment this to allow connections in windows wsl
@@ -517,18 +538,22 @@ const server = Bun.serve({
 
     logger.debug(`Received ${req.method} request to ${url.pathname}`);
 
-    // Handle CORS preflight
+    // Handle CORS preflight — return 204 without ACAO so browser cross-origin
+    // requests are blocked at preflight stage. Same-origin localhost tools and
+    // non-browser clients (no Origin) are unaffected.
     if (req.method === "OPTIONS") {
       return new Response(null, {
+        status: 204,
         headers: {
-          "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
         },
       });
     }
 
-    // Handle status endpoint
+    // Handle status endpoint — no CORS header, only same-origin localhost tools
+    // (curl, postman, dev scripts) can read this. Blocks browser fingerprinting
+    // of active channels from arbitrary websites.
     if (url.pathname === "/status") {
       return new Response(JSON.stringify({
         status: "running",
@@ -547,18 +572,21 @@ const server = Bun.serve({
       }), {
         headers: {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
         }
       });
     }
 
-    // Handle WebSocket upgrade
+    // Handle WebSocket upgrade — enforce Origin allowlist for browser clients.
+    // Non-browser clients (no Origin header) are always allowed.
     try {
-      const success = server.upgrade(req, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      });
+      if (!isOriginAllowed(req)) {
+        const origin = req.headers.get("origin") ?? "<missing>";
+        logger.warn(`Rejected WS upgrade from disallowed origin: ${origin}`);
+        stats.blockedCommands++;
+        return new Response("Origin not allowed", { status: 403 });
+      }
+
+      const success = server.upgrade(req);
 
       if (success) {
         return; // Upgraded to WebSocket
@@ -572,7 +600,6 @@ const server = Bun.serve({
     return new Response("Claude to Figma WebSocket server running. Try connecting with a WebSocket client.", {
       headers: {
         "Content-Type": "text/plain",
-        "Access-Control-Allow-Origin": "*",
       },
     });
   },
