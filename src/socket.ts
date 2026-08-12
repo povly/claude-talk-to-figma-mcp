@@ -1,4 +1,5 @@
 import { Server, ServerWebSocket } from "bun";
+import { randomBytes } from "crypto";
 
 // Enhanced logging system
 const logger = {
@@ -552,6 +553,17 @@ function isOriginAllowed(req: Request): boolean {
 // payloads that could surface in logs or UI.
 const CHANNEL_NAME_REGEX = /^[a-zA-Z0-9_-]{1,64}$/;
 
+// Secure session ID format: mcp_ + 32 hex chars (128 bits entropy from
+// crypto.getRandomValues). The relay accepts client-supplied IDs in this
+// format; legacy or missing IDs trigger server-side generation.
+const SECURE_SESSION_ID_REGEX = /^mcp_[a-f0-9]{32}$/;
+
+function generateSecureSessionId(): string {
+  // randomBytes(16) = 128 bits entropy from the OS CSPRNG. Hex-encoded into
+  // the mcp_<32hex> format. randomBytes is available in both Node and Bun.
+  return `mcp_${randomBytes(16).toString("hex")}`;
+}
+
 const server = Bun.serve({
   port: 3055,
   // uncomment this to allow connections in windows wsl
@@ -665,24 +677,37 @@ const server = Bun.serve({
           // Session deduplication: if this client sends a sessionId (MCP agents do),
           // close the previous connection with the same sessionId to prevent stale
           // connections from polluting routing when an agent reconnects (e.g., after compaction).
-          const sessionId = data.sessionId;
-          if (sessionId && typeof sessionId === "string") {
-            const oldWs = sessionToClient.get(sessionId);
-            if (oldWs && oldWs !== ws) {
-              logger.info(`Session ${sessionId} reconnected (client ${clientId}). Closing stale connection.`);
-              // Clean up the old connection's state before closing
-              const oldChannels: string[] = [];
-              channels.forEach((clients, ch) => {
-                if (clients.has(oldWs)) oldChannels.push(ch);
-              });
-              channels.forEach((clients) => clients.delete(oldWs));
-              cleanupClient(oldWs, oldChannels);
-              try { oldWs.close(1000, "Replaced by reconnecting session"); } catch {}
-              stats.activeConnections--;
-            }
-            sessionToClient.set(sessionId, ws);
-            ws.data.sessionId = sessionId;
+          //
+          // P2: only accept client-supplied sessionIds in the secure format
+          // (mcp_<32hex>). Legacy format (mcp_PID_timestamp) and missing IDs
+          // trigger server-side generation so attackers cannot predict or
+          // hijack session IDs by guessing PID+timestamp patterns.
+          const providedSessionId = data.sessionId;
+          const sessionId =
+            typeof providedSessionId === "string" && SECURE_SESSION_ID_REGEX.test(providedSessionId)
+              ? providedSessionId
+              : generateSecureSessionId();
+
+          if (sessionId !== providedSessionId) {
+            // Server generated a fresh ID for this client.
+            logger.info(`Issued new sessionId for client ${clientId}: ${sessionId.substring(0, 12)}...`);
           }
+
+          const oldWs = sessionToClient.get(sessionId);
+          if (oldWs && oldWs !== ws) {
+            logger.info(`Session ${sessionId.substring(0, 12)}... reconnected (client ${clientId}). Closing stale connection.`);
+            // Clean up the old connection's state before closing
+            const oldChannels: string[] = [];
+            channels.forEach((clients, ch) => {
+              if (clients.has(oldWs)) oldChannels.push(ch);
+            });
+            channels.forEach((clients) => clients.delete(oldWs));
+            cleanupClient(oldWs, oldChannels);
+            try { oldWs.close(1000, "Replaced by reconnecting session"); } catch {}
+            stats.activeConnections--;
+          }
+          sessionToClient.set(sessionId, ws);
+          ws.data.sessionId = sessionId;
 
           // Create channel if it doesn't exist
           if (!channels.has(channelName)) {
@@ -709,6 +734,9 @@ const server = Bun.serve({
               message: {
                 id: data.id,
                 result: "Connected to channel: " + channelName,
+                // Echo the effective sessionId so the client can adopt it for
+                // reconnects. Always present after P2 task 3.
+                sessionId: sessionId,
               },
               channel: channelName
             }));

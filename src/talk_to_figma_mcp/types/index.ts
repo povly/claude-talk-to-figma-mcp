@@ -3,6 +3,10 @@ export interface FigmaResponse {
   id: string;
   result?: any;
   error?: string;
+  // P2: present on join responses. Echoes the effective sessionId the relay
+  // uses for this client (server-generated for new clients). Clients capture
+  // this and reuse it on reconnect so the relay can dedupe stale connections.
+  sessionId?: string;
 }
 
 // Define interface for command progress updates

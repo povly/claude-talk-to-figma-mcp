@@ -11,7 +11,11 @@ let currentChannel: string | null = null;
 // Stable session ID for this MCP process — survives reconnections.
 // Sent in join messages so the server can deduplicate reconnecting agents
 // (e.g., after context compaction) instead of counting them as separate agents.
-const SESSION_ID = `mcp_${process.pid}_${Date.now()}`;
+//
+// P2: initially a predictable placeholder; the relay issues a secure
+// server-generated ID on first join and we adopt it from the response so
+// subsequent reconnects reuse the secure value.
+let sessionId = `mcp_${process.pid}_${Date.now()}`;
 
 // Map of pending requests for promise tracking
 const pendingRequests = new Map<string, PendingRequest>();
@@ -146,6 +150,15 @@ export function connectToFigma(port: number = defaultPort) {
             logger.error(`Error from Figma: ${error}`);
             request.reject(new Error(String(error)));
           } else {
+            // P2: adopt server-issued secure sessionId for future reconnects.
+            // The relay always echoes the effective sessionId in the join
+            // response; we capture it so subsequent reconnects reuse the
+            // secure value instead of the initial placeholder.
+            const issued = myResponse.sessionId;
+            if (typeof issued === "string" && issued !== sessionId) {
+              sessionId = issued;
+              logger.debug(`Adopted server-issued sessionId: ${issued.substring(0, 12)}...`);
+            }
             request.resolve(myResponse.result ?? myResponse);
           }
 
@@ -260,7 +273,7 @@ export function sendCommandToFigma(
       id,
       type: command === "join" ? "join" : "message",
       ...(command === "join"
-        ? { channel: (params as any).channel, sessionId: SESSION_ID }
+        ? { channel: (params as any).channel, sessionId }
         : { channel: currentChannel }),
       message: {
         id,
