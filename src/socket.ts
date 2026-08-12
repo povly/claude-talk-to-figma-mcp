@@ -486,7 +486,25 @@ setInterval(() => {
 
 // ─── Connection Handling ───────────────────────────────────────────────────
 
+// P2: cap concurrent WebSocket connections to prevent OOM via connection flood
+// (128MB payload × N sockets). 16 covers 1 plugin + 8 agents + headroom; can
+// be overridden via MAX_CONNECTIONS env var if a heavier workload needs more.
+const MAX_CONNECTIONS = Number(process.env.MAX_CONNECTIONS) || 16;
+
 function handleConnection(ws: ServerWebSocket<any>) {
+  if (stats.activeConnections >= MAX_CONNECTIONS) {
+    logger.warn(`Rejecting connection: ${stats.activeConnections}/${MAX_CONNECTIONS} limit reached`);
+    stats.blockedCommands++;
+    try {
+      ws.send(JSON.stringify({
+        type: "error",
+        message: "Server connection limit reached. Disconnect other clients and retry.",
+      }));
+      ws.close(1008, "Connection limit");
+    } catch {}
+    return;
+  }
+
   stats.totalConnections++;
   stats.activeConnections++;
 
@@ -528,6 +546,11 @@ function isOriginAllowed(req: Request): boolean {
   if (origin.startsWith("file://")) return true;   // Figma plugin sandbox variants
   return false;
 }
+
+// Channel names must be 1-64 chars of [a-zA-Z0-9_-]. Blocks prototype-pollution
+// tricks (__proto__, constructor), control characters, megabyte names, and XSS
+// payloads that could surface in logs or UI.
+const CHANNEL_NAME_REGEX = /^[a-zA-Z0-9_-]{1,64}$/;
 
 const server = Bun.serve({
   port: 3055,
@@ -626,12 +649,15 @@ const server = Bun.serve({
         // ─── Join ──────────────────────────────────────────────────────
         if (data.type === "join") {
           const channelName = data.channel;
-          if (!channelName || typeof channelName !== "string") {
-            logger.warn(`Client ${clientId} attempted to join without a valid channel name`);
+          // P2: validate channel name format to block prototype pollution,
+          // megabyte-length names, control characters, and other abuse.
+          if (!channelName || typeof channelName !== "string" || !CHANNEL_NAME_REGEX.test(channelName)) {
+            logger.warn(`Client ${clientId} attempted to join with invalid channel name`);
             ws.send(JSON.stringify({
               type: "error",
-              message: "Channel name is required"
+              message: "Invalid channel name. Use 1-64 chars: letters, digits, underscore, hyphen.",
             }));
+            stats.blockedCommands++;
             stats.messagesSent++;
             return;
           }
@@ -848,11 +874,13 @@ const server = Bun.serve({
 
       } catch (err) {
         stats.errors++;
+        // Log full error server-side only; client gets a generic message to
+        // avoid leaking internal paths, stack frames, or library versions.
         logger.error("Error handling message:", err);
         try {
           ws.send(JSON.stringify({
             type: "error",
-            message: "Error processing your message: " + (err instanceof Error ? err.message : String(err))
+            message: "Invalid message format"
           }));
           stats.messagesSent++;
         } catch (sendError) {
