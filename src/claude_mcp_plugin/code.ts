@@ -622,7 +622,7 @@ async function getBoundVariables(nodeId) {
   // matching the previous per-iteration try/catch semantics).
   const variableIdsArr = Array.from(variableIds);
   const varResults = await Promise.allSettled(
-    variableIdsArr.map((id) => figma.variables.getVariableByIdAsync(id))
+    variableIdsArr.map((id) => figma.variables.getVariableByIdAsync(id as string))
   );
   const variableDetails = [];
   varResults.forEach((result) => {
@@ -713,10 +713,10 @@ async function findNodes(params) {
     }
 
     if (params.maxDepth !== undefined) {
-      const rootDepth = "depth" in root ? root.depth || 0 : 0;
+      const rootDepth = "depth" in root ? (root.depth as number) || 0 : 0;
       allMatches = allMatches.filter((n) => {
         if (!("depth" in n)) return true;
-        return (n.depth - rootDepth) <= params.maxDepth;
+        return ((n as unknown as { depth: number }).depth - rootDepth) <= params.maxDepth;
       });
     }
 
@@ -1118,7 +1118,7 @@ async function setSelectionColors(params) {
   // Get all descendant nodes + the target node itself
   let targets = [];
   if ("findAll" in node) {
-    targets = [node].concat(node.findAll(() => true));
+    targets = ([node] as SceneNode[]).concat((node as unknown as { findAll: Function }).findAll(() => true) as unknown as SceneNode[]);
   } else {
     targets = [node];
   }
@@ -1794,7 +1794,7 @@ const setCharacters = async (node, characters, options) => {
           fontHashTree[key] = fontHashTree[key] ? fontHashTree[key] + 1 : 1;
         }
         const prevailedTreeItem = Object.entries(fontHashTree).sort(
-          (a, b) => b[1] - a[1]
+          (a, b) => (b[1] as number) - (a[1] as number)
         )[0];
         const [family, style] = prevailedTreeItem[0].split("::");
         const prevailedFont = {
@@ -4106,7 +4106,7 @@ async function renameNode(params) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
 
-  if (node.type === "DOCUMENT") {
+  if ((node as unknown as BaseNode).type === "DOCUMENT") {
     throw new Error("Cannot rename the document node");
   }
 
@@ -5439,7 +5439,7 @@ async function setGrid(params) {
     return layoutGrid;
   });
 
-  node.layoutGrids = layoutGrids as LayoutGrid[];
+  node.layoutGrids = layoutGrids as unknown as LayoutGrid[];
 
   return {
     id: node.id,
@@ -5983,7 +5983,7 @@ async function getVariableDefs(params) {
     // P3: Promise.allSettled — one bad ID must NOT reject the batch.
     const nodeVarIds = Array.from(varIds);
     const nodeVarResults = await Promise.allSettled(
-      nodeVarIds.map((id) => figma.variables.getVariableByIdAsync(id))
+      nodeVarIds.map((id) => figma.variables.getVariableByIdAsync(id as string))
     );
     nodeVarResults.forEach((result) => {
       if (result.status === "fulfilled" && result.value) {
@@ -6577,7 +6577,7 @@ async function setReactions(params) {
       const trigger = r.trigger as Record<string, unknown>;
       reaction.trigger = { type: trigger.type };
       if (trigger.delay !== undefined) {
-        reaction.trigger.delay = r.trigger.delay;
+        (reaction.trigger as Record<string, unknown>).delay = trigger.delay;
       }
     }
 
