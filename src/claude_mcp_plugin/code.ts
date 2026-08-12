@@ -267,7 +267,7 @@ async function handleCommand(command: CommandId, params: Record<string, unknown>
     case "load_font_async":
       return await loadFontAsyncWrapper(params);
     case "get_remote_components":
-      return await getRemoteComponents(params);
+      return await getRemoteComponents();
     case "set_effects":
       return await setEffects(params);
     case "set_effect_style_id":
@@ -360,7 +360,7 @@ async function handleCommand(command: CommandId, params: Record<string, unknown>
     case "get_annotation":
       return await getAnnotation(params);
     case "get_variables":
-      return await getVariables(params);
+      return await getVariables();
     case "set_variable":
       return await setVariable(params);
     case "apply_variable_to_node":
@@ -960,7 +960,7 @@ async function createText(params) {
   } catch (error) {
     console.error("Error setting font size", error);
   }
-  await setCharacters(textNode, text);
+  await setCharacters(textNode, text, undefined);
 
   // Set text color
   const paintStyle = {
@@ -1727,7 +1727,7 @@ async function setTextContent(params) {
   try {
     await figma.loadFontAsync(node.fontName as FontName);
 
-    await setCharacters(node, text);
+    await setCharacters(node, text, undefined);
 
     return {
       id: node.id,
