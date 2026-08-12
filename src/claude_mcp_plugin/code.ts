@@ -6637,7 +6637,7 @@ async function setReactions(params) {
   }
 
   // Verify what was actually set by reading back
-  const actualReactions = node.reactions;
+  const actualReactions = (node as unknown as { reactions: Reaction[] }).reactions;
   const actualCount = actualReactions ? actualReactions.length : 0;
   const actualJson = JSON.stringify(actualReactions, null, 2);
 
@@ -6661,7 +6661,7 @@ async function getReactions(params) {
   if (!node) {
     throw new Error(`Node not found: ${params.nodeId}`);
   }
-  const reactions = node.reactions;
+  const reactions = (node as unknown as { reactions: Reaction[] }).reactions;
   return {
     id: node.id,
     name: node.name,
