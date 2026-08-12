@@ -6184,7 +6184,7 @@ async function createSticky(params) {
     try {
       // Prefer the native NodeColor API (uses FigJam's exact palette colours).
       // Fall back to manual fills if the property isn't settable.
-      sticky.color = color.toUpperCase();
+      (sticky as Record<string, unknown>).color = color.toUpperCase();
     } catch (e) {
       try {
         sticky.fills = stickyColorToFill(color);
@@ -6803,7 +6803,7 @@ async function createGridStyle(params) {
   style.name = name;
 
   style.layoutGrids = (grids || []).map((grid) => {
-    const layoutGrid = {
+    const layoutGrid: Record<string, unknown> = {
       pattern: grid.pattern,
       visible: grid.visible !== undefined ? grid.visible : true,
     };
