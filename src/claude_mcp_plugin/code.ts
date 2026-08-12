@@ -1687,11 +1687,11 @@ async function setCornerRadius(params) {
       if (corners[3]) node.bottomLeftRadius = radius;
     } else {
       // Node only supports uniform corner radius
-      node.cornerRadius = radius;
+      (node as unknown as { cornerRadius: number }).cornerRadius = radius;
     }
   } else {
     // Set uniform corner radius
-    node.cornerRadius = radius;
+    (node as unknown as { cornerRadius: number }).cornerRadius = radius;
   }
 
   return {
@@ -5439,7 +5439,7 @@ async function setGrid(params) {
     return layoutGrid;
   });
 
-  node.layoutGrids = layoutGrids;
+  node.layoutGrids = layoutGrids as LayoutGrid[];
 
   return {
     id: node.id,
@@ -6186,12 +6186,12 @@ async function createSticky(params) {
   try {
     sticky.x = x;
     sticky.y = y;
-    try { (sticky as Record<string, unknown>).isWide = isWide; } catch (e) { /* isWide may not be settable in all FigJam versions */ }
+    try { (sticky as unknown as Record<string, unknown>).isWide = isWide; } catch (e) { /* isWide may not be settable in all FigJam versions */ }
     if (name) { sticky.name = name; }
     try {
       // Prefer the native NodeColor API (uses FigJam's exact palette colours).
       // Fall back to manual fills if the property isn't settable.
-      (sticky as Record<string, unknown>).color = color.toUpperCase();
+      (sticky as unknown as Record<string, unknown>).color = color.toUpperCase();
     } catch (e) {
       try {
         sticky.fills = stickyColorToFill(color);
@@ -6219,7 +6219,7 @@ async function createSticky(params) {
     width: sticky.width,
     height: sticky.height,
     text: sticky.text ? sticky.text.characters : "",
-    isWide: (sticky as Record<string, unknown>).isWide,
+    isWide: (sticky as unknown as Record<string, unknown>).isWide,
     fills: resultFills,
     parentId: sticky.parent ? sticky.parent.id : undefined,
   };
