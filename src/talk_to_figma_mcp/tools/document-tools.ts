@@ -73,11 +73,17 @@ export function registerDocumentTools(server: McpServer): void {
     "Get detailed information about a specific node in Figma",
     {
       nodeId: z.string().describe("The ID of the node to get information about"),
-      depth: z.number().int().min(0).optional().describe("How many child levels to include in full detail. Deeper levels return only id/name/type stubs."),
+      depth: z.number().int().min(0).optional().describe(
+        "Max child levels to include in full detail. 0=root only (children stubbed), 1=root+children, N=N levels. " +
+        "Default: 1. Plugin-side pruning reduces WS payload; deeper levels return {id,name,type,_childrenTruncated:true} stubs. " +
+        "Call get_node_info on a child ID for progressive disclosure."
+      ),
     },
     async ({ nodeId, depth }) => {
       try {
-        const result = await sendCommandToFigma("get_node_info", { nodeId });
+        // Pass depth to plugin so it prunes BEFORE sending payload over WebSocket.
+        // filterFigmaNode still runs below as a defensive layer (backwards compat with old plugins).
+        const result = await sendCommandToFigma("get_node_info", { nodeId, depth });
         const filtered = filterFigmaNode(result, depth ?? 1);
         const coordinateNote = filtered.absoluteBoundingBox && filtered.localPosition
           ? "absoluteBoundingBox contains global coordinates (relative to canvas). localPosition contains local coordinates (relative to parent, use these for move_node)."
