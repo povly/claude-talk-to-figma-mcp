@@ -703,12 +703,13 @@ async function findNodes(params) {
     return parts.join("/");
   }
 
-  if (typeof root.findAll === "function") {
-    if (params.types && params.types.length > 0 && typeof root.findAllWithCriteria === "function") {
-      allMatches = root.findAllWithCriteria({ types: params.types });
+  const rootWithFind = root as unknown as { findAll: Function; findAllWithCriteria?: Function };
+  if (typeof rootWithFind.findAll === "function") {
+    if (params.types && params.types.length > 0 && typeof rootWithFind.findAllWithCriteria === "function") {
+      allMatches = rootWithFind.findAllWithCriteria({ types: params.types });
       allMatches = allMatches.filter(matches);
     } else {
-      allMatches = root.findAll(matches);
+      allMatches = rootWithFind.findAll(matches);
     }
 
     if (params.maxDepth !== undefined) {
@@ -5962,7 +5963,7 @@ async function getVariableDefs(params) {
     }
 
     // Traverse subtree collecting bound variable IDs
-    node.findAll((n) => {
+    (node as unknown as { findAll: Function }).findAll((n: BaseNode) => {
       if (n.boundVariables) {
         collectVarIds(n.boundVariables);
       }
