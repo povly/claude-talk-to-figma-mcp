@@ -1,17 +1,17 @@
-// @ts-nocheck — migration in progress; types added incrementally
+// S1a migration: typecheck errors tracked to 0 — see .ai-factory/plans/s1a-plugin-ts-migration-completion.md
 // This is the main code file for the Claude MCP Figma plugin
 // It handles Figma API commands
 
 // Safe color channel parser: returns a valid 0-1 number or NaN.
 // Unlike `parseFloat(x) || 0`, this does NOT silently fall back to 0 (black).
-function safeChannel(value) {
+export function safeChannel(value) {
   if (value === undefined || value === null) return NaN;
   var n = typeof value === "number" ? value : parseFloat(value);
   return isNaN(n) ? NaN : Math.max(0, Math.min(1, n));
 }
 
 // Build a Figma paint from an {r, g, b, a?} color object.
-function safePaint(color) {
+export function safePaint(color) {
   if (!color || typeof color !== "object") return null;
   var r = safeChannel(color.r);
   var g = safeChannel(color.g);
@@ -5198,7 +5198,7 @@ async function booleanOperation(params) {
 }
 
 // SVG sanitization - strip scripts, event handlers, external resources
-function sanitizeSvg(svgString) {
+export function sanitizeSvg(svgString) {
   let clean = svgString;
   // Strip <script> tags
   clean = clean.replace(/<script[\s\S]*?<\/script>/gi, '');

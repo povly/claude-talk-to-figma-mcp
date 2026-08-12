@@ -13,5 +13,5 @@
     "types": ["bun-types", "jest"]
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "exclude": ["node_modules", "dist", "src/claude_mcp_plugin/**"]
 }

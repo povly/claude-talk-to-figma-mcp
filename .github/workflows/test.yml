@@ -39,3 +39,7 @@ jobs:
 
     - name: Run plugin tests (Vitest)
       run: bun run test:plugin
+
+    - name: plugin typecheck (warn)
+      run: bun run typecheck:plugin
+      continue-on-error: true   # S1a: warn-only until error-count=0 (Task 14 promotes to block)

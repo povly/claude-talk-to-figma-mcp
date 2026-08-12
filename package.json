@@ -41,6 +41,7 @@
     "test:integration": "node scripts/test-integration.js",
     "test:plugin": "vitest run",
     "test:plugin:watch": "vitest",
+    "typecheck:plugin": "tsc -p tsconfig.plugin.json --noEmit",
     "lint": "eslint src/"
   },
   "devDependencies": {

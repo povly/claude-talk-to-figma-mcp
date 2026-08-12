@@ -20,7 +20,6 @@ export default tseslint.config(
       'dist-plugin/',
       'node_modules/',
       'src/claude_mcp_plugin/code.ts',
-      'src/claude_mcp_plugin/setcharacters.js',
     ],
   },
 );
