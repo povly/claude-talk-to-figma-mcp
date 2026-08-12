@@ -5903,10 +5903,11 @@ async function getVariableDefs(params) {
     let tokenType = "others";
 
     if (variable.resolvedType === "COLOR" && rawValue && typeof rawValue === "object") {
-      const r = Math.round((rawValue.r || 0) * 255);
-      const g = Math.round((rawValue.g || 0) * 255);
-      const b = Math.round((rawValue.b || 0) * 255);
-      const a = rawValue.a !== undefined ? rawValue.a : 1;
+      const rv = rawValue as Record<string, unknown>;
+      const r = Math.round(((rv.r as number) || 0) * 255);
+      const g = Math.round(((rv.g as number) || 0) * 255);
+      const b = Math.round(((rv.b as number) || 0) * 255);
+      const a = rv.a !== undefined ? (rv.a as number) : 1;
       valueStr = a < 1
         ? `rgba(${r}, ${g}, ${b}, ${a})`
         : `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
