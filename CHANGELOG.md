@@ -7,6 +7,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — R1 Refactor: Shared Schemas + isError Standardization
+
+### Refactored
+- **Shared Zod schemas extracted** (`src/talk_to_figma_mcp/utils/schema-helpers.ts`): three new named exports — `rgbaColorSchema`, `nodeIdSchema`, `parentIdSchema`. Replaced 23 inline RGBA object definitions, 63 inline `nodeId: z.string()` definitions, and 10 inline `parentId: z.string().optional()` definitions across all 10 tool files. Net change: −234 lines of duplicated schema literals. No behavior change — Zod validation semantics preserved (RGBA coercion + [0,1] bounds; nodeId/parentId non-empty, ≤200 chars).
+- **`isError: true` standardised** across all MCP tool error responses. Previously only 9 of 100 catch blocks set the `isError` flag, so MCP clients (Claude Desktop, Cursor, etc.) could not reliably distinguish error responses from success on 91 of the tool handlers. Now every tool handler error path returns `{ content, isError: true }`.
+
+### Added (Tests)
+- `tests/unit/schema-helpers.test.ts` — 33 cases covering `rgbaColorSchema` (valid/invalid/coercion/alpha-optional/boundaries), `nodeIdSchema` (length/format permissiveness), `parentIdSchema` (optional semantics).
+- `tests/integration/iserror-standardization.test.ts` — 4 cases verifying `isError: true` appears on error responses across 3 tool categories (document/creation/text) and is absent on success path.
+
+### Operational Notes
+- The `parentIdSchema` is intentionally optional at the schema layer — server-side enforcement (socket.ts blocks stateful commands without parentId during P2 hardening) is the real contract; the schema is a UX hint for MCP clients.
+- MCP JSON Schema output for color fields now carries one object-level description instead of per-field (r/g/b/a) descriptions. The information lost is redundant with field names + numeric type.
+- MCP clients that previously special-cased the ABSENCE of `isError` as a success signal continue to work — `isError` is only set on error paths, never on success.
+
 ## [Unreleased] — P2 Relay Security Hardening
 
 ### Security
