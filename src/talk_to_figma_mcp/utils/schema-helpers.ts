@@ -58,6 +58,7 @@ export const parentIdSchema = z.string().min(1).max(200).optional();
  * layer compositing. Replaces 2 inline `z.string()` duplicates.
  */
 export const blendModeSchema = z.enum([
+  "PASS_THROUGH",
   "NORMAL",
   "DARKEN",
   "MULTIPLY",

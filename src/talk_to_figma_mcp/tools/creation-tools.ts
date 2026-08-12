@@ -18,7 +18,7 @@ export function registerCreationTools(server: McpServer): void {
       y: z.coerce.number().describe("Y position (local coordinates, relative to parent)"),
       width: z.coerce.number().describe("Width of the rectangle"),
       height: z.coerce.number().describe("Height of the rectangle"),
-      name: z.string().optional().describe("Optional name for the rectangle"),
+      name: z.string().max(500).optional().describe("Optional name for the rectangle"),
       parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
       fillColor: coerceJson(rgbaColorSchema)
         .optional()
@@ -72,7 +72,7 @@ export function registerCreationTools(server: McpServer): void {
       y: z.coerce.number().describe("Y position (local coordinates, relative to parent)"),
       width: z.coerce.number().describe("Width of the frame"),
       height: z.coerce.number().describe("Height of the frame"),
-      name: z.string().optional().describe("Optional name for the frame"),
+      name: z.string().max(500).optional().describe("Optional name for the frame"),
       parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
       fillColor: coerceJson(rgbaColorSchema)
         .optional()
@@ -210,7 +210,7 @@ export function registerCreationTools(server: McpServer): void {
       y: z.coerce.number().describe("Y position (local coordinates, relative to parent)"),
       width: z.coerce.number().describe("Width of the ellipse"),
       height: z.coerce.number().describe("Height of the ellipse"),
-      name: z.string().optional().describe("Optional name for the ellipse"),
+      name: z.string().max(500).optional().describe("Optional name for the ellipse"),
       parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
       fillColor: coerceJson(rgbaColorSchema)
         .optional()
@@ -267,7 +267,7 @@ export function registerCreationTools(server: McpServer): void {
       width: z.coerce.number().describe("Width of the polygon"),
       height: z.coerce.number().describe("Height of the polygon"),
       sides: z.coerce.number().min(3).optional().describe("Number of sides (default: 6)"),
-      name: z.string().optional().describe("Optional name for the polygon"),
+      name: z.string().max(500).optional().describe("Optional name for the polygon"),
       parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
       fillColor: coerceJson(rgbaColorSchema)
         .optional()
@@ -326,7 +326,7 @@ export function registerCreationTools(server: McpServer): void {
       height: z.coerce.number().describe("Height of the star"),
       points: z.coerce.number().min(3).optional().describe("Number of points (default: 5)"),
       innerRadius: z.coerce.number().min(0.01).max(0.99).optional().describe("Inner radius ratio (0.01-0.99, default: 0.5)"),
-      name: z.string().optional().describe("Optional name for the star"),
+      name: z.string().max(500).optional().describe("Optional name for the star"),
       parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
       fillColor: coerceJson(rgbaColorSchema)
         .optional()
@@ -381,7 +381,7 @@ export function registerCreationTools(server: McpServer): void {
     "Group nodes in Figma",
     {
       nodeIds: coerceJson(z.array(z.string())).describe("Array of IDs of the nodes to group"),
-      name: z.string().optional().describe("Optional name for the group")
+      name: z.string().max(500).optional().describe("Optional name for the group")
     },
     async ({ nodeIds, name }) => {
       try {
@@ -586,7 +586,7 @@ export function registerCreationTools(server: McpServer): void {
     {
       nodeIds: coerceJson(z.array(z.string()).min(2)).describe("Array of node IDs to combine (minimum 2). Order matters for SUBTRACT."),
       operation: z.enum(["UNION", "SUBTRACT", "INTERSECT", "EXCLUDE"]).describe("Boolean operation type"),
-      name: z.string().optional().describe("Optional name for the resulting node"),
+      name: z.string().max(500).optional().describe("Optional name for the resulting node"),
     },
     async ({ nodeIds, operation, name }) => {
       try {

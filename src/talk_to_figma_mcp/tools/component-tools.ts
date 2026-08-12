@@ -193,6 +193,7 @@ export function registerComponentTools(server: McpServer): void {
                     .describe("Action type"),
                   destinationId: z
                     .string()
+                    .max(200)
                     .optional()
                     .describe("Target node ID (for NODE type)"),
                   navigation: z

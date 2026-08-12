@@ -232,8 +232,8 @@ export function registerDocumentTools(server: McpServer): void {
     "Search for nodes in the Figma document by name, type, or other criteria. Returns matching nodes with basic metadata (call get_node_info for full details on specific results).",
     {
       nodeId: nodeIdSchema.optional().describe("Root node to search in (default: current page)"),
-      name: z.string().optional().describe("Exact name match"),
-      nameContains: z.string().optional().describe("Substring match for node name"),
+      name: z.string().max(500).optional().describe("Exact name match"),
+      nameContains: z.string().max(200).optional().describe("Substring match for node name"),
       types: z.array(z.string()).optional().describe("Filter by node types (e.g., ['FRAME', 'TEXT', 'COMPONENT'])"),
       maxDepth: z.number().int().min(0).optional().describe("Maximum tree depth to search"),
       limit: z.number().int().min(1).max(200).default(50).describe("Maximum number of results"),

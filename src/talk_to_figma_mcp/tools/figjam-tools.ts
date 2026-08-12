@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
-import { rgbaColorSchema, nodeIdSchema } from "../utils/schema-helpers";
+import { rgbaColorSchema, nodeIdSchema, parentIdSchema } from "../utils/schema-helpers";
 
 /**
  * Register FigJam-specific tools to the MCP server.
@@ -87,11 +87,7 @@ export function registerFigJamTools(server: McpServer): void {
         .optional()
         .describe("Whether the sticky note should be wide format (default: false)"),
       name: z.string().max(500).optional().describe("Optional name/label for the node"),
-      parentId: z
-        .string()
-        .max(200)
-        .optional()
-        .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({ x, y, text, color, isWide, name, parentId }) => {
       try {
@@ -193,11 +189,7 @@ export function registerFigJamTools(server: McpServer): void {
         .optional()
         .describe("Fill color in RGBA format (0-1 range each component)"),
       name: z.string().max(500).optional().describe("Optional name for the node"),
-      parentId: z
-        .string()
-        .max(200)
-        .optional()
-        .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({ x, y, width, height, shapeType, text, fillColor, name, parentId }) => {
       try {
@@ -284,11 +276,7 @@ export function registerFigJamTools(server: McpServer): void {
         .describe("Stroke color in RGBA format"),
       strokeWeight: z.number().positive().optional().describe("Stroke weight / line thickness"),
       name: z.string().max(500).optional().describe("Optional name for the connector node"),
-      parentId: z
-        .string()
-        .max(200)
-        .optional()
-        .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({
       startNodeId,
@@ -358,11 +346,7 @@ export function registerFigJamTools(server: McpServer): void {
       fillColor: rgbaColorSchema
         .optional()
         .describe("Background fill color in RGBA format"),
-      parentId: z
-        .string()
-        .max(200)
-        .optional()
-        .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({ x, y, width, height, name, fillColor, parentId }) => {
       try {

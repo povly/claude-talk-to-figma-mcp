@@ -31,8 +31,12 @@ describe('blendModeSchema', () => {
       expect(() => blendModeSchema.parse('normal')).toThrow();
     });
 
-    it('rejects "pass_through" (not in enum)', () => {
-      expect(() => blendModeSchema.parse('PASS_THROUGH')).toThrow();
+    it('accepts PASS_THROUGH (Figma default for groups)', () => {
+      expect(blendModeSchema.parse('PASS_THROUGH')).toBe('PASS_THROUGH');
+    });
+
+    it('rejects lowercase "pass_through"', () => {
+      expect(() => blendModeSchema.parse('pass_through')).toThrow();
     });
 
     it('rejects unknown value "FOO"', () => {

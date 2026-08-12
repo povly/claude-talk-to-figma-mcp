@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] — R2 Schema Hardening
 
+### Cleanup (post-review)
+- **`PASS_THROUGH` added to `blendModeSchema`** — schema теперь полностью соответствует Figma BlendMode API (17 values). PASS_THROUGH — default для groups/frames; до этого fix'а caller'ы получали Zod error при попытке установить его.
+- **`.max()` bounds на 10 оставшихся unbounded string полей** — 8 `name` полей в creation-tools + document-tools (`.max(500)`), `destinationId` в set_reactions (`.max(200)`), `nameContains` в find_nodes (`.max(200)`). Все unbounded `z.string().optional().describe` в tools/ теперь = 0.
+- **figjam parentId migrated к `parentIdSchema`** — 4 inline `z.string().max(200).optional()` заменены на shared `parentIdSchema` из `utils/schema-helpers.ts`. R1 consistency достигнута: все parentId во всех tool files используют shared schema.
+
 ### Hardened
 - **`.max()` bounds on user-supplied strings** — все 63 оставшихся unbounded `z.string()` для user-supplied content получили explicit length caps. Text content: 100K chars. Image source (base64/URL): 10MB. Names/labels: 500. Non-nodeId IDs: 200. Misc strings: 1000. Closes DoS surface где LLM мог сгенерировать multi-MB payload через WS relay.
 
