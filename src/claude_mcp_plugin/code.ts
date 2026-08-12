@@ -3571,7 +3571,8 @@ async function flattenNode(params) {
     }
 
     // Verify the node has the flatten method before calling it
-    if (typeof node.flatten !== 'function') {
+    const nodeWithFlatten = node as unknown as { flatten: Function };
+    if (typeof nodeWithFlatten.flatten !== 'function') {
       throw new Error(`Node with ID ${nodeId} does not support the flatten operation.`);
     }
 
@@ -3589,7 +3590,7 @@ async function flattenNode(params) {
       setTimeout(() => {
         try {
           console.log(`Starting flatten operation for node ID ${nodeId}...`);
-          const flattened = node.flatten();
+          const flattened = nodeWithFlatten.flatten();
           console.log(`Flatten operation completed successfully for node ID ${nodeId}`);
           resolve(flattened);
         } catch (err) {
