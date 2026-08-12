@@ -73,7 +73,7 @@ figma.showUI(__html__, { width: 300, height: 220 });
 figma.ui.onmessage = async (msg) => {
   switch (msg.type) {
     case "update-settings":
-      updateSettings(msg);
+      await updateSettings(msg);
       break;
     case "notify":
       figma.notify(msg.message);
@@ -108,14 +108,19 @@ figma.on("run", ({ command }) => {
 });
 
 // Update plugin settings
-function updateSettings(settings) {
+// Update plugin settings
+async function updateSettings(settings) {
   if (settings.serverPort) {
     state.serverPort = settings.serverPort;
   }
 
-  figma.clientStorage.setAsync("settings", {
-    serverPort: state.serverPort,
-  });
+  try {
+    await figma.clientStorage.setAsync("settings", {
+      serverPort: state.serverPort,
+    });
+  } catch (err) {
+    console.error("[FIX:await] Failed to persist plugin settings", err);
+  }
 }
 
 // Helper: safe node lookup using figma.getNodeByIdAsync.

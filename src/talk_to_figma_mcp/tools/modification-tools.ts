@@ -24,11 +24,6 @@ export function registerModificationTools(server: McpServer): void {
     },
     async ({ nodeId, r, g, b, a }) => {
       try {
-        // Additional validation: Ensure RGB values are provided (they should not be undefined)
-        if (r === undefined || g === undefined || b === undefined) {
-          throw new Error("RGB components (r, g, b) are required and cannot be undefined");
-        }
-
         // Apply default values safely - preserves opacity 0 for transparency
         const colorInput: Color = { r, g, b, a };
         const colorWithDefaults = applyColorDefaults(colorInput);
@@ -73,10 +68,6 @@ export function registerModificationTools(server: McpServer): void {
     },
     async ({ nodeId, r, g, b, a, strokeWeight }) => {
       try {
-
-        if (r === undefined || g === undefined || b === undefined) {
-          throw new Error("RGB components (r, g, b) are required and cannot be undefined");
-        }
 
         const colorInput: Color = { r, g, b, a };
         const colorWithDefaults = applyColorDefaults(colorInput);
@@ -123,10 +114,6 @@ export function registerModificationTools(server: McpServer): void {
     },
     async ({ nodeId, r, g, b, a }) => {
       try {
-        if (r === undefined || g === undefined || b === undefined) {
-          throw new Error("RGB components (r, g, b) are required");
-        }
-
         const colorWithDefaults = applyColorDefaults({ r, g, b, a } as Color);
 
         const result = await sendCommandToFigma("set_selection_colors", {
