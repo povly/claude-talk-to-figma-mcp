@@ -36,9 +36,37 @@ This single command will:
 
 ---
 
-## Alternative: Using Docker
+## Optional: Security Environment Variables (P2 Hardening)
 
-If you prefer Docker or need to run the WebSocket server in a team environment, you can use Docker instead of the standard installation method.
+The relay (port 3055) accepts two optional environment variables that tighten security in shared or untrusted environments. Both default to unset, preserving the open-relay behaviour for local development.
+
+### `FIGMA_RELAY_TOKEN` — shared-secret handshake
+
+Require every client (MCP server + Figma plugin) to present a shared secret when joining a channel.
+
+```bash
+# Pick any long random string
+export FIGMA_RELAY_TOKEN="$(openssl rand -hex 32)"
+bun run socket
+```
+
+When this env var is set:
+- The MCP server reads it from the same environment and includes it in the join automatically — no extra config needed.
+- The Figma plugin prompts the operator for the token on the first join attempt; the token is held in memory for the session and discarded when the plugin closes.
+- Any client without the token is rejected with close code 1008 (Policy Violation).
+
+### `MAX_CONNECTIONS` — concurrent socket cap
+
+```bash
+# Default 16 (1 plugin + 8 agents + headroom). Override for heavier workloads:
+MAX_CONNECTIONS=32 bun run socket
+```
+
+Caps concurrent WebSocket connections to prevent OOM via payload flood (128 MB max payload × N sockets). Past the cap, new connections are rejected with close code 1008.
+
+---
+
+## Alternative: Using Docker
 
 ### Prerequisites
 

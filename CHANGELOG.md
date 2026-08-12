@@ -7,6 +7,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — P2 Relay Security Hardening
+
+### Security
+- **Origin allowlist on WS-upgrade** (`src/socket.ts`): WebSocket upgrade requests from browser clients are now gated on an `ALLOWED_ORIGINS` allowlist (`null`, `file://`, `localhost`, `127.0.0.1`). Non-browser clients (curl, Figma plugin, MCP server) are always allowed. Blocks cross-origin WS hijack from arbitrary websites.
+- **CORS cleanup** (`src/socket.ts`): removed `Access-Control-Allow-Origin: *` from four response paths (OPTIONS preflight, `/status`, WS-upgrade response, default text response). Browser tabs on arbitrary websites can no longer probe the relay's `/status` endpoint for active channel names.
+- **Connection limit** (`src/socket.ts`): `MAX_CONNECTIONS` cap (default 16, override via env `MAX_CONNECTIONS`). New connections past the cap are rejected with close code 1008. Prevents OOM via connection flood (128 MB payload × N sockets).
+- **Channel name validation** (`src/socket.ts`): join channel names must match `^[a-zA-Z0-9_-]{1,64}$`. Blocks prototype-pollution tricks (`__proto__`, `constructor`), megabyte names, control characters, and XSS payloads.
+- **Generic error responses** (`src/socket.ts`): the message-dispatcher catch block now returns "Invalid message format" instead of leaking `err.message` (which could expose internal paths, stack frames, or library versions). Full error still logged server-side.
+- **Server-generated sessionId** (`src/socket.ts` + `src/talk_to_figma_mcp/utils/websocket.ts`): the relay now issues cryptographically random session IDs (`mcp_<32hex>`, 128 bits from `crypto.randomBytes`) for clients that don't supply a secure-format ID. Legacy predictable IDs (`mcp_<pid>_<timestamp>`) are no longer accepted as authoritative — closes session-hijack via PID/timestamp guessing.
+- **Opt-in shared-secret handshake** (env var `FIGMA_RELAY_TOKEN`): when set on the relay, every join must include the matching token or be rejected with close code 1008. The MCP client reads the same env var and includes the token automatically. The Figma plugin UI prompts the operator for the token on auth failure. Default (unset) preserves open-relay behaviour for backwards compatibility and local development.
+
+### Changed
+- **`FigmaResponse` type** (`src/talk_to_figma_mcp/types/index.ts`): added optional `sessionId?: string` field. Replaces an `as any` access that violated the project's no-type-suppression rule.
+- **`SESSION_ID` const → mutable `let sessionId`** (`src/talk_to_figma_mcp/utils/websocket.ts`): the MCP client now adopts the server-issued secure sessionId from the join response for use on reconnect.
+
+### Operational Notes
+- All security hardening is **opt-in or non-breaking by default**:
+  - Origin allowlist permits the Figma plugin iframe (`file://`) and localhost dev tools.
+  - `MAX_CONNECTIONS=16` covers 1 plugin + 8 agents + 7 headroom; override via env.
+  - `FIGMA_RELAY_TOKEN` unset = open relay (dev mode); set = required auth.
+  - Legacy session IDs continue to work (server regenerates and returns the secure ID).
+- New observability: `stats.blockedCommands` counter incremented on every rejection (invalid origin, invalid channel, connection limit, auth failure).
+
 ## [Unreleased] — Figma Fidelity Improvements
 
 ### Added
