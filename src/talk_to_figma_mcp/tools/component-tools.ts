@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
-import { coerceJson } from "../utils/schema-helpers";
+import { coerceJson, nodeIdSchema, parentIdSchema } from "../utils/schema-helpers";
 
 /**
  * Register component-related tools to the MCP server
@@ -17,7 +17,7 @@ export function registerComponentTools(server: McpServer): void {
       componentKey: z.string().describe("Key of the component to instantiate"),
       x: z.coerce.number().describe("X position (local coordinates, relative to parent)"),
       y: z.coerce.number().describe("Y position (local coordinates, relative to parent)"),
-      parentId: z.string().optional().describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({ componentKey, x, y, parentId }) => {
       try {
@@ -54,9 +54,9 @@ export function registerComponentTools(server: McpServer): void {
     "create_component_from_node",
     "Convert an existing node (frame, group, etc.) into a reusable component in Figma",
     {
-      nodeId: z.string().describe("The ID of the node to convert into a component"),
+      nodeId: nodeIdSchema.describe("The ID of the node to convert into a component"),
       name: z.string().optional().describe("Optional new name for the component"),
-      parentId: z.string().optional().describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({ nodeId, name, parentId }) => {
       try {
@@ -94,7 +94,7 @@ export function registerComponentTools(server: McpServer): void {
     {
       componentIds: coerceJson(z.array(z.string())).describe("Array of component node IDs to combine into a component set"),
       name: z.string().optional().describe("Optional name for the component set"),
-      parentId: z.string().optional().describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({ componentIds, name, parentId }) => {
       try {
@@ -130,7 +130,7 @@ export function registerComponentTools(server: McpServer): void {
     "set_instance_variant",
     "Change the variant properties of a component instance without recreating it. This preserves instance overrides and is more efficient than delete + create workflow.",
     {
-      nodeId: z.string().describe("The ID of the instance node to modify"),
+      nodeId: nodeIdSchema.describe("The ID of the instance node to modify"),
       properties: coerceJson(z.record(z.string())).describe("Variant properties to set as key-value pairs (e.g., { \"State\": \"Hover\", \"Size\": \"Large\" })"),
     },
     async ({ nodeId, properties }) => {
@@ -166,7 +166,7 @@ export function registerComponentTools(server: McpServer): void {
     "set_reactions",
     "Set prototype interactions (reactions) on a node in Figma. Use this to add hover effects, click interactions, etc. For component variants, set on the default variant to add 'While hovering -> Change to hover variant' interactions.",
     {
-      nodeId: z.string().describe("The ID of the node to set reactions on"),
+      nodeId: nodeIdSchema.describe("The ID of the node to set reactions on"),
       reactions: coerceJson(
         z.array(
           z.object({
@@ -272,7 +272,7 @@ export function registerComponentTools(server: McpServer): void {
     "get_reactions",
     "Read all prototype interactions (reactions) from a node in Figma. Useful for debugging and inspecting existing interactions.",
     {
-      nodeId: z.string().describe("The ID of the node to read reactions from"),
+      nodeId: nodeIdSchema.describe("The ID of the node to read reactions from"),
     },
     async ({ nodeId }) => {
       try {

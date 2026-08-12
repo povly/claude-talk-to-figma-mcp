@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
+import { nodeIdSchema } from "../utils/schema-helpers";
 
 /**
  * Register image manipulation tools to the MCP server
@@ -13,7 +14,7 @@ export function registerImageTools(server: McpServer): void {
     "set_image_fill",
     "Apply image to node from URL or base64 data",
     {
-      nodeId: z.string().describe("The ID of the node to apply image to"),
+      nodeId: nodeIdSchema.describe("The ID of the node to apply image to"),
       imageSource: z.string().describe("Image URL or base64 data string"),
       sourceType: z.enum(["url", "base64"]).describe("Source type: 'url' for image URL, 'base64' for base64 encoded data"),
       scaleMode: z.enum(["FILL", "FIT", "CROP", "TILE"]).optional().describe("Image scaling mode (default: FILL)"),
@@ -53,7 +54,7 @@ export function registerImageTools(server: McpServer): void {
     "get_image_from_node",
     "Extract image metadata from a node",
     {
-      nodeId: z.string().describe("The ID of the node to get image from"),
+      nodeId: nodeIdSchema.describe("The ID of the node to get image from"),
     },
     async ({ nodeId }) => {
       try {
@@ -105,7 +106,7 @@ export function registerImageTools(server: McpServer): void {
     "replace_image_fill",
     "Replace existing image on node with new image while preserving transform",
     {
-      nodeId: z.string().describe("The ID of the node with image to replace"),
+      nodeId: nodeIdSchema.describe("The ID of the node with image to replace"),
       newImageSource: z.string().describe("New image URL or base64 data"),
       sourceType: z.enum(["url", "base64"]).describe("Source type: 'url' or 'base64'"),
       preserveTransform: z.boolean().optional().describe("Preserve existing image transform (default: true)"),
@@ -145,7 +146,7 @@ export function registerImageTools(server: McpServer): void {
     "get_image_bytes",
     "Export a node as image bytes (base64 encoded). Useful for downloading image assets or analyzing image content.",
     {
-      nodeId: z.string().describe("The ID of the node to export"),
+      nodeId: nodeIdSchema.describe("The ID of the node to export"),
       format: z.enum(["PNG", "JPG", "SVG"]).default("PNG").describe("Export format"),
       scale: z.number().positive().default(1).describe("Export scale factor"),
     },
@@ -176,7 +177,7 @@ export function registerImageTools(server: McpServer): void {
     "apply_image_transform",
     "Adjust image position, scale, and rotation within node. Rotates the IMAGE inside the node, not the node itself.",
     {
-      nodeId: z.string().describe("The ID of the node to transform image on"),
+      nodeId: nodeIdSchema.describe("The ID of the node to transform image on"),
       scaleMode: z.enum(["FILL", "FIT", "CROP", "TILE"]).optional().describe("Change scale mode"),
       rotation: z.coerce.number().optional().describe("Rotation in 90-degree increments (0, 90, 180, 270). Rotates the IMAGE inside the node, not the node itself."),
       translateX: z.coerce.number().optional().describe("Horizontal translation offset"),
@@ -220,7 +221,7 @@ export function registerImageTools(server: McpServer): void {
     "set_image_filters",
     "Apply color and light adjustments to image fills",
     {
-      nodeId: z.string().describe("The ID of the node with image fill"),
+      nodeId: nodeIdSchema.describe("The ID of the node with image fill"),
       exposure: z.number().min(-1).max(1).optional().describe("Brightness adjustment (-1.0 to 1.0)"),
       contrast: z.number().min(-1).max(1).optional().describe("Contrast adjustment (-1.0 to 1.0)"),
       saturation: z.number().min(-1).max(1).optional().describe("Color intensity (-1.0 to 1.0, -1 = grayscale)"),

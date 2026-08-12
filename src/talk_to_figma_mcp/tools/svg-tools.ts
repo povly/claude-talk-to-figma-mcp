@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
+import { nodeIdSchema, parentIdSchema } from "../utils/schema-helpers";
 
 /**
  * Register SVG-related tools to the MCP server
@@ -16,7 +17,7 @@ export function registerSvgTools(server: McpServer): void {
       x: z.coerce.number().optional().describe("X position for the imported SVG (default: 0)"),
       y: z.coerce.number().optional().describe("Y position for the imported SVG (default: 0)"),
       name: z.string().optional().describe("Optional name for the imported node"),
-      parentId: z.string().optional().describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
     },
     async ({ svgString, x, y, name, parentId }) => {
       try {
@@ -54,7 +55,7 @@ export function registerSvgTools(server: McpServer): void {
     "get_svg",
     "Export a single node as an SVG string from Figma. Returns the SVG markup including all nested children.",
     {
-      nodeId: z.string().describe("The ID of the node to export as SVG"),
+      nodeId: nodeIdSchema.describe("The ID of the node to export as SVG"),
     },
     async ({ nodeId }) => {
       try {

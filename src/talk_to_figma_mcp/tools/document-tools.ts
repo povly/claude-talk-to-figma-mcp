@@ -2,7 +2,7 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma, joinChannel } from "../utils/websocket.js";
 import { filterFigmaNode } from "../utils/figma-helpers.js";
-import { coerceJson } from "../utils/schema-helpers";
+import { coerceJson, nodeIdSchema } from "../utils/schema-helpers";
 import { logger } from "../utils/logger.js";
 
 /**
@@ -73,7 +73,7 @@ export function registerDocumentTools(server: McpServer): void {
     "get_node_info",
     "Get detailed information about a specific node in Figma",
     {
-      nodeId: z.string().describe("The ID of the node to get information about"),
+      nodeId: nodeIdSchema.describe("The ID of the node to get information about"),
       depth: z.number().int().min(0).optional().describe(
         "Max child levels to include in full detail. 0=root only (children stubbed), 1=root+children, N=N levels. " +
         "Default: 1. Plugin-side pruning reduces WS payload; deeper levels return {id,name,type,_childrenTruncated:true} stubs. " +
@@ -152,7 +152,7 @@ export function registerDocumentTools(server: McpServer): void {
     "get_component_properties",
     "Get component property definitions and current values for a component, instance, or component set",
     {
-      nodeId: z.string().describe("The ID of the node to inspect"),
+      nodeId: nodeIdSchema.describe("The ID of the node to inspect"),
     },
     async ({ nodeId }) => {
       try {
@@ -176,7 +176,7 @@ export function registerDocumentTools(server: McpServer): void {
     "get_bound_variables",
     "Get variables bound to a node's properties, along with resolved modes and variable details",
     {
-      nodeId: z.string().describe("The ID of the node to inspect for bound variables"),
+      nodeId: nodeIdSchema.describe("The ID of the node to inspect for bound variables"),
     },
     async ({ nodeId }) => {
       try {
@@ -200,7 +200,7 @@ export function registerDocumentTools(server: McpServer): void {
     "get_css",
     "Get CSS properties for a node directly from Figma's Inspect panel. Returns the raw CSS that Figma generates.",
     {
-      nodeId: z.string().describe("The ID of the node to get CSS for"),
+      nodeId: nodeIdSchema.describe("The ID of the node to get CSS for"),
     },
     async ({ nodeId }) => {
       try {
@@ -224,7 +224,7 @@ export function registerDocumentTools(server: McpServer): void {
     "find_nodes",
     "Search for nodes in the Figma document by name, type, or other criteria. Returns matching nodes with basic metadata (call get_node_info for full details on specific results).",
     {
-      nodeId: z.string().optional().describe("Root node to search in (default: current page)"),
+      nodeId: nodeIdSchema.optional().describe("Root node to search in (default: current page)"),
       name: z.string().optional().describe("Exact name match"),
       nameContains: z.string().optional().describe("Substring match for node name"),
       types: z.array(z.string()).optional().describe("Filter by node types (e.g., ['FRAME', 'TEXT', 'COMPONENT'])"),
@@ -340,7 +340,7 @@ export function registerDocumentTools(server: McpServer): void {
     "scan_text_nodes",
     "Scan all text nodes in the selected Figma node",
     {
-      nodeId: z.string().describe("ID of the node to scan"),
+      nodeId: nodeIdSchema.describe("ID of the node to scan"),
     },
     async ({ nodeId }) => {
       try {
@@ -465,7 +465,7 @@ export function registerDocumentTools(server: McpServer): void {
     "export_node_as_image",
     "Export a node as an image from Figma",
     {
-      nodeId: z.string().describe("The ID of the node to export"),
+      nodeId: nodeIdSchema.describe("The ID of the node to export"),
       format: z
         .enum(["PNG", "JPG", "SVG", "PDF"])
         .optional()

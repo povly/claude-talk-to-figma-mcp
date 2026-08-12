@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
+import { nodeIdSchema } from "../utils/schema-helpers";
 
 /**
  * Register variable tools to the MCP server
@@ -87,7 +88,7 @@ export function registerVariableTools(server: McpServer): void {
     "apply_variable_to_node",
     "Bind a variable to a node property in Figma. Call once per field — for multiple fields, call multiple times.",
     {
-      nodeId: z.string().describe("The ID of the node to bind the variable to"),
+      nodeId: nodeIdSchema.describe("The ID of the node to bind the variable to"),
       variableId: z.string().describe("The ID of the variable to bind"),
       field: z.string().describe("The node property field to bind (e.g., 'fills/0/color', 'opacity', 'width', 'height')"),
     },
@@ -125,7 +126,7 @@ export function registerVariableTools(server: McpServer): void {
     "switch_variable_mode",
     "Switch the variable mode on a node for a specific collection. This changes which mode's values are used for bound variables.",
     {
-      nodeId: z.string().describe("The ID of the node to switch mode on"),
+      nodeId: nodeIdSchema.describe("The ID of the node to switch mode on"),
       collectionId: z.string().describe("The ID of the variable collection"),
       modeId: z.string().describe("The ID of the mode to switch to"),
     },
@@ -163,7 +164,7 @@ export function registerVariableTools(server: McpServer): void {
     "get_variable_defs",
     "Get design tokens in CSS var(--name, value) format for a node subtree or the entire file. Returns tokens grouped by type (colors, spacing, typography, radius).",
     {
-      nodeId: z.string().optional().describe("Node ID to extract tokens from (if omitted, scans entire file)"),
+      nodeId: nodeIdSchema.optional().describe("Node ID to extract tokens from (if omitted, scans entire file)"),
     },
     async ({ nodeId }) => {
       try {
