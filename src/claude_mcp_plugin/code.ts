@@ -569,7 +569,7 @@ async function getComponentProperties(nodeId) {
   }
 
   const nodeType = node.type;
-  const result = {
+  const result: Record<string, unknown> = {
     nodeId: node.id,
     nodeType: nodeType,
   };
