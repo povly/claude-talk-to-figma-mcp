@@ -493,7 +493,7 @@ async function getNodeInfo(nodeId, depth) {
     format: "JSON_REST_V1",
   });
 
-  const document = response.document;
+  const document = (response as Record<string, unknown>).document;
 
   // Plugin-side depth pruning — reduces WS payload size.
   // MCP-side filterFigmaNode still runs on the pruned tree (defensive backwards-compat layer).
@@ -1539,7 +1539,7 @@ async function exportNodeAsImage(params) {
         clearTimeout(timeoutId);
       });
 
-    console.log(`[exportNodeAsImage] Export completed in ${Date.now() - startTime}ms, bytes: ${bytes.length}`);
+    console.log(`[exportNodeAsImage] Export completed in ${Date.now() - startTime}ms, bytes: ${(bytes as Uint8Array).length}`);
 
     let mimeType;
     switch (format) {
@@ -2861,7 +2861,7 @@ async function setFontWeight(params) {
   }
 
   try {
-    const family = node.fontName.family;
+    const family = (node.fontName as FontName).family;
     const style = getFontStyle(weight);
     await figma.loadFontAsync({ family, style });
     node.fontName = { family, style };
@@ -5467,16 +5467,19 @@ async function getGrid(params) {
   return {
     id: node.id,
     name: node.name,
-    grids: node.layoutGrids.map(grid => ({
-      pattern: grid.pattern,
-      visible: grid.visible,
-      sectionSize: grid.sectionSize,
-      count: grid.count,
-      gutterSize: grid.gutterSize,
-      offset: grid.offset,
-      alignment: grid.alignment,
-      color: grid.color
-    }))
+    grids: node.layoutGrids.map(grid => {
+      const g = grid as unknown as Record<string, unknown>;
+      return {
+        pattern: g.pattern,
+        visible: g.visible,
+        sectionSize: g.sectionSize,
+        count: g.count,
+        gutterSize: g.gutterSize,
+        offset: g.offset,
+        alignment: g.alignment,
+        color: g.color
+      };
+    })
   };
 }
 
@@ -6571,8 +6574,9 @@ async function setReactions(params) {
 
     // Set trigger
     if (r.trigger) {
-      reaction.trigger = { type: r.trigger.type };
-      if (r.trigger.delay !== undefined) {
+      const trigger = r.trigger as Record<string, unknown>;
+      reaction.trigger = { type: trigger.type };
+      if (trigger.delay !== undefined) {
         reaction.trigger.delay = r.trigger.delay;
       }
     }
