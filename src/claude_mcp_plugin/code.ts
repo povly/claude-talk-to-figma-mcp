@@ -2,24 +2,61 @@
 // This is the main code file for the Claude MCP Figma plugin
 // It handles Figma API commands
 
+type RGB = { r: number; g: number; b: number };
+type RGBA = RGB & { a?: number };
+type SolidPaintLike = { type: "SOLID"; color: RGB; opacity: number };
+type CommandId =
+  | "ping" | "get_document_info" | "get_selection" | "get_node_info"
+  | "get_nodes_info" | "get_component_properties" | "get_bound_variables"
+  | "get_css" | "find_nodes" | "create_rectangle" | "create_frame"
+  | "create_text" | "set_fill_color" | "set_stroke_color"
+  | "set_selection_colors" | "move_node" | "resize_node" | "delete_node"
+  | "get_styles" | "get_local_components" | "create_component_instance"
+  | "export_node_as_image" | "set_corner_radius" | "set_text_content"
+  | "clone_node" | "scan_text_nodes" | "set_multiple_text_contents"
+  | "set_auto_layout" | "set_font_name" | "set_font_size"
+  | "set_font_weight" | "set_letter_spacing" | "set_line_height"
+  | "set_paragraph_spacing" | "set_text_case" | "set_text_decoration"
+  | "set_text_align" | "get_styled_text_segments" | "load_font_async"
+  | "get_remote_components" | "set_effects" | "set_effect_style_id"
+  | "set_text_style_id" | "group_nodes" | "ungroup_nodes" | "flatten_node"
+  | "insert_child" | "create_ellipse" | "create_polygon" | "create_star"
+  | "create_vector" | "create_line" | "create_component_from_node"
+  | "create_component_set" | "set_instance_variant" | "create_page"
+  | "delete_page" | "rename_page" | "get_pages" | "set_current_page"
+  | "rename_node" | "set_image_fill" | "get_image_from_node"
+  | "replace_image_fill" | "get_image_bytes" | "apply_image_transform"
+  | "set_image_filters" | "rotate_node" | "set_node_properties"
+  | "set_constraints" | "reorder_node" | "duplicate_page"
+  | "convert_to_frame" | "set_gradient" | "boolean_operation" | "set_svg"
+  | "get_svg" | "set_image" | "set_grid" | "get_grid" | "set_guide"
+  | "get_guide" | "set_annotation" | "get_annotation" | "get_variables"
+  | "set_variable" | "apply_variable_to_node" | "switch_variable_mode"
+  | "get_variable_defs" | "get_figjam_elements" | "create_sticky"
+  | "set_sticky_text" | "create_shape_with_text" | "create_connector"
+  | "create_section" | "set_reactions" | "get_reactions"
+  | "detach_instance" | "create_text_style" | "create_paint_style"
+  | "create_effect_style" | "create_grid_style";
+
 // Safe color channel parser: returns a valid 0-1 number or NaN.
 // Unlike `parseFloat(x) || 0`, this does NOT silently fall back to 0 (black).
-export function safeChannel(value) {
+export function safeChannel(value: unknown): number {
   if (value === undefined || value === null) return NaN;
-  var n = typeof value === "number" ? value : parseFloat(value);
+  var n = typeof value === "number" ? value : parseFloat(value as string);
   return isNaN(n) ? NaN : Math.max(0, Math.min(1, n));
 }
 
 // Build a Figma paint from an {r, g, b, a?} color object.
-export function safePaint(color) {
+export function safePaint(color: unknown): SolidPaintLike | null {
   if (!color || typeof color !== "object") return null;
-  var r = safeChannel(color.r);
-  var g = safeChannel(color.g);
-  var b = safeChannel(color.b);
+  const c = color as Record<string, unknown>;
+  var r = safeChannel(c.r);
+  var g = safeChannel(c.g);
+  var b = safeChannel(c.b);
   if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
-  var a = safeChannel(color.a);
+  var a = safeChannel(c.a);
   return {
-    type: "SOLID",
+    type: "SOLID" as const,
     color: { r: r, g: g, b: b },
     opacity: isNaN(a) ? 1 : a,
   };
@@ -124,16 +161,14 @@ async function updateSettings(settings) {
 }
 
 // Helper: safe node lookup using figma.getNodeByIdAsync.
-// The original getNodeByIdAsync works fine — the bug was in ui.html's
-// sendErrorResponse which dropped error messages (no type/channel fields).
-// With that fixed, errors propagate correctly and timeouts are eliminated.
-async function getNodeByIdSafe(nodeId) {
+// Returns SceneNode (narrowed from BaseNode) for direct property access.
+async function getNodeByIdSafe(nodeId: string): Promise<SceneNode | null> {
   if (!nodeId) return null;
-  return await figma.getNodeByIdAsync(nodeId);
+  return await figma.getNodeByIdAsync(nodeId) as SceneNode | null;
 }
 
 // Handle commands from UI
-async function handleCommand(command, params) {
+async function handleCommand(command: CommandId, params: Record<string, unknown>): Promise<unknown> {
   switch (command) {
     case "ping":
       return { status: "ok" };
@@ -823,7 +858,7 @@ async function createFrame(params) {
   }
 
   // If parentId is provided, append to that node, otherwise append to current page
-  var targetParent = figma.currentPage;
+  var targetParent: PageNode | SceneNode = figma.currentPage;
   if (parentId) {
     const parentNode = await getNodeByIdSafe(parentId);
     if (!parentNode) {
@@ -928,7 +963,7 @@ async function createText(params) {
 
   // Set text color
   const paintStyle = {
-    type: "SOLID",
+    type: "SOLID" as const,
     color: {
       r: parseFloat(fontColor.r) || 0,
       g: parseFloat(fontColor.g) || 0,
@@ -2277,7 +2312,7 @@ async function processTextNode(node, parentPath, depth) {
       const originalFills = JSON.parse(JSON.stringify(node.fills));
       node.fills = [
         {
-          type: "SOLID",
+          type: "SOLID" as const,
           color: { r: 1, g: 0.5, b: 0 },
           opacity: 0.3,
         },
@@ -2352,7 +2387,7 @@ async function findTextNodes(node, parentPath = [], depth = 0, textNodes = []) {
         const originalFills = JSON.parse(JSON.stringify(node.fills));
         node.fills = [
           {
-            type: "SOLID",
+            type: "SOLID" as const,
             color: { r: 1, g: 0.5, b: 0 },
             opacity: 0.3,
           },
@@ -2526,7 +2561,7 @@ async function setMultipleTextContents(params) {
           // Apply highlight color (orange with 30% opacity)
           textNode.fills = [
             {
-              type: "SOLID",
+              type: "SOLID" as const,
               color: { r: 1, g: 0.5, b: 0 },
               opacity: 0.3,
             },
@@ -3244,7 +3279,7 @@ async function setEffects(params) {
     });
 
     // Apply the effects to the node
-    node.effects = validEffects;
+    node.effects = validEffects as Effect[];
 
     return {
       id: node.id,
@@ -3889,7 +3924,7 @@ async function createVector(params) {
   // Set fill color if provided
   if (fillColor) {
     const paintStyle = {
-      type: "SOLID",
+      type: "SOLID" as const,
       color: {
         r: parseFloat(fillColor.r) || 0,
         g: parseFloat(fillColor.g) || 0,
@@ -3903,7 +3938,7 @@ async function createVector(params) {
   // Set stroke color and weight if provided
   if (strokeColor) {
     const strokeStyle = {
-      type: "SOLID",
+      type: "SOLID" as const,
       color: {
         r: parseFloat(strokeColor.r) || 0,
         g: parseFloat(strokeColor.g) || 0,
@@ -3997,7 +4032,7 @@ async function createLine(params) {
 
   // Set stroke color
   const strokeStyle = {
-    type: "SOLID",
+    type: "SOLID" as const,
     color: {
       r: parseFloat(strokeColor.r) || 0,
       g: parseFloat(strokeColor.g) || 0,
@@ -4235,7 +4270,7 @@ async function createComponentSet(params) {
   }
 
   // Determine parent container
-  let container = figma.currentPage;
+  let container: PageNode | SceneNode = figma.currentPage;
   if (params.parentId) {
     const parentNode = await getNodeByIdSafe(params.parentId);
     if (!parentNode) {
@@ -4485,7 +4520,7 @@ async function setImageFill(params) {
     }
 
     const imageFill = {
-      type: "IMAGE",
+      type: "IMAGE" as const,
       scaleMode: scaleMode || "FILL",
       imageHash: image.hash,
     };
@@ -4583,7 +4618,7 @@ async function replaceImageFill(params) {
     }
 
     const newImageFill = {
-      type: "IMAGE",
+      type: "IMAGE" as const,
       imageHash: newImage.hash,
     };
 
@@ -5198,7 +5233,7 @@ async function booleanOperation(params) {
 }
 
 // SVG sanitization - strip scripts, event handlers, external resources
-export function sanitizeSvg(svgString) {
+export function sanitizeSvg(svgString: string): string {
   let clean = svgString;
   // Strip <script> tags
   clean = clean.replace(/<script[\s\S]*?<\/script>/gi, '');
@@ -5321,7 +5356,7 @@ async function setImage(params) {
   // Create image in Figma and set as fill
   const image = figma.createImage(bytes);
   node.fills = [{
-    type: "IMAGE",
+    type: "IMAGE" as const,
     imageHash: image.hash,
     scaleMode: scaleMode || "FILL",
     visible: true,
@@ -5356,10 +5391,10 @@ async function setGrid(params) {
   }
 
   const layoutGrids = grids.map(grid => {
-    const layoutGrid = {
+    const layoutGrid: LayoutGrid = {
       pattern: grid.pattern,
       visible: grid.visible !== undefined ? grid.visible : true
-    };
+    } as LayoutGrid;
 
     // Ensure required fields have defaults per pattern type to prevent Figma from hanging
     if (grid.pattern === "GRID") {
@@ -5999,7 +6034,7 @@ function stickyColorToFill(color) {
 
   var rgb = palette[color] || palette["yellow"];
   // Always construct a fresh color object so Figma can freely extend it.
-  return [{ type: "SOLID", color: { r: rgb[0], g: rgb[1], b: rgb[2] }, opacity: 1, visible: true, blendMode: "NORMAL" }];
+  return [{ type: "SOLID" as const, color: { r: rgb[0], g: rgb[1], b: rgb[2] }, opacity: 1, visible: true, blendMode: "NORMAL" as const }];
 }
 
 /**
@@ -6240,7 +6275,7 @@ async function createShapeWithText(params) {
   if (fillColor) {
     shape.fills = [
       {
-        type: "SOLID",
+        type: "SOLID" as const,
         color: {
           r: parseFloat(fillColor.r) || 0,
           g: parseFloat(fillColor.g) || 0,
@@ -6348,7 +6383,7 @@ async function createConnector(params) {
   if (strokeColor) {
     connector.strokes = [
       {
-        type: "SOLID",
+        type: "SOLID" as const,
         color: {
           r: parseFloat(strokeColor.r) || 0,
           g: parseFloat(strokeColor.g) || 0,
@@ -6421,7 +6456,7 @@ async function createSection(params) {
   if (fillColor) {
     section.fills = [
       {
-        type: "SOLID",
+        type: "SOLID" as const,
         color: {
           r: parseFloat(fillColor.r) || 0,
           g: parseFloat(fillColor.g) || 0,
@@ -6710,7 +6745,7 @@ async function createPaintStyle(params) {
   style.name = name;
   style.paints = [
     {
-      type: "SOLID",
+      type: "SOLID" as const,
       color: { r, g, b },
       opacity: a,
     },
