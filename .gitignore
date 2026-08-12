@@ -40,3 +40,13 @@ dxt-*/
 
 # Claude Code local settings
 .claude/
+
+# AI agent environments (local only — not shared via repo)
+.agents/
+.ai-factory/
+.ai-factory.json
+.omo/
+.opencode/
+skills-lock.json
+AGENTS.md
+opencode.json
