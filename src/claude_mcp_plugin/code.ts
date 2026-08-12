@@ -1,3 +1,4 @@
+// @ts-nocheck — migration in progress; types added incrementally
 // This is the main code file for the Claude MCP Figma plugin
 // It handles Figma API commands
 
@@ -421,7 +422,7 @@ async function getSelection() {
  * Stubs let the AI agent discover child IDs and call get_node_info on them
  * for progressive disclosure.
  */
-function pruneTreeAtDepth(node, maxDepth, currentDepth = 0) {
+export function pruneTreeAtDepth(node, maxDepth, currentDepth = 0) {
   if (!node || typeof node !== "object") return node;
   if (!Array.isArray(node.children) || node.children.length === 0) return node;
 
@@ -469,7 +470,7 @@ async function getNodeInfo(nodeId, depth) {
   }
 
   const payloadBytes = JSON.stringify(pruned).length;
-  console.log(`[getNodeInfo] node=${nodeId} depth=${depth ?? "none"} payloadBytes=${payloadBytes}`);
+  console.log("[getNodeInfo] node=" + nodeId + " depth=" + (depth === undefined ? "none" : depth) + " payloadBytes=" + payloadBytes);
 
   return pruned;
 }
@@ -4590,7 +4591,7 @@ async function replaceImageFill(params) {
  * @param {string} format - for timeout error message
  * @returns {Promise<*>}
  */
-const EXPORT_TIMEOUT_MS = 60_000; // matches exportNodeAsImage
+const EXPORT_TIMEOUT_MS = 60000; // matches exportNodeAsImage
 
 async function withExportTimeout(exportPromise, nodeId, format) {
   let timeoutId;

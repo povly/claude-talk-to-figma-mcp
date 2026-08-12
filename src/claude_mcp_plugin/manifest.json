@@ -1,14 +1,13 @@
 {
-  "name": "Claude Talk to Figma Plugin",
-  "id": "1601160737181340240",
+  "name": "Claude Talk to Figma",
+  "id": "1485687494525374295",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
-  "editorType": ["figma"],
+  "editorType": ["figma", "dev"],
+  "documentAccess": "unrestricted",
   "networkAccess": {
     "allowedDomains": ["none"],
     "devAllowedDomains": ["http://localhost:3055", "ws://localhost:3055"]
-  },
-  "documentAccess": "dynamic-page",
-  "enableProposedApi": false
+  }
 }
