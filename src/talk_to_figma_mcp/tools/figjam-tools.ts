@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
+import { rgbaColorSchema, nodeIdSchema } from "../utils/schema-helpers";
 
 /**
  * Register FigJam-specific tools to the MCP server.
@@ -129,7 +130,7 @@ export function registerFigJamTools(server: McpServer): void {
     "set_sticky_text",
     "Update the text content of an existing FigJam sticky note.",
     {
-      nodeId: z.string().describe("The ID of the sticky note node to update"),
+      nodeId: nodeIdSchema.describe("The ID of the sticky note node to update"),
       text: z.string().describe("The new text content"),
     },
     async ({ nodeId, text }) => {
@@ -184,13 +185,7 @@ export function registerFigJamTools(server: McpServer): void {
         .optional()
         .describe("The shape type (default: ROUNDED_RECTANGLE)"),
       text: z.string().optional().describe("Text to display inside the shape"),
-      fillColor: z
-        .object({
-          r: z.number().min(0).max(1).describe("Red (0-1)"),
-          g: z.number().min(0).max(1).describe("Green (0-1)"),
-          b: z.number().min(0).max(1).describe("Blue (0-1)"),
-          a: z.number().min(0).max(1).optional().describe("Alpha (0-1)"),
-        })
+      fillColor: rgbaColorSchema
         .optional()
         .describe("Fill color in RGBA format (0-1 range each component)"),
       name: z.string().optional().describe("Optional name for the node"),
@@ -276,13 +271,7 @@ export function registerFigJamTools(server: McpServer): void {
         .enum(["NONE", "ARROW", "ARROW_EQUILATERAL", "CIRCLE_FILLED", "DIAMOND_FILLED"])
         .optional()
         .describe("Arrowhead at the end (default: ARROW)"),
-      strokeColor: z
-        .object({
-          r: z.number().min(0).max(1),
-          g: z.number().min(0).max(1),
-          b: z.number().min(0).max(1),
-          a: z.number().min(0).max(1).optional(),
-        })
+      strokeColor: rgbaColorSchema
         .optional()
         .describe("Stroke color in RGBA format"),
       strokeWeight: z.number().positive().optional().describe("Stroke weight / line thickness"),
@@ -356,13 +345,7 @@ export function registerFigJamTools(server: McpServer): void {
       width: z.number().optional().describe("Width of the section (default: 800)"),
       height: z.number().optional().describe("Height of the section (default: 600)"),
       name: z.string().optional().describe("Label / name for the section"),
-      fillColor: z
-        .object({
-          r: z.number().min(0).max(1),
-          g: z.number().min(0).max(1),
-          b: z.number().min(0).max(1),
-          a: z.number().min(0).max(1).optional(),
-        })
+      fillColor: rgbaColorSchema
         .optional()
         .describe("Background fill color in RGBA format"),
       parentId: z

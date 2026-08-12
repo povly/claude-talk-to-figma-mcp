@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
-import { coerceJson } from "../utils/schema-helpers";
+import { coerceJson, rgbaColorSchema, nodeIdSchema, parentIdSchema } from "../utils/schema-helpers";
 
 /**
  * Register creation tools to the MCP server
@@ -19,24 +19,11 @@ export function registerCreationTools(server: McpServer): void {
       width: z.coerce.number().describe("Width of the rectangle"),
       height: z.coerce.number().describe("Height of the rectangle"),
       name: z.string().optional().describe("Optional name for the rectangle"),
-      parentId: z
-        .string()
-        .optional()
-        .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
-      fillColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      fillColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Fill color in RGBA format"),
-      strokeColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      strokeColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Stroke color in RGBA format"),
       strokeWeight: z.coerce.number().positive().optional().describe("Stroke weight"),
@@ -85,24 +72,11 @@ export function registerCreationTools(server: McpServer): void {
       width: z.coerce.number().describe("Width of the frame"),
       height: z.coerce.number().describe("Height of the frame"),
       name: z.string().optional().describe("Optional name for the frame"),
-      parentId: z
-        .string()
-        .optional()
-        .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
-      fillColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      fillColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Fill color in RGBA format"),
-      strokeColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      strokeColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Stroke color in RGBA format"),
       strokeWeight: z.coerce.number().positive().optional().describe("Stroke weight"),
@@ -165,22 +139,14 @@ export function registerCreationTools(server: McpServer): void {
         .coerce.number()
         .optional()
         .describe("Font weight (e.g., 400 for Regular, 700 for Bold)"),
-      fontColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      fontColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Font color in RGBA format"),
       name: z
         .string()
         .optional()
         .describe("Optional name for the text node by default following text"),
-      parentId: z
-        .string()
-        .optional()
-        .describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
       textAlignHorizontal: z
         .enum(["LEFT", "CENTER", "RIGHT", "JUSTIFIED"])
         .optional()
@@ -242,21 +208,11 @@ export function registerCreationTools(server: McpServer): void {
       width: z.coerce.number().describe("Width of the ellipse"),
       height: z.coerce.number().describe("Height of the ellipse"),
       name: z.string().optional().describe("Optional name for the ellipse"),
-      parentId: z.string().optional().describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
-      fillColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      fillColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Fill color in RGBA format"),
-      strokeColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      strokeColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Stroke color in RGBA format"),
       strokeWeight: z.coerce.number().positive().optional().describe("Stroke weight"),
@@ -308,21 +264,11 @@ export function registerCreationTools(server: McpServer): void {
       height: z.coerce.number().describe("Height of the polygon"),
       sides: z.coerce.number().min(3).optional().describe("Number of sides (default: 6)"),
       name: z.string().optional().describe("Optional name for the polygon"),
-      parentId: z.string().optional().describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
-      fillColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      fillColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Fill color in RGBA format"),
-      strokeColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      strokeColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Stroke color in RGBA format"),
       strokeWeight: z.coerce.number().positive().optional().describe("Stroke weight"),
@@ -376,21 +322,11 @@ export function registerCreationTools(server: McpServer): void {
       points: z.coerce.number().min(3).optional().describe("Number of points (default: 5)"),
       innerRadius: z.coerce.number().min(0.01).max(0.99).optional().describe("Inner radius ratio (0.01-0.99, default: 0.5)"),
       name: z.string().optional().describe("Optional name for the star"),
-      parentId: z.string().optional().describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
-      fillColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      parentId: parentIdSchema.describe("Parent node ID. REQUIRED — server enforces this. Use page node ID for top-level elements. Get page IDs via get_pages tool."),
+      fillColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Fill color in RGBA format"),
-      strokeColor: coerceJson(z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
-        }))
+      strokeColor: coerceJson(rgbaColorSchema)
         .optional()
         .describe("Stroke color in RGBA format"),
       strokeWeight: z.coerce.number().positive().optional().describe("Stroke weight"),
@@ -481,7 +417,7 @@ export function registerCreationTools(server: McpServer): void {
     "ungroup_nodes",
     "Ungroup nodes in Figma",
     {
-      nodeId: z.string().describe("ID of the node (group or frame) to ungroup"),
+      nodeId: nodeIdSchema.describe("ID of the node (group or frame) to ungroup"),
     },
     async ({ nodeId }) => {
       try {
@@ -519,10 +455,10 @@ export function registerCreationTools(server: McpServer): void {
     "clone_node",
     "Clone an existing node in Figma",
     {
-      nodeId: z.string().describe("The ID of the node to clone"),
+      nodeId: nodeIdSchema.describe("The ID of the node to clone"),
       x: z.coerce.number().optional().describe("New X position for the clone (local coordinates, relative to parent)"),
       y: z.coerce.number().optional().describe("New Y position for the clone (local coordinates, relative to parent)"),
-      parentId: z.string().optional().describe("The ID of the parent node to place the clone into. REQUIRED — server enforces this. Use page node ID for top-level elements.")
+      parentId: parentIdSchema.describe("The ID of the parent node to place the clone into. REQUIRED — server enforces this. Use page node ID for top-level elements.")
     },
     async ({ nodeId, x, y, parentId }) => {
       try {
@@ -554,8 +490,8 @@ export function registerCreationTools(server: McpServer): void {
     "insert_child",
     "Insert a child node inside a parent node in Figma",
     {
-      parentId: z.string().describe("ID of the parent node where the child will be inserted"),
-      childId: z.string().describe("ID of the child node to insert"),
+      parentId: parentIdSchema.describe("ID of the parent node where the child will be inserted"),
+      childId: nodeIdSchema.describe("ID of the child node to insert"),
       index: z.coerce.number().optional().describe("Optional index where to insert the child (if not specified, it will be added at the end)")
     },
     async ({ parentId, childId, index }) => {
@@ -599,7 +535,7 @@ export function registerCreationTools(server: McpServer): void {
     "flatten_node",
     "Flatten a node in Figma (e.g., for boolean operations or converting to path)",
     {
-      nodeId: z.string().describe("ID of the node to flatten"),
+      nodeId: nodeIdSchema.describe("ID of the node to flatten"),
     },
     async ({ nodeId }) => {
       try {

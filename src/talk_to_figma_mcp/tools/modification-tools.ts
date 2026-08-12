@@ -3,7 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
 import { applyColorDefaults, applyDefault, FIGMA_DEFAULTS } from "../utils/defaults";
 import { Color } from "../types/color";
-import { coerceJson, coerceBoolean } from "../utils/schema-helpers";
+import { coerceJson, coerceBoolean, rgbaColorSchema, nodeIdSchema } from "../utils/schema-helpers";
 
 /**
  * Register modification tools to the MCP server
@@ -16,11 +16,11 @@ export function registerModificationTools(server: McpServer): void {
     "set_fill_color",
     "Set the fill color of a node in Figma. Alpha component defaults to 1 (fully opaque) if not specified. Use alpha 0 for fully transparent.",
     {
-      nodeId: z.string().describe("The ID of the node to modify"),
-      r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-      g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-      b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-      a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1, defaults to 1 if not specified)"),
+      nodeId: nodeIdSchema.describe("The ID of the node to modify"),
+      r: rgbaColorSchema.shape.r.describe("Red component (0-1)"),
+      g: rgbaColorSchema.shape.g.describe("Green component (0-1)"),
+      b: rgbaColorSchema.shape.b.describe("Blue component (0-1)"),
+      a: rgbaColorSchema.shape.a.describe("Alpha component (0-1, defaults to 1 if not specified)"),
     },
     async ({ nodeId, r, g, b, a }) => {
       try {
@@ -59,11 +59,11 @@ export function registerModificationTools(server: McpServer): void {
     "set_stroke_color",
     "Set the stroke color of a node in Figma (defaults: opacity 1, weight 1)",
     {
-      nodeId: z.string().describe("The ID of the node to modify"),
-      r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-      g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-      b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-      a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1)"),
+      nodeId: nodeIdSchema.describe("The ID of the node to modify"),
+      r: rgbaColorSchema.shape.r.describe("Red component (0-1)"),
+      g: rgbaColorSchema.shape.g.describe("Green component (0-1)"),
+      b: rgbaColorSchema.shape.b.describe("Blue component (0-1)"),
+      a: rgbaColorSchema.shape.a.describe("Alpha component (0-1)"),
       strokeWeight: z.coerce.number().min(0).optional().describe("Stroke weight >= 0)"),
     },
     async ({ nodeId, r, g, b, a, strokeWeight }) => {
@@ -106,11 +106,11 @@ export function registerModificationTools(server: McpServer): void {
     "set_selection_colors",
     "Recursively change all stroke and fill colors of a node and all its descendants. Works like Figma's 'Selection colors' feature - perfect for recoloring icon instances.",
     {
-      nodeId: z.string().describe("The ID of the node to modify (typically an icon instance)"),
-      r: z.coerce.number().min(0).max(1).describe("Red component (0-1)"),
-      g: z.coerce.number().min(0).max(1).describe("Green component (0-1)"),
-      b: z.coerce.number().min(0).max(1).describe("Blue component (0-1)"),
-      a: z.coerce.number().min(0).max(1).optional().describe("Alpha component (0-1, defaults to 1)"),
+      nodeId: nodeIdSchema.describe("The ID of the node to modify (typically an icon instance)"),
+      r: rgbaColorSchema.shape.r.describe("Red component (0-1)"),
+      g: rgbaColorSchema.shape.g.describe("Green component (0-1)"),
+      b: rgbaColorSchema.shape.b.describe("Blue component (0-1)"),
+      a: rgbaColorSchema.shape.a.describe("Alpha component (0-1, defaults to 1)"),
     },
     async ({ nodeId, r, g, b, a }) => {
       try {
@@ -150,7 +150,7 @@ export function registerModificationTools(server: McpServer): void {
     "move_node",
     "Move a node to a new position in Figma",
     {
-      nodeId: z.string().describe("The ID of the node to move"),
+      nodeId: nodeIdSchema.describe("The ID of the node to move"),
       x: z.coerce.number().describe("New X position (local coordinates, relative to parent)"),
       y: z.coerce.number().describe("New Y position (local coordinates, relative to parent)"),
     },
@@ -184,7 +184,7 @@ export function registerModificationTools(server: McpServer): void {
     "resize_node",
     "Resize a node in Figma",
     {
-      nodeId: z.string().describe("The ID of the node to resize"),
+      nodeId: nodeIdSchema.describe("The ID of the node to resize"),
       width: z.coerce.number().positive().describe("New width"),
       height: z.coerce.number().positive().describe("New height"),
     },
@@ -222,7 +222,7 @@ export function registerModificationTools(server: McpServer): void {
     "delete_node",
     "Delete a node from Figma",
     {
-      nodeId: z.string().describe("The ID of the node to delete"),
+      nodeId: nodeIdSchema.describe("The ID of the node to delete"),
     },
     async ({ nodeId }) => {
       try {
@@ -253,7 +253,7 @@ export function registerModificationTools(server: McpServer): void {
     "set_corner_radius",
     "Set the corner radius of a node in Figma",
     {
-      nodeId: z.string().describe("The ID of the node to modify"),
+      nodeId: nodeIdSchema.describe("The ID of the node to modify"),
       radius: z.coerce.number().min(0).describe("Corner radius value"),
       corners: coerceJson(z
         .array(z.boolean())
@@ -297,7 +297,7 @@ export function registerModificationTools(server: McpServer): void {
     "set_auto_layout",
     "Configure auto layout properties for a node in Figma",
     {
-      nodeId: z.string().describe("The ID of the node to configure auto layout"),
+      nodeId: nodeIdSchema.describe("The ID of the node to configure auto layout"),
       layoutMode: z.enum(["HORIZONTAL", "VERTICAL", "NONE"]).describe("Layout direction"),
       paddingTop: z.coerce.number().optional().describe("Top padding in pixels"),
       paddingBottom: z.coerce.number().optional().describe("Bottom padding in pixels"),
@@ -353,16 +353,11 @@ export function registerModificationTools(server: McpServer): void {
     "set_effects",
     "Set the visual effects of a node in Figma",
     {
-      nodeId: z.string().describe("The ID of the node to modify"),
+      nodeId: nodeIdSchema.describe("The ID of the node to modify"),
       effects: coerceJson(z.array(
         z.object({
           type: z.enum(["DROP_SHADOW", "INNER_SHADOW", "LAYER_BLUR", "BACKGROUND_BLUR"]).describe("Effect type"),
-          color: z.object({
-            r: z.coerce.number().min(0).max(1).describe("Red (0-1)"),
-            g: z.coerce.number().min(0).max(1).describe("Green (0-1)"),
-            b: z.coerce.number().min(0).max(1).describe("Blue (0-1)"),
-            a: z.coerce.number().min(0).max(1).describe("Alpha (0-1)")
-          }).optional().describe("Effect color (for shadows)"),
+          color: rgbaColorSchema.optional().describe("Effect color (for shadows)"),
           offset: z.object({
             x: z.coerce.number().describe("X offset"),
             y: z.coerce.number().describe("Y offset")
@@ -409,7 +404,7 @@ export function registerModificationTools(server: McpServer): void {
     "set_effect_style_id",
     "Apply an effect style to a node in Figma",
     {
-      nodeId: z.string().describe("The ID of the node to modify"),
+      nodeId: nodeIdSchema.describe("The ID of the node to modify"),
       effectStyleId: z.string().describe("The ID of the effect style to apply")
     },
     async ({ nodeId, effectStyleId }) => {
@@ -447,7 +442,7 @@ export function registerModificationTools(server: McpServer): void {
     "rotate_node",
     "Rotate a node in Figma by a specified angle in degrees (clockwise). Use relative=true to add to the current rotation instead of setting an absolute value. Note: locked nodes can still be rotated — the Plugin API bypasses the UI lock by design.",
     {
-      nodeId: z.string().describe("The ID of the node to rotate"),
+      nodeId: nodeIdSchema.describe("The ID of the node to rotate"),
       angle: z.coerce.number().describe("Rotation angle in degrees (clockwise)"),
       relative: coerceBoolean.optional().describe("If true, add angle to current rotation instead of setting absolute value (default: false)"),
     },
@@ -485,7 +480,7 @@ export function registerModificationTools(server: McpServer): void {
     "set_node_properties",
     "Set visibility, lock state, and/or opacity of a node in Figma. Only provided properties are changed; omitted properties remain unchanged.",
     {
-      nodeId: z.string().describe("The ID of the node to modify"),
+      nodeId: nodeIdSchema.describe("The ID of the node to modify"),
       visible: coerceBoolean.optional().describe("Set node visibility (true = visible, false = hidden)"),
       locked: coerceBoolean.optional().describe("Set node lock state (true = locked, false = unlocked)"),
       opacity: z.coerce.number().min(0).max(1).optional().describe("Set node opacity (0 = fully transparent, 1 = fully opaque)"),
@@ -529,7 +524,7 @@ export function registerModificationTools(server: McpServer): void {
     "reorder_node",
     "Change the z-order (layer order) of a node within its parent. Distinct from insert_child which re-parents a node — reorder_node changes position within the same parent.",
     {
-      nodeId: z.string().describe("The ID of the node to reorder"),
+      nodeId: nodeIdSchema.describe("The ID of the node to reorder"),
       position: z.enum(["front", "back", "forward", "backward"]).optional().describe("Move to front/back or one step forward/backward"),
       index: z.coerce.number().optional().describe("Direct index position within parent's children (0 = bottom). Overrides position if both provided."),
     },
@@ -567,7 +562,7 @@ export function registerModificationTools(server: McpServer): void {
     "convert_to_frame",
     "Convert a group or shape node into a frame in Figma. Preserves position, size, visual properties, and children. Useful for converting groups into auto-layout-capable frames.",
     {
-      nodeId: z.string().describe("The ID of the node to convert to a frame"),
+      nodeId: nodeIdSchema.describe("The ID of the node to convert to a frame"),
     },
     async ({ nodeId }) => {
       try {
@@ -599,16 +594,11 @@ export function registerModificationTools(server: McpServer): void {
     "set_gradient",
     "Set a gradient fill on a node in Figma. Supports linear, radial, angular, and diamond gradients. Replaces all existing fills (same behavior as set_fill_color).",
     {
-      nodeId: z.string().describe("The ID of the node to modify"),
+      nodeId: nodeIdSchema.describe("The ID of the node to modify"),
       type: z.enum(["GRADIENT_LINEAR", "GRADIENT_RADIAL", "GRADIENT_ANGULAR", "GRADIENT_DIAMOND"]).describe("Gradient type"),
       stops: coerceJson(z.array(z.object({
         position: z.coerce.number().min(0).max(1).describe("Stop position (0-1, where 0 is start and 1 is end)"),
-        color: z.object({
-          r: z.coerce.number().min(0).max(1).describe("Red (0-1)"),
-          g: z.coerce.number().min(0).max(1).describe("Green (0-1)"),
-          b: z.coerce.number().min(0).max(1).describe("Blue (0-1)"),
-          a: z.coerce.number().min(0).max(1).optional().describe("Alpha (0-1, defaults to 1)"),
-        }),
+          color: rgbaColorSchema,
       })).min(2)).describe("Array of gradient color stops (minimum 2)"),
       gradientTransform: coerceJson(z.array(z.array(z.coerce.number()))).optional().describe("2x3 affine transform matrix [[a,b,tx],[c,d,ty]]. Defaults to left-to-right linear: [[1,0,0],[0,1,0]]"),
     },
@@ -650,7 +640,7 @@ export function registerModificationTools(server: McpServer): void {
     "set_image",
     "Set an image fill on a node from base64-encoded image data. Supports PNG, JPEG, GIF, WebP. Max ~5MB after decode.",
     {
-      nodeId: z.string().describe("The ID of the node to apply the image fill to"),
+      nodeId: nodeIdSchema.describe("The ID of the node to apply the image fill to"),
       imageData: z.string().max(7_000_000).describe("Base64-encoded image data (PNG, JPEG, GIF, or WebP). Max ~5MB after decode."),
       scaleMode: z.enum(["FILL", "FIT", "CROP", "TILE"]).optional().describe("How the image is scaled within the node (default: FILL)"),
     },
@@ -688,7 +678,7 @@ export function registerModificationTools(server: McpServer): void {
     "set_grid",
     "Apply layout grids to a frame node in Figma. Supports columns, rows, and grid patterns.",
     {
-      nodeId: z.string().describe("The ID of the frame node to apply grids to"),
+      nodeId: nodeIdSchema.describe("The ID of the frame node to apply grids to"),
       grids: coerceJson(z.array(
         z.object({
           pattern: z.enum(["COLUMNS", "ROWS", "GRID"]).describe("Grid pattern type"),
@@ -698,12 +688,7 @@ export function registerModificationTools(server: McpServer): void {
           offset: z.coerce.number().optional().describe("Offset from the edge in pixels"),
           alignment: z.enum(["MIN", "CENTER", "MAX", "STRETCH"]).optional().describe("Grid alignment"),
           visible: z.boolean().optional().describe("Whether the grid is visible (default: true)"),
-          color: z.object({
-            r: z.coerce.number().min(0).max(1).describe("Red (0-1)"),
-            g: z.coerce.number().min(0).max(1).describe("Green (0-1)"),
-            b: z.coerce.number().min(0).max(1).describe("Blue (0-1)"),
-            a: z.coerce.number().min(0).max(1).describe("Alpha (0-1)")
-          }).optional().describe("Grid color")
+          color: rgbaColorSchema.optional().describe("Grid color")
         })
       )).describe("Array of layout grids to apply")
     },
@@ -737,7 +722,7 @@ export function registerModificationTools(server: McpServer): void {
     "get_grid",
     "Read layout grids from a frame node in Figma",
     {
-      nodeId: z.string().describe("The ID of the frame node to read grids from"),
+      nodeId: nodeIdSchema.describe("The ID of the frame node to read grids from"),
     },
     async ({ nodeId }) => {
       try {
@@ -839,7 +824,7 @@ export function registerModificationTools(server: McpServer): void {
     "set_annotation",
     "Add an annotation label to a node in Figma. Uses the proposed Annotations API — requires Figma Desktop with enableProposedApi.",
     {
-      nodeId: z.string().describe("The ID of the node to annotate"),
+      nodeId: nodeIdSchema.describe("The ID of the node to annotate"),
       label: z.string().describe("The annotation label text"),
     },
     async ({ nodeId, label }) => {
@@ -872,7 +857,7 @@ export function registerModificationTools(server: McpServer): void {
     "get_annotation",
     "Read annotations from a node in Figma. Uses the proposed Annotations API.",
     {
-      nodeId: z.string().describe("The ID of the node to read annotations from"),
+      nodeId: nodeIdSchema.describe("The ID of the node to read annotations from"),
     },
     async ({ nodeId }) => {
       try {
@@ -904,7 +889,7 @@ export function registerModificationTools(server: McpServer): void {
     "rename_node",
     "Rename a node (frame, component, group, etc.) in Figma",
     {
-      nodeId: z.string().describe("The ID of the node to rename"),
+      nodeId: nodeIdSchema.describe("The ID of the node to rename"),
       name: z.string().describe("The new name for the node"),
     },
     async ({ nodeId, name }) => {
@@ -940,7 +925,7 @@ export function registerModificationTools(server: McpServer): void {
     "set_constraints",
     "Set horizontal and/or vertical constraints on a node. Constraints control how a node resizes relative to its parent.",
     {
-      nodeId: z.string().describe("The ID of the node to modify"),
+      nodeId: nodeIdSchema.describe("The ID of the node to modify"),
       horizontal: z.enum(["MIN", "CENTER", "MAX", "STRETCH", "SCALE"]).optional().describe("Horizontal constraint"),
       vertical: z.enum(["MIN", "CENTER", "MAX", "STRETCH", "SCALE"]).optional().describe("Vertical constraint"),
     },

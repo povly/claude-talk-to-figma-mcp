@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma } from "../utils/websocket";
-import { coerceJson } from "../utils/schema-helpers";
+import { coerceJson, rgbaColorSchema } from "../utils/schema-helpers";
 
 /**
  * Register style creation tools to the MCP server
@@ -78,10 +78,10 @@ export function registerStyleTools(server: McpServer): void {
     "Create a reusable color/paint style (SOLID) in Figma's local styles.",
     {
       name: z.string().describe("Name for the style (e.g., 'Brand/Primary' or 'UI/Background')"),
-      r: z.number().min(0).max(1).describe("Red component (0-1)"),
-      g: z.number().min(0).max(1).describe("Green component (0-1)"),
-      b: z.number().min(0).max(1).describe("Blue component (0-1)"),
-      a: z.number().min(0).max(1).optional().describe("Alpha/opacity (0-1, default 1)"),
+      r: rgbaColorSchema.shape.r.describe("Red component (0-1)"),
+      g: rgbaColorSchema.shape.g.describe("Green component (0-1)"),
+      b: rgbaColorSchema.shape.b.describe("Blue component (0-1)"),
+      a: rgbaColorSchema.shape.a.optional().describe("Alpha/opacity (0-1, default 1)"),
     },
     async ({ name, r, g, b, a = 1 }) => {
       try {
@@ -133,13 +133,7 @@ export function registerStyleTools(server: McpServer): void {
               })
               .optional()
               .describe("Shadow offset"),
-            color: z
-              .object({
-                r: z.number().min(0).max(1).describe("Red (0-1)"),
-                g: z.number().min(0).max(1).describe("Green (0-1)"),
-                b: z.number().min(0).max(1).describe("Blue (0-1)"),
-                a: z.number().min(0).max(1).optional().describe("Alpha (0-1)"),
-              })
+            color: rgbaColorSchema
               .optional()
               .describe("Effect color"),
             visible: z.boolean().optional().describe("Whether effect is visible"),
@@ -188,12 +182,7 @@ export function registerStyleTools(server: McpServer): void {
         pattern: z.enum(["COLUMNS", "ROWS", "GRID"]),
         sectionSize: z.number().optional().describe("Spacing between grid lines (for COLUMNS/ROWS) or grid size (for GRID)"),
         visible: z.boolean().default(true).describe("Whether the grid is visible"),
-        color: z.object({
-          r: z.number().min(0).max(1),
-          g: z.number().min(0).max(1),
-          b: z.number().min(0).max(1),
-          a: z.number().min(0).max(1).optional().default(1),
-        }).optional().describe("Grid line color (RGBA, 0-1)"),
+        color: rgbaColorSchema.optional().describe("Grid line color (RGBA, 0-1)"),
         count: z.number().optional().describe("Number of columns/rows (for COLUMNS/ROWS pattern)"),
         offset: z.number().optional().describe("Offset from the start (for COLUMNS/ROWS)"),
         gutter: z.number().optional().describe("Gutter between columns/rows"),
