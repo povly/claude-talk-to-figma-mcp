@@ -7,6 +7,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — R3 Defense-in-Depth
+
+### Added (Prevention)
+- **CI manifest validation** (`.github/workflows/build-dxt.yml`): new step before `dxt pack` that validates `dxt_version` field exists in root `manifest.json`. Catches regressions where root manifest is accidentally rewritten to Figma plugin format (the `7d9e4fc` bug pattern).
+- **DOM Safety convention** (`.ai-factory/rules/base.md`): new section codifying "Dynamic strings in DOM — only via `textContent`. `innerHTML` only for static trusted strings." References the P2 XSS fix pattern.
+- **ESLint setup** (`eslint.config.js` + `eslint-plugin-no-unsanitized`): flat config with `no-unsanitized/method` and `no-unsanitized/property` rules at error level. `code.ts` excluded (has `@ts-nocheck`, S1a scope). Initial run: 77 pre-existing violations (mostly `no-explicit-any` and `no-unused-vars`) — documented for future cleanup, not blocking.
+- **Vitest XSS prevention test** (`src/claude_mcp_plugin/__tests__/update-status-xss.test.ts`): 3 jsdom-based tests demonstrating that `textContent` renders malicious channel names as inert text, `createElement` + `textContent` for styled spans is safe, and `innerHTML` with interpolation would execute scripts (documents the threat).
+
+### Added (DevDeps)
+- `eslint@^10.8.1`, `@eslint/js@^10.0.1`, `typescript-eslint@^8.67.0`, `eslint-plugin-no-unsanitized@^4.1.5` — linting infrastructure.
+- `jsdom@^30.0.1` — DOM simulation for XSS prevention tests.
+
+### Changed
+- `package.json`: added `"lint": "eslint src/"` script.
+
 ## [Unreleased] — R2 Schema Hardening
 
 ### Cleanup (post-review)

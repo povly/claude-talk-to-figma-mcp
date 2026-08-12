@@ -58,6 +58,16 @@ jobs:
         npm install -g @anthropic-ai/dxt@0.2.0
         echo "✅ DXT CLI v0.2.0 installed successfully"
       
+    - name: Validate DXT manifest
+      run: |
+        set -e
+        if ! jq -e '.dxt_version' manifest.json > /dev/null 2>&1; then
+          echo "❌ manifest.json is missing dxt_version — not a valid DXT manifest"
+          echo "Check that root manifest.json has DXT schema, not Figma plugin schema"
+          exit 1
+        fi
+        echo "✅ DXT manifest validated (dxt_version present)"
+      
     - name: Validate build output
       run: |
         set -e
