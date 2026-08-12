@@ -5966,8 +5966,9 @@ async function getVariableDefs(params) {
 
     // Traverse subtree collecting bound variable IDs
     (node as unknown as { findAll: Function }).findAll((n: BaseNode) => {
-      if (n.boundVariables) {
-        collectVarIds(n.boundVariables);
+      const nWithVars = n as unknown as { boundVariables: Record<string, unknown> | undefined };
+      if (nWithVars.boundVariables) {
+        collectVarIds(nWithVars.boundVariables);
       }
       return false;
     });
