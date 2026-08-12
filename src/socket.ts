@@ -34,6 +34,8 @@ const stats = {
   unicastResponses: 0,
   discardedResponses: 0,
   cleanedStaleRequests: 0,
+  // Largest WS message observed (bytes) — tracks payload growth and validates depth-pruning effect.
+  maxPayloadSeen: 0,
 };
 
 // ─── Command Queue & Response Routing Infrastructure ────────────────────────
@@ -583,6 +585,13 @@ const server = Bun.serve({
       try {
         stats.messagesReceived++;
         const clientId = ws.data?.clientId || "unknown";
+
+        // Track largest message for payload-size monitoring (validates P1 depth-pruning effect).
+        const msgBytes = typeof message === "string" ? Buffer.byteLength(message) : (message as Buffer).length;
+        if (msgBytes > stats.maxPayloadSeen) {
+          stats.maxPayloadSeen = msgBytes;
+          logger.info(`New payload size record: ${msgBytes} bytes (${(msgBytes / 1024 / 1024).toFixed(2)} MB)`);
+        }
 
         logger.debug(`Received message from client ${clientId}:`, typeof message === 'string' ? message : '<binary>');
         const data = JSON.parse(message as string);

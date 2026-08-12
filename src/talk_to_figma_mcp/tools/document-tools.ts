@@ -3,6 +3,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { sendCommandToFigma, joinChannel } from "../utils/websocket.js";
 import { filterFigmaNode } from "../utils/figma-helpers.js";
 import { coerceJson } from "../utils/schema-helpers";
+import { logger } from "../utils/logger.js";
 
 /**
  * Register document-related tools to the MCP server
@@ -84,6 +85,8 @@ export function registerDocumentTools(server: McpServer): void {
         // Pass depth to plugin so it prunes BEFORE sending payload over WebSocket.
         // filterFigmaNode still runs below as a defensive layer (backwards compat with old plugins).
         const result = await sendCommandToFigma("get_node_info", { nodeId, depth });
+        const resultBytes = JSON.stringify(result).length;
+        logger.debug(`get_node_info: nodeId=${nodeId} depth=${depth ?? 1} resultBytes=${resultBytes}`);
         const filtered = filterFigmaNode(result, depth ?? 1);
         const coordinateNote = filtered.absoluteBoundingBox && filtered.localPosition
           ? "absoluteBoundingBox contains global coordinates (relative to canvas). localPosition contains local coordinates (relative to parent, use these for move_node)."
