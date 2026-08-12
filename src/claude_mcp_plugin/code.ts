@@ -3599,11 +3599,11 @@ async function flattenNode(params) {
     });
 
     // Race between the timeout and the operation
-    const flattened = await Promise.race([flattenPromise, timeoutPromise])
+    const flattened = (await Promise.race([flattenPromise, timeoutPromise])
       .finally(() => {
         // Clear the timeout to prevent memory leaks
         clearTimeout(timeoutId);
-      });
+      })) as SceneNode;
 
     return {
       id: flattened.id,
@@ -4129,8 +4129,9 @@ async function createComponentFromNode(params) {
   }
 
   // Check if the node can be converted to a component
-  if (node.type === "DOCUMENT" || node.type === "PAGE") {
-    throw new Error(`Cannot create component from ${node.type}`);
+  const baseNode = node as unknown as BaseNode;
+  if (baseNode.type === "DOCUMENT" || baseNode.type === "PAGE") {
+    throw new Error(`Cannot create component from ${baseNode.type}`);
   }
 
   // If already a component, return its info
