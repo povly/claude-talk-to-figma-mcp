@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+declare const figma: {
+  skipInvisibleInstanceChildren: boolean;
+  ui: { onmessage: Function | null };
+};
+
 // Module-load smoke test: code.ts executes side effects on import.
 // Verify the figma globals are wired up correctly by setup.ts mock.
 describe('plugin code.ts module load', () => {
@@ -16,12 +21,12 @@ describe('plugin code.ts module load', () => {
 
   it('sets figma.skipInvisibleInstanceChildren = true', async () => {
     await import('../code');
-    expect(globalThis.figma.skipInvisibleInstanceChildren).toBe(true);
+    expect(figma.skipInvisibleInstanceChildren).toBe(true);
   });
 
   it('registers figma.ui.onmessage handler', async () => {
     await import('../code');
-    expect(typeof globalThis.figma.ui.onmessage).toBe('function');
+    expect(typeof figma.ui.onmessage).toBe('function');
   });
 });
 
