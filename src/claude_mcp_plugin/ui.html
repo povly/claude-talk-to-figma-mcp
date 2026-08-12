@@ -270,6 +270,12 @@
             serverPort: 3055,
             pendingRequests: new Map(),
             channel: null,
+            // Auto-reconnect state — without this, any relay restart leaves the plugin
+            // permanently disconnected until the user manually clicks Connect.
+            reconnectAttempts: 0,
+            maxReconnectAttempts: 5,
+            reconnectTimer: null,
+            intentionalDisconnect: false,
           };
 
           // Cache DOM elements
@@ -332,6 +338,14 @@
          * Connect to WebSocket server
          */
         async connect(port = 3055) {
+          // Reset intentional-disconnect flag and clear any pending backoff timer
+          // so a manual Connect click cancels any in-flight scheduled reconnect.
+          this.state.intentionalDisconnect = false;
+          if (this.state.reconnectTimer) {
+            clearTimeout(this.state.reconnectTimer);
+            this.state.reconnectTimer = null;
+          }
+
           try {
             if (this.state.connected && this.state.socket) {
               this.updateStatus(true, "Already connected to server");
@@ -345,6 +359,8 @@
             this.state.socket = new WebSocket(`ws://localhost:${port}`);
 
             this.state.socket.onopen = () => {
+              // Successful connection resets the backoff counter.
+              this.state.reconnectAttempts = 0;
               const channelName = this.generateChannelName();
               console.log("Joining channel:", channelName);
               this.state.channel = channelName;
@@ -394,16 +410,29 @@
             };
 
             this.state.socket.onclose = () => {
+              console.debug("WebSocket onclose", {
+                intentional: this.state.intentionalDisconnect,
+                attempt: this.state.reconnectAttempts,
+              });
               this.state.connected = false;
               this.state.socket = null;
-              this.updateStatus(false, "Disconnected from server…<br>Try to reconnect clicking the button");
+              if (this.state.intentionalDisconnect) {
+                this.updateStatus(false, "Disconnected");
+              } else {
+                console.warn("WebSocket closed unexpectedly, scheduling reconnect");
+                this.updateStatus(false, "Connection lost. Reconnecting...");
+                this.connectWithBackoff();
+              }
             };
 
             this.state.socket.onerror = (error) => {
               console.error("WebSocket error:", error);
               this.updateStatus(false, "Connection error");
-              this.state.connected = false;
-              this.state.socket = null;
+              // onclose usually fires next and triggers reconnect.
+              // Schedule here as a fallback in case it doesn't (guard prevents double-scheduling).
+              if (!this.state.intentionalDisconnect) {
+                this.connectWithBackoff();
+              }
             };
           } catch (error) {
             console.error("Connection error:", error);
@@ -411,7 +440,66 @@
               false,
               `Connection error: ${error.message || "Unknown error"}`
             );
+            // If connect() throws synchronously, also schedule a retry (unintentional failure).
+            if (!this.state.intentionalDisconnect) {
+              this.connectWithBackoff();
+            }
           }
+        }
+
+        /**
+         * Schedule a reconnect attempt with exponential backoff.
+         * Called automatically by onclose/onerror when the connection drops unexpectedly.
+         * Skipped when the user disconnected manually (intentionalDisconnect flag) or
+         * when a reconnect is already pending (guard against double-scheduling).
+         *
+         * Backoff schedule: 1s → 2s → 4s → 8s → 16s, capped at 30s.
+         * After maxReconnectAttempts failed attempts, gives up and asks for manual Connect.
+         */
+        connectWithBackoff() {
+          // Guard 1: never auto-reconnect after a user-initiated disconnect.
+          if (this.state.intentionalDisconnect) {
+            console.debug("connectWithBackoff skipped: intentional disconnect");
+            return;
+          }
+          // Guard 2: never stack two pending reconnect timers (onerror + onclose can both fire).
+          if (this.state.reconnectTimer) {
+            console.debug("connectWithBackoff skipped: timer already pending");
+            return;
+          }
+
+          if (this.state.reconnectAttempts >= this.state.maxReconnectAttempts) {
+            console.warn(
+              `Max reconnect attempts (${this.state.maxReconnectAttempts}) reached; manual Connect required.`
+            );
+            this.updateStatus(
+              false,
+              `Connection lost after ${this.state.maxReconnectAttempts} attempts.<br>Click Connect to retry.`
+            );
+            return;
+          }
+
+          const delay = Math.min(
+            1000 * Math.pow(2, this.state.reconnectAttempts),
+            30000
+          );
+          this.state.reconnectAttempts++;
+          const attempt = this.state.reconnectAttempts;
+          console.debug("Scheduling reconnect", {
+            attempt,
+            delayMs: delay,
+            max: this.state.maxReconnectAttempts,
+          });
+          this.updateStatus(
+            false,
+            `Reconnecting in ${Math.round(delay / 1000)}s (attempt ${attempt}/${this.state.maxReconnectAttempts})...`
+          );
+
+          this.state.reconnectTimer = setTimeout(() => {
+            this.state.reconnectTimer = null;
+            console.debug("Reconnect attempt firing", { attempt });
+            this.connect(this.state.serverPort);
+          }, delay);
         }
 
         /**
@@ -419,6 +507,13 @@
          */
         disconnect() {
           if (this.state.socket) {
+            // Mark as intentional so onclose doesn't schedule an auto-reconnect.
+            this.state.intentionalDisconnect = true;
+            if (this.state.reconnectTimer) {
+              clearTimeout(this.state.reconnectTimer);
+              this.state.reconnectTimer = null;
+            }
+            this.state.reconnectAttempts = 0;
             this.updateStatus(false, "Disconnecting...");
             this.ui.connectionStatus.className = "mcp-plugin__connection-status info";
             this.state.socket.close();
