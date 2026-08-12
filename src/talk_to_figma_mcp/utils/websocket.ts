@@ -128,7 +128,9 @@ export function connectToFigma(port: number = defaultPort) {
 
         // Handle regular responses
         const myResponse = json.message;
-        logger.debug(`Received message: ${JSON.stringify(myResponse)}`);
+        // P3: truncate DEBUG payload to 200 chars (log hygiene).
+        const responseStr = JSON.stringify(myResponse);
+        logger.debug(`Received message (${responseStr.length} bytes): ${responseStr.substring(0, 200)}${responseStr.length > 200 ? '...' : ''}`);
 
         // Skip command echoes (own messages broadcast back to sender)
         if (myResponse.command) {
@@ -313,7 +315,9 @@ export function sendCommandToFigma(
 
     // Send the request
     logger.info(`Sending command to Figma: ${command}`);
-    logger.debug(`Request details: ${JSON.stringify(request)}`);
+    // P3: truncate DEBUG payload to 200 chars (log hygiene).
+    const requestStr = JSON.stringify(request);
+    logger.debug(`Request details (${requestStr.length} bytes): ${requestStr.substring(0, 200)}${requestStr.length > 200 ? '...' : ''}`);
     ws.send(JSON.stringify(request));
   });
 }

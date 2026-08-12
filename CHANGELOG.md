@@ -7,6 +7,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — P3 Performance & Polish
+
+### Performance
+- **Promise.allSettled for variable resolution** — `getBoundVariables` and `getVariableDefs` in the Figma plugin now resolve variable IDs in parallel instead of sequentially. Reduces latency proportionally to collection size.
+- **Batched getNodesInfo** — `exportAsync` calls now run in batches of 5 with `setTimeout(0)` yields between batches, preventing UI thread blockage on large node sets.
+- **Chunked findNodes traversal** — `findNodes` results now process in chunks of 200 with yields, preventing UI freeze on documents with 10k+ matching nodes.
+
+### Security (Log Hygiene)
+- **DEBUG log redaction** — `socket.ts` and `websocket.ts` DEBUG-level logs now truncate payloads to 200 characters with byte count. Prevents design content, node IDs, and text data from appearing in process logs at DEBUG level. INFO/WARN levels unchanged.
+
 ## [Unreleased] — R3 Defense-in-Depth
 
 ### Added (Prevention)

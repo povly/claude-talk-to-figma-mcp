@@ -666,7 +666,12 @@ const server = Bun.serve({
           logger.info(`New payload size record: ${msgBytes} bytes (${(msgBytes / 1024 / 1024).toFixed(2)} MB)`);
         }
 
-        logger.debug(`Received message from client ${clientId}:`, typeof message === 'string' ? message : '<binary>');
+        // P3: truncate DEBUG payload preview to 200 chars to avoid leaking
+        // design content / node IDs / text data into process logs.
+        const msgPreview = typeof message === 'string'
+          ? (message.length > 200 ? message.substring(0, 200) + '...' : message)
+          : '<binary>';
+        logger.debug(`Received message from client ${clientId} (${msgBytes} bytes): ${msgPreview}`);
         const data = JSON.parse(message as string);
 
         // ─── Join ──────────────────────────────────────────────────────

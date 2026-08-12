@@ -490,26 +490,36 @@ async function getNodesInfo(nodeIds) {
     // Filter out any null values (nodes that weren't found)
     const validNodes = nodes.filter((node) => node !== null);
 
-    // Export all valid nodes in parallel
-    const responses = await Promise.all(
-      validNodes.map(async (node) => {
-        const response = await node.exportAsync({
-          format: "JSON_REST_V1",
-        });
-        const doc = response.document;
-        // Add local coordinates if node supports positioning
-        if ("x" in node && "y" in node) {
-          doc.localPosition = {
-            x: node.x,
-            y: node.y
+    // Export valid nodes in batches of 5 with setTimeout(0) yields between
+    // batches — prevents UI thread blockage on large node sets.
+    const BATCH_SIZE = 5;
+    const responses = [];
+    for (let i = 0; i < validNodes.length; i += BATCH_SIZE) {
+      const batch = validNodes.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.all(
+        batch.map(async (node) => {
+          const response = await node.exportAsync({
+            format: "JSON_REST_V1",
+          });
+          const doc = response.document;
+          // Add local coordinates if node supports positioning
+          if ("x" in node && "y" in node) {
+            doc.localPosition = {
+              x: node.x,
+              y: node.y
+            };
+          }
+          return {
+            nodeId: node.id,
+            document: doc,
           };
-        }
-        return {
-          nodeId: node.id,
-          document: doc,
-        };
-      })
-    );
+        })
+      );
+      responses.push(...batchResults);
+      if (i + BATCH_SIZE < validNodes.length) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
+    }
 
     return responses;
   } catch (error) {
@@ -571,23 +581,27 @@ async function getBoundVariables(nodeId) {
   }
   collectVarIds(boundVariables);
 
-  // Resolve each variable alias to get name, type, codeSyntax
+  // Resolve each variable alias to get name, type, codeSyntax.
+  // P3: Promise.allSettled resolves all IDs in parallel; one bad ID
+  // must NOT reject the batch (rejected results are silently skipped,
+  // matching the previous per-iteration try/catch semantics).
+  const variableIdsArr = Array.from(variableIds);
+  const varResults = await Promise.allSettled(
+    variableIdsArr.map((id) => figma.variables.getVariableByIdAsync(id))
+  );
   const variableDetails = [];
-  for (const varId of variableIds) {
-    try {
-      const variable = await figma.variables.getVariableByIdAsync(varId);
-      if (variable) {
-        variableDetails.push({
-          id: variable.id,
-          name: variable.name,
-          resolvedType: variable.resolvedType,
-          codeSyntax: variable.codeSyntax || {},
-        });
-      }
-    } catch (e) {
-      // Skip unresolved variables
+  varResults.forEach((result) => {
+    if (result.status === "fulfilled" && result.value) {
+      const variable = result.value;
+      variableDetails.push({
+        id: variable.id,
+        name: variable.name,
+        resolvedType: variable.resolvedType,
+        codeSyntax: variable.codeSyntax || {},
+      });
     }
-  }
+    // rejected results are silently skipped (same as previous catch)
+  });
 
   return {
     nodeId: node.id,
@@ -670,24 +684,34 @@ async function findNodes(params) {
       });
     }
 
-    for (const node of allMatches) {
+    // P3: process matches in chunks of 200 with setTimeout(0) yields
+    // between chunks. Prevents UI freeze on documents with 10k+ matches.
+    const FIND_CHUNK = 200;
+    for (let i = 0; i < allMatches.length; i += FIND_CHUNK) {
       if (results.length >= limit) break;
-      const bounds = "absoluteBoundingBox" in node ? node.absoluteBoundingBox : null;
-      if (bounds) {
-        results.push({
-          id: node.id,
-          name: node.name,
-          type: node.type,
-          absoluteBoundingBox: { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height },
-          path: buildPath(node),
-        });
-      } else {
-        results.push({
-          id: node.id,
-          name: node.name,
-          type: node.type,
-          path: buildPath(node),
-        });
+      const chunk = allMatches.slice(i, i + FIND_CHUNK);
+      for (const node of chunk) {
+        if (results.length >= limit) break;
+        const bounds = "absoluteBoundingBox" in node ? node.absoluteBoundingBox : null;
+        if (bounds) {
+          results.push({
+            id: node.id,
+            name: node.name,
+            type: node.type,
+            absoluteBoundingBox: { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height },
+            path: buildPath(node),
+          });
+        } else {
+          results.push({
+            id: node.id,
+            name: node.name,
+            type: node.type,
+            path: buildPath(node),
+          });
+        }
+      }
+      if (i + FIND_CHUNK < allMatches.length && results.length < limit) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
       }
     }
   }
@@ -5905,22 +5929,29 @@ async function getVariableDefs(params) {
       return false;
     });
 
-    for (const varId of varIds) {
-      try {
-        const v = await figma.variables.getVariableByIdAsync(varId);
-        if (v) variablesToResolve.push({ variable: v, consumerNode: node });
-      } catch (e) {}
-    }
+    // P3: Promise.allSettled — one bad ID must NOT reject the batch.
+    const nodeVarIds = Array.from(varIds);
+    const nodeVarResults = await Promise.allSettled(
+      nodeVarIds.map((id) => figma.variables.getVariableByIdAsync(id))
+    );
+    nodeVarResults.forEach((result) => {
+      if (result.status === "fulfilled" && result.value) {
+        variablesToResolve.push({ variable: result.value, consumerNode: node });
+      }
+    });
   } else {
     // File-wide: iterate all collections
     const collections = await figma.variables.getLocalVariableCollectionsAsync();
     for (const col of collections) {
-      for (const varId of col.variableIds) {
-        try {
-          const v = await figma.variables.getVariableByIdAsync(varId);
-          if (v) variablesToResolve.push({ variable: v, consumerNode: null });
-        } catch (e) {}
-      }
+      // P3: Promise.allSettled per collection — same parallel-resolve semantics.
+      const colResults = await Promise.allSettled(
+        col.variableIds.map((id) => figma.variables.getVariableByIdAsync(id))
+      );
+      colResults.forEach((result) => {
+        if (result.status === "fulfilled" && result.value) {
+          variablesToResolve.push({ variable: result.value, consumerNode: null });
+        }
+      });
     }
   }
 
