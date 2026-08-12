@@ -69,7 +69,7 @@ const state = {
 
 // Helper function for progress updates
 function sendProgressUpdate(commandId, commandType, status, progress, totalItems, processedItems, message, payload = null) {
-  const update = {
+  const update: Record<string, unknown> = {
     type: 'command_progress',
     commandId,
     commandType,
@@ -6527,7 +6527,7 @@ async function setReactions(params) {
         if (a.type === "NODE" && a.navigation === "OVERLAY" && a.destinationId) {
           try {
             const destNode = await figma.getNodeByIdAsync(a.destinationId);
-            const info = { destId: a.destinationId, type: destNode ? destNode.type : "not found" };
+            const info: Record<string, unknown> = { destId: a.destinationId, type: destNode ? destNode.type : "not found" };
             if (destNode) {
               // For instances, set overlay properties on the main component
               let targetNode = destNode;
@@ -6592,7 +6592,7 @@ async function setReactions(params) {
       const mappedActions = r.actions.map((a) => {
         if (a.type === "NODE") {
           const nav = a.navigation || "NAVIGATE";
-          const nodeAction = {
+          const nodeAction: Record<string, unknown> = {
             type: "NODE",
             destinationId: a.destinationId || null,
             navigation: nav,
