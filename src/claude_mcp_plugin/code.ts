@@ -1872,14 +1872,20 @@ const setCharactersWithStrictMatchFont = async (
   characters: string,
   fallbackFont: Record<string, string>
 ) => {
-  const fontHashTree = {};
-  for (let i = 1; i < node.characters.length; i++) {
+  const n = node as unknown as {
+    fontName: FontName | typeof figma.mixed;
+    characters: string;
+    getRangeFontName: (start: number, end: number) => FontName;
+    setRangeFontName: (start: number, end: number, font: FontName) => void;
+  };
+  const fontHashTree: Record<string, string> = {};
+  for (let i = 1; i < n.characters.length; i++) {
     const startIdx = i - 1;
-    const startCharFont = node.getRangeFontName(startIdx, i);
+    const startCharFont = n.getRangeFontName(startIdx, i);
     const startCharFontVal = `${startCharFont.family}::${startCharFont.style}`;
-    while (i < node.characters.length) {
+    while (i < n.characters.length) {
       i++;
-      const charFont = node.getRangeFontName(i - 1, i);
+      const charFont = n.getRangeFontName(i - 1, i);
       if (startCharFontVal !== `${charFont.family}::${charFont.style}`) {
         break;
       }
@@ -1887,8 +1893,8 @@ const setCharactersWithStrictMatchFont = async (
     fontHashTree[`${startIdx}_${i}`] = startCharFontVal;
   }
   await figma.loadFontAsync(fallbackFont);
-  node.fontName = fallbackFont;
-  node.characters = characters;
+  n.fontName = fallbackFont;
+  n.characters = characters;
   console.log(fontHashTree);
   await Promise.all(
     Object.keys(fontHashTree).map(async (range) => {
@@ -1900,7 +1906,7 @@ const setCharactersWithStrictMatchFont = async (
         style,
       };
       await figma.loadFontAsync(matchedFont);
-      return node.setRangeFontName(Number(start), Number(end), matchedFont);
+      return n.setRangeFontName(Number(start), Number(end), matchedFont);
     })
   );
   return true;
@@ -1924,42 +1930,46 @@ const getDelimiterPos = (str: string, delimiter: string, startIdx: number = 0, e
 };
 
 const buildLinearOrder = (node: Record<string, unknown>) => {
-  const fontTree = [];
-  const newLinesPos = getDelimiterPos(node.characters, "\n");
-  newLinesPos.forEach(([newLinesRangeStart, newLinesRangeEnd], n) => {
-    const newLinesRangeFont = node.getRangeFontName(
+  const n = node as unknown as {
+    characters: string;
+    getRangeFontName: (start: number, end: number) => FontName | typeof figma.mixed;
+  };
+  const fontTree: Array<Record<string, unknown>> = [];
+  const newLinesPos = getDelimiterPos(n.characters, "\n");
+  newLinesPos.forEach(([newLinesRangeStart, newLinesRangeEnd]: number[]) => {
+    const newLinesRangeFont = n.getRangeFontName(
       newLinesRangeStart,
       newLinesRangeEnd
     );
     if (newLinesRangeFont === figma.mixed) {
       const spacesPos = getDelimiterPos(
-        node.characters,
+        n.characters,
         " ",
         newLinesRangeStart,
         newLinesRangeEnd
       );
-      spacesPos.forEach(([spacesRangeStart, spacesRangeEnd], s) => {
-        const spacesRangeFont = node.getRangeFontName(
+      spacesPos.forEach(([spacesRangeStart, spacesRangeEnd]: number[]) => {
+        const spacesRangeFont = n.getRangeFontName(
           spacesRangeStart,
           spacesRangeEnd
         );
         if (spacesRangeFont === figma.mixed) {
-          const spacesRangeFont = node.getRangeFontName(
+          const fallbackFont = n.getRangeFontName(
             spacesRangeStart,
-            spacesRangeStart[0]
+            spacesRangeStart
           );
           fontTree.push({
             start: spacesRangeStart,
             delimiter: " ",
-            family: spacesRangeFont.family,
-            style: spacesRangeFont.style,
+            family: fallbackFont.family,
+            style: fallbackFont.style,
           });
         } else {
           fontTree.push({
             start: spacesRangeStart,
             delimiter: " ",
-            family: spacesRangeFont.family,
-            style: spacesRangeFont.style,
+            family: (spacesRangeFont as FontName).family,
+            style: (spacesRangeFont as FontName).style,
           });
         }
       });
@@ -1982,31 +1992,36 @@ const setCharactersWithSmartMatchFont = async (
   characters: string,
   fallbackFont: Record<string, string>
 ) => {
+  const n = node as unknown as {
+    fontName: FontName | typeof figma.mixed;
+    characters: string;
+    setRangeFontName: (start: number, end: number, font: FontName) => void;
+  };
   const rangeTree = buildLinearOrder(node);
   const fontsToLoad = uniqBy(
     rangeTree,
-    ({ family, style }) => `${family}::${style}`
-  ).map(({ family, style }) => ({
+    ({ family, style }: Record<string, unknown>) => `${family}::${style}`
+  ).map(({ family, style }: Record<string, unknown>) => ({
     family,
     style,
   }));
 
   await Promise.all([...fontsToLoad, fallbackFont].map(figma.loadFontAsync));
 
-  node.fontName = fallbackFont;
-  node.characters = characters;
+  n.fontName = fallbackFont;
+  n.characters = characters;
 
   let prevPos = 0;
-  rangeTree.forEach(({ family, style, delimiter }) => {
-    if (prevPos < node.characters.length) {
-      const delimeterPos = node.characters.indexOf(delimiter, prevPos);
+  rangeTree.forEach(({ family, style, delimiter }: Record<string, unknown>) => {
+    if (prevPos < n.characters.length) {
+      const delimeterPos = n.characters.indexOf(delimiter as string, prevPos);
       const endPos =
-        delimeterPos > prevPos ? delimeterPos : node.characters.length;
+        delimeterPos > prevPos ? delimeterPos : n.characters.length;
       const matchedFont = {
         family,
         style,
       };
-      node.setRangeFontName(prevPos, endPos, matchedFont);
+      n.setRangeFontName(prevPos, endPos, matchedFont as FontName);
       prevPos = endPos + 1;
     }
   });
