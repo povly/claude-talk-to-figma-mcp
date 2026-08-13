@@ -186,7 +186,7 @@ async function handleCommand(command: CommandId, params: Record<string, unknown>
       if (!params || !params.nodeId) {
         throw new Error("Missing nodeId parameter");
       }
-      return await getNodeInfo(params.nodeId, params.depth);
+      return await getNodeInfo(params.nodeId as string, params.depth as number);
     case "get_nodes_info":
       if (!params || !params.nodeIds || !Array.isArray(params.nodeIds)) {
         throw new Error("Missing or invalid nodeIds parameter");
@@ -196,17 +196,17 @@ async function handleCommand(command: CommandId, params: Record<string, unknown>
       if (!params || !params.nodeId) {
         throw new Error("Missing nodeId parameter");
       }
-      return await getComponentProperties(params.nodeId);
+      return await getComponentProperties(params.nodeId as string);
     case "get_bound_variables":
       if (!params || !params.nodeId) {
         throw new Error("Missing nodeId parameter");
       }
-      return await getBoundVariables(params.nodeId);
+      return await getBoundVariables(params.nodeId as string);
     case "get_css":
       if (!params || !params.nodeId) {
         throw new Error("Missing nodeId parameter");
       }
-      return await getCSS(params.nodeId);
+      return await getCSS(params.nodeId as string);
     case "find_nodes":
       return await findNodes(params);
     case "create_rectangle":
