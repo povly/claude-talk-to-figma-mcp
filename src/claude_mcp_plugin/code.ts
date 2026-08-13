@@ -780,11 +780,17 @@ async function createRectangle(params: Record<string, unknown>) {
     strokeWeight,
   } = params || {};
 
+  const xNum = x as number;
+  const yNum = y as number;
+  const widthNum = width as number;
+  const heightNum = height as number;
+  const nameStr = name as string;
+
   const rect = figma.createRectangle();
-  rect.x = x;
-  rect.y = y;
-  rect.resize(width, height);
-  rect.name = name;
+  rect.x = xNum;
+  rect.y = yNum;
+  rect.resize(widthNum, heightNum);
+  rect.name = nameStr;
 
   // Set fill color if provided
   if (fillColor) {
@@ -843,12 +849,15 @@ async function createFrame(params: Record<string, unknown>) {
 
   const width = widthParam as number;
   const height = heightParam as number;
+  const xNum = x as number;
+  const yNum = y as number;
+  const nameStr = name as string;
 
   const frame = figma.createFrame();
-  frame.x = x;
-  frame.y = y;
+  frame.x = xNum;
+  frame.y = yNum;
   frame.resize(width, height);
-  frame.name = name;
+  frame.name = nameStr;
 
   // Set fill color if provided (invalid color → skip, keeping Figma default)
   if (fillColor) {
@@ -930,6 +939,9 @@ async function createText(params: Record<string, unknown>) {
   } = params || {};
 
   const fontColor = fontColorParam as Record<string, unknown>;
+  const xNum = x as number;
+  const yNum = y as number;
+  const nameStr = name as string;
 
   // Map common font weights to Figma font styles
   const getFontStyle = (weight) => {
