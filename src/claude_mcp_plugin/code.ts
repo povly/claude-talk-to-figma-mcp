@@ -138,7 +138,7 @@ figma.ui.onmessage = async (msg) => {
         figma.ui.postMessage({
           type: "command-error",
           id: msg.id,
-          error: error.message || "Error executing command",
+          error: (error instanceof Error ? error.message : String(error)) || "Error executing command",
         });
       }
       break;
@@ -564,7 +564,7 @@ async function getNodesInfo(nodeIds) {
 
     return responses;
   } catch (error) {
-    throw new Error(`Error getting nodes info: ${error.message}`);
+    throw new Error(`Error getting nodes info: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -722,7 +722,7 @@ async function findNodes(params: Record<string, unknown>) {
       const rootDepth = "depth" in root ? (root.depth as number) || 0 : 0;
       allMatches = allMatches.filter((n) => {
         if (!("depth" in n)) return true;
-        return ((n as unknown as { depth: number }).depth - rootDepth) <= params.maxDepth;
+        return ((n as unknown as { depth: number }).depth - rootDepth) <= (params.maxDepth as number);
       });
     }
 
@@ -832,14 +832,17 @@ async function createFrame(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
-    width = 100,
-    height = 100,
+    width: widthParam = 100,
+    height: heightParam = 100,
     name = "Frame",
     parentId,
     fillColor,
     strokeColor,
     strokeWeight,
   } = params || {};
+
+  const width = widthParam as number;
+  const height = heightParam as number;
 
   const frame = figma.createFrame();
   frame.x = x;
@@ -918,13 +921,15 @@ async function createText(params: Record<string, unknown>) {
     text = "Text",
     fontSize = 14,
     fontWeight = 400,
-    fontColor = { r: 0, g: 0, b: 0, a: 1 }, // Default to black
+    fontColor: fontColorParam = { r: 0, g: 0, b: 0, a: 1 }, // Default to black
     name = "Text",
     parentId,
     textAlignHorizontal,
     textAutoResize,
     width,
   } = params || {};
+
+  const fontColor = fontColorParam as Record<string, unknown>;
 
   // Map common font weights to Figma font styles
   const getFontStyle = (weight) => {
@@ -1389,7 +1394,7 @@ async function getLocalComponents() {
 //       })),
 //     };
 //   } catch (error) {
-//     throw new Error(`Error getting team components: ${error.message}`);
+//     throw new Error(`Error getting team components: ${(error instanceof Error ? error.message : String(error))}`);
 //   }
 // }
 
@@ -1403,7 +1408,7 @@ async function createComponentInstance(params: Record<string, unknown>) {
   try {
     console.log(`Looking for component with key: ${componentKey}...`);
 
-    let component = null;
+    let component: Record<string, unknown> | null = null;
 
     // Try to find the component locally first (faster than import)
     try {
@@ -1427,7 +1432,7 @@ async function createComponentInstance(params: Record<string, unknown>) {
         console.log(`Found component locally: ${component.name}`);
       }
     } catch (findError) {
-      console.log(`Error searching locally: ${findError.message}`);
+      console.log(`Error searching locally: ${(findError instanceof Error ? findError.message : String(findError))}`);
     }
 
     // If not found locally, try importing (for remote/team library components)
@@ -1453,7 +1458,7 @@ async function createComponentInstance(params: Record<string, unknown>) {
 
     // Create instance and set properties in a separate try block to handle errors specifically from this step
     try {
-      const instance = component.createInstance();
+      const instance = (component.createInstance as Function)();
       instance.x = x;
       instance.y = y;
 
@@ -1483,22 +1488,24 @@ async function createComponentInstance(params: Record<string, unknown>) {
         componentId: instance.componentId,
       };
     } catch (instanceError) {
-      console.error(`Error creating component instance: ${instanceError.message}`);
-      throw new Error(`Error creating component instance: ${instanceError.message}`);
+      const errMsg = instanceError instanceof Error ? instanceError.message : String(instanceError);
+      console.error(`Error creating component instance: ${errMsg}`);
+      throw new Error(`Error creating component instance: ${errMsg}`);
     }
   } catch (error) {
-    console.error(`Detailed error creating component instance: ${error.message || "Unknown error"}`);
-    console.error(`Stack trace: ${error.stack || "Not available"}`);
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error(`Detailed error creating component instance: ${err.message || "Unknown error"}`);
+    console.error(`Stack trace: ${err.stack || "Not available"}`);
 
     // Provide more helpful error messages for common failure scenarios
-    if (error.message.includes("timeout") || error.message.includes("Timeout")) {
+    if (err.message.includes("timeout") || err.message.includes("Timeout")) {
       throw new Error(`The component import timed out after 10 seconds. This usually happens with complex remote components or network issues. Try again later or use a simpler component.`);
-    } else if (error.message.includes("not found") || error.message.includes("Not found")) {
+    } else if (err.message.includes("not found") || err.message.includes("Not found")) {
       throw new Error(`Component with key "${componentKey}" not found. Make sure the component exists and is accessible in your document or team libraries.`);
-    } else if (error.message.includes("permission") || error.message.includes("Permission")) {
+    } else if (err.message.includes("permission") || err.message.includes("Permission")) {
       throw new Error(`You don't have permission to use this component. Make sure you have access to the team library containing this component.`);
     } else {
-      throw new Error(`Error creating component instance: ${error.message}`);
+      throw new Error(`Error creating component instance: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 }
@@ -1577,7 +1584,7 @@ async function exportNodeAsImage(params: Record<string, unknown>) {
       imageData: base64,
     };
   } catch (error) {
-    throw new Error(`Error exporting node as image: ${error.message}`);
+    throw new Error(`Error exporting node as image: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 function customBase64Encode(bytes) {
@@ -1745,7 +1752,7 @@ async function setTextContent(params: Record<string, unknown>) {
       fontName: node.fontName,
     };
   } catch (error) {
-    throw new Error(`Error setting text content: ${error.message}`);
+    throw new Error(`Error setting text content: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -2108,11 +2115,11 @@ async function scanTextNodes(params: Record<string, unknown>) {
         0,
         0,
         0,
-        `Error scanning text nodes: ${error.message}`,
-        { error: error.message }
+        `Error scanning text nodes: ${(error instanceof Error ? error.message : String(error))}`,
+        { error: (error instanceof Error ? error.message : String(error)) }
       );
 
-      throw new Error(`Error scanning text nodes: ${error.message}`);
+      throw new Error(`Error scanning text nodes: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 
@@ -2196,7 +2203,7 @@ async function scanTextNodes(params: Record<string, unknown>) {
             chunkTextNodes.push(textNodeInfo);
           }
         } catch (error) {
-          console.error(`Error processing text node: ${error.message}`);
+          console.error(`Error processing text node: ${(error instanceof Error ? error.message : String(error))}`);
           // Continue with other nodes
         }
       }
@@ -2577,7 +2584,7 @@ async function setMultipleTextContents(params: Record<string, unknown>) {
             },
           ];
         } catch (highlightErr) {
-          console.error(`Error highlighting text node: ${highlightErr.message}`);
+          console.error(`Error highlighting text node: ${(highlightErr instanceof Error ? highlightErr.message : String(highlightErr))}`);
           // Continue anyway, highlighting is just visual feedback
         }
 
@@ -2594,7 +2601,7 @@ async function setMultipleTextContents(params: Record<string, unknown>) {
             await delay(500);
             textNode.fills = originalFills;
           } catch (restoreErr) {
-            console.error(`Error restoring fills: ${restoreErr.message}`);
+            console.error(`Error restoring fills: ${(restoreErr instanceof Error ? restoreErr.message : String(restoreErr))}`);
           }
         }
 
@@ -2606,11 +2613,11 @@ async function setMultipleTextContents(params: Record<string, unknown>) {
           translatedText: replacement.text
         };
       } catch (error) {
-        console.error(`Error replacing text in node ${replacement.nodeId}: ${error.message}`);
+        console.error(`Error replacing text in node ${replacement.nodeId}: ${(error instanceof Error ? error.message : String(error))}`);
         return {
           success: false,
           nodeId: replacement.nodeId,
-          error: `Error applying replacement: ${error.message}`
+          error: `Error applying replacement: ${(error instanceof Error ? error.message : String(error))}`
         };
       }
     });
@@ -2803,7 +2810,7 @@ async function setFontName(params: Record<string, unknown>) {
       fontName: node.fontName
     };
   } catch (error) {
-    throw new Error(`Error setting font name: ${error.message}`);
+    throw new Error(`Error setting font name: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -2831,7 +2838,7 @@ async function setFontSize(params: Record<string, unknown>) {
       fontSize: node.fontSize
     };
   } catch (error) {
-    throw new Error(`Error setting font size: ${error.message}`);
+    throw new Error(`Error setting font size: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -2878,7 +2885,7 @@ async function setFontWeight(params: Record<string, unknown>) {
       weight: weight
     };
   } catch (error) {
-    throw new Error(`Error setting font weight: ${error.message}`);
+    throw new Error(`Error setting font weight: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -2906,7 +2913,7 @@ async function setLetterSpacing(params: Record<string, unknown>) {
       letterSpacing: node.letterSpacing
     };
   } catch (error) {
-    throw new Error(`Error setting letter spacing: ${error.message}`);
+    throw new Error(`Error setting letter spacing: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -2934,7 +2941,7 @@ async function setLineHeight(params: Record<string, unknown>) {
       lineHeight: node.lineHeight
     };
   } catch (error) {
-    throw new Error(`Error setting line height: ${error.message}`);
+    throw new Error(`Error setting line height: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -2962,7 +2969,7 @@ async function setParagraphSpacing(params: Record<string, unknown>) {
       paragraphSpacing: node.paragraphSpacing
     };
   } catch (error) {
-    throw new Error(`Error setting paragraph spacing: ${error.message}`);
+    throw new Error(`Error setting paragraph spacing: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -2995,7 +3002,7 @@ async function setTextCase(params: Record<string, unknown>) {
       textCase: node.textCase
     };
   } catch (error) {
-    throw new Error(`Error setting text case: ${error.message}`);
+    throw new Error(`Error setting text case: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -3028,7 +3035,7 @@ async function setTextDecoration(params: Record<string, unknown>) {
       textDecoration: node.textDecoration
     };
   } catch (error) {
-    throw new Error(`Error setting text decoration: ${error.message}`);
+    throw new Error(`Error setting text decoration: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -3077,7 +3084,7 @@ async function setTextAlign(params: Record<string, unknown>) {
       textAlignVertical: node.textAlignVertical
     };
   } catch (error) {
-    throw new Error(`Error setting text alignment: ${error.message}`);
+    throw new Error(`Error setting text alignment: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -3157,7 +3164,7 @@ async function getStyledTextSegments(params: Record<string, unknown>) {
       segments: safeSegments
     };
   } catch (error) {
-    throw new Error(`Error getting styled text segments: ${error.message}`);
+    throw new Error(`Error getting styled text segments: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -3176,7 +3183,7 @@ async function loadFontAsyncWrapper(params: Record<string, unknown>) {
       message: `Successfully loaded ${family} ${style}`
     };
   } catch (error) {
-    throw new Error(`Error loading font: ${error.message}`);
+    throw new Error(`Error loading font: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -3227,11 +3234,12 @@ async function getRemoteComponents() {
       }))
     };
   } catch (error) {
-    console.error(`Detailed error retrieving remote components: ${error.message || "Unknown error"}`);
-    console.error(`Stack trace: ${error.stack || "Not available"}`);
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error(`Detailed error retrieving remote components: ${err.message || "Unknown error"}`);
+    console.error(`Stack trace: ${err.stack || "Not available"}`);
 
     // Instead of returning an error object, throw an exception with the error message
-    throw new Error(`Error retrieving remote components: ${error.message}`);
+    throw new Error(`Error retrieving remote components: ${err.message}`);
   }
 }
 
@@ -3298,7 +3306,7 @@ async function setEffects(params: Record<string, unknown>) {
       effects: node.effects
     };
   } catch (error) {
-    throw new Error(`Error setting effects: ${error.message}`);
+    throw new Error(`Error setting effects: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -3368,20 +3376,21 @@ async function setEffectStyleId(params: Record<string, unknown>) {
     console.log(`Successfully set effect style ID on node ${nodeId}`);
     return result;
   } catch (error) {
-    console.error(`Error setting effect style ID: ${error.message || "Unknown error"}`);
-    console.error(`Stack trace: ${error.stack || "Not available"}`);
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error(`Error setting effect style ID: ${err.message || "Unknown error"}`);
+    console.error(`Stack trace: ${err.stack || "Not available"}`);
 
     // Proporcionar mensajes de error específicos para diferentes casos
-    if (error.message.includes("timeout") || error.message.includes("Timeout")) {
+    if (err.message.includes("timeout") || err.message.includes("Timeout")) {
       throw new Error(`The operation timed out after 8 seconds. This could happen with complex nodes or effects. Try with a simpler node or effect style.`);
-    } else if (error.message.includes("not found") && error.message.includes("Node")) {
+    } else if (err.message.includes("not found") && err.message.includes("Node")) {
       throw new Error(`Node with ID "${nodeId}" not found. Make sure the node exists in the current document.`);
-    } else if (error.message.includes("not found") && error.message.includes("style")) {
+    } else if (err.message.includes("not found") && err.message.includes("style")) {
       throw new Error(`Effect style with ID "${effectStyleId}" not found. Make sure the style exists in your local styles.`);
-    } else if (error.message.includes("does not support")) {
+    } else if (err.message.includes("does not support")) {
       throw new Error(`The selected node type does not support effect styles. Only certain node types like frames, components, and instances can have effect styles.`);
     } else {
-      throw new Error(`Error setting effect style ID: ${error.message}`);
+      throw new Error(`Error setting effect style ID: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 }
@@ -3459,20 +3468,21 @@ async function setTextStyleId(params: Record<string, unknown>) {
     console.log(`Successfully set text style ID on node ${nodeId}`);
     return result;
   } catch (error) {
-    console.error(`Error setting text style ID: ${error.message || "Unknown error"}`);
-    console.error(`Stack trace: ${error.stack || "Not available"}`);
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error(`Error setting text style ID: ${err.message || "Unknown error"}`);
+    console.error(`Stack trace: ${err.stack || "Not available"}`);
 
     // Provide specific error messages for different cases
-    if (error.message.includes("timeout") || error.message.includes("Timeout")) {
+    if (err.message.includes("timeout") || err.message.includes("Timeout")) {
       throw new Error(`The operation timed out after 8 seconds. This could happen with complex nodes. Try with a simpler node.`);
-    } else if (error.message.includes("not found") && error.message.includes("Node")) {
+    } else if (err.message.includes("not found") && err.message.includes("Node")) {
       throw new Error(`Node with ID "${nodeId}" not found. Make sure the node exists in the current document.`);
-    } else if (error.message.includes("not found") && error.message.includes("style")) {
+    } else if (err.message.includes("not found") && err.message.includes("style")) {
       throw new Error(`Text style with ID "${textStyleId}" not found. Make sure the style exists in your local styles.`);
-    } else if (error.message.includes("not a text node")) {
+    } else if (err.message.includes("not a text node")) {
       throw new Error(`The selected node is not a text node. Only text nodes can have text styles applied.`);
     } else {
-      throw new Error(`Error setting text style ID: ${error.message}`);
+      throw new Error(`Error setting text style ID: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 }
@@ -3519,7 +3529,7 @@ async function groupNodes(params: Record<string, unknown>) {
       children: group.children.map(child => ({ id: child.id, name: child.name, type: child.type }))
     };
   } catch (error) {
-    throw new Error(`Error grouping nodes: ${error.message}`);
+    throw new Error(`Error grouping nodes: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -3555,7 +3565,7 @@ async function ungroupNodes(params: Record<string, unknown>) {
       items: ungroupedItems.map(item => ({ id: item.id, name: item.name, type: item.type }))
     };
   } catch (error) {
-    throw new Error(`Error ungrouping node: ${error.message}`);
+    throw new Error(`Error ungrouping node: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
@@ -3604,7 +3614,7 @@ async function flattenNode(params: Record<string, unknown>) {
           console.log(`Flatten operation completed successfully for node ID ${nodeId}`);
           resolve(flattened);
         } catch (err) {
-          console.error(`Error during flatten operation: ${err.message}`);
+          console.error(`Error during flatten operation: ${(err instanceof Error ? err.message : String(err))}`);
           reject(err);
         }
       }, 0);
@@ -3623,12 +3633,13 @@ async function flattenNode(params: Record<string, unknown>) {
       type: flattened.type
     };
   } catch (error) {
-    console.error(`Error in flattenNode: ${error.message}`);
-    if (error.message.includes("timed out")) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error(`Error in flattenNode: ${errMsg}`);
+    if (errMsg.includes("timed out")) {
       // Provide a more helpful message for timeout errors
       throw new Error(`The flatten operation timed out. This usually happens with complex nodes. Try simplifying the node first or breaking it into smaller parts.`);
     } else {
-      throw new Error(`Error flattening node: ${error.message}`);
+      throw new Error(`Error flattening node: ${(error instanceof Error ? error.message : String(error))}`);
     }
   }
 }
@@ -3683,8 +3694,8 @@ async function insertChild(params: Record<string, unknown>) {
       previousParentId: originalParent ? originalParent.id : null
     };
   } catch (error) {
-    console.error(`Error inserting child: ${error.message}`, error);
-    throw new Error(`Error inserting child: ${error.message}`);
+    console.error(`Error inserting child: ${(error instanceof Error ? error.message : String(error))}`, error);
+    throw new Error(`Error inserting child: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
 
