@@ -1805,16 +1805,22 @@ function uniqBy(arr: unknown[], predicate: string | ((item: unknown) => unknown)
   ];
 }
 const setCharacters = async (node: Record<string, unknown>, characters: string, options?: Record<string, unknown>) => {
+  const n = node as unknown as {
+    fontName: FontName | typeof figma.mixed;
+    characters: string;
+    getRangeFontName: (start: number, end: number) => FontName;
+    setRangeFontName: (start: number, end: number, font: FontName) => void;
+  };
   const fallbackFont = (options && options.fallbackFont) || {
     family: "Inter",
     style: "Regular",
   };
   try {
-    if (node.fontName === figma.mixed) {
+    if (n.fontName === figma.mixed) {
       if (options && options.smartStrategy === "prevail") {
-        const fontHashTree = {};
-        for (let i = 1; i < node.characters.length; i++) {
-          const charFont = node.getRangeFontName(i - 1, i);
+        const fontHashTree: Record<string, number> = {};
+        for (let i = 1; i < n.characters.length; i++) {
+          const charFont = n.getRangeFontName(i - 1, i);
           const key = `${charFont.family}::${charFont.style}`;
           fontHashTree[key] = fontHashTree[key] ? fontHashTree[key] + 1 : 1;
         }
@@ -1827,32 +1833,33 @@ const setCharacters = async (node: Record<string, unknown>, characters: string, 
           style,
         };
         await figma.loadFontAsync(prevailedFont);
-        node.fontName = prevailedFont;
+        n.fontName = prevailedFont;
       } else if (options && options.smartStrategy === "strict") {
         return setCharactersWithStrictMatchFont(node, characters, fallbackFont);
       } else if (options && options.smartStrategy === "experimental") {
         return setCharactersWithSmartMatchFont(node, characters, fallbackFont);
       } else {
-        const firstCharFont = node.getRangeFontName(0, 1);
+        const firstCharFont = n.getRangeFontName(0, 1);
         await figma.loadFontAsync(firstCharFont);
-        node.fontName = firstCharFont;
+        n.fontName = firstCharFont;
       }
     } else {
       await figma.loadFontAsync({
-        family: node.fontName.family,
-        style: node.fontName.style,
+        family: (n.fontName as FontName).family,
+        style: (n.fontName as FontName).style,
       });
     }
   } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
     console.warn(
-      `Failed to load "${node.fontName["family"]} ${node.fontName["style"]}" font and replaced with fallback "${fallbackFont.family} ${fallbackFont.style}"`,
-      err
+      `Failed to load "${(n.fontName as FontName).family} ${(n.fontName as FontName).style}" font and replaced with fallback "${fallbackFont.family} ${fallbackFont.style}"`,
+      errMsg
     );
     await figma.loadFontAsync(fallbackFont);
-    node.fontName = fallbackFont;
+    n.fontName = fallbackFont;
   }
   try {
-    node.characters = characters;
+    n.characters = characters;
     return true;
   } catch (err) {
     console.warn(`Failed to set characters. Skipped.`, err);
