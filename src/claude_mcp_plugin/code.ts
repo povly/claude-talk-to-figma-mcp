@@ -672,7 +672,7 @@ async function getCSS(nodeId) {
   };
 }
 
-async function findNodes(params) {
+async function findNodes(params: Record<string, unknown>) {
   const root = params.nodeId
     ? await getNodeByIdSafe(params.nodeId)
     : figma.currentPage;
@@ -761,7 +761,7 @@ async function findNodes(params) {
   };
 }
 
-async function createRectangle(params) {
+async function createRectangle(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
@@ -822,7 +822,7 @@ async function createRectangle(params) {
   };
 }
 
-async function createFrame(params) {
+async function createFrame(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
@@ -905,7 +905,7 @@ async function createFrame(params) {
   };
 }
 
-async function createText(params) {
+async function createText(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
@@ -1020,7 +1020,7 @@ async function createText(params) {
   };
 }
 
-async function setFillColor(params) {
+async function setFillColor(params: Record<string, unknown>) {
   const {
     nodeId,
     color,
@@ -1053,7 +1053,7 @@ async function setFillColor(params) {
   };
 }
 
-async function setStrokeColor(params) {
+async function setStrokeColor(params: Record<string, unknown>) {
   const {
     nodeId,
     color,
@@ -1092,7 +1092,7 @@ async function setStrokeColor(params) {
   };
 }
 
-async function setSelectionColors(params) {
+async function setSelectionColors(params: Record<string, unknown>) {
   const { nodeId, r, g, b, a, commandId } = params || {};
 
   if (!nodeId) {
@@ -1198,7 +1198,7 @@ async function setSelectionColors(params) {
   };
 }
 
-async function moveNode(params) {
+async function moveNode(params: Record<string, unknown>) {
   const { nodeId, x, y } = params || {};
 
   if (!nodeId) {
@@ -1229,7 +1229,7 @@ async function moveNode(params) {
   };
 }
 
-async function resizeNode(params) {
+async function resizeNode(params: Record<string, unknown>) {
   const { nodeId, width, height } = params || {};
 
   if (!nodeId) {
@@ -1259,7 +1259,7 @@ async function resizeNode(params) {
   };
 }
 
-async function deleteNode(params) {
+async function deleteNode(params: Record<string, unknown>) {
   const { nodeId } = params || {};
 
   if (!nodeId) {
@@ -1387,7 +1387,7 @@ async function getLocalComponents() {
 //   }
 // }
 
-async function createComponentInstance(params) {
+async function createComponentInstance(params: Record<string, unknown>) {
   const { componentKey, x = 0, y = 0, parentId } = params || {};
 
   if (!componentKey) {
@@ -1497,7 +1497,7 @@ async function createComponentInstance(params) {
   }
 }
 
-async function exportNodeAsImage(params) {
+async function exportNodeAsImage(params: Record<string, unknown>) {
   const { nodeId, scale = 1, format = "PNG" } = params || {};
 
   if (!nodeId) {
@@ -1656,7 +1656,7 @@ function customBase64Decode(base64) {
   return bytes;
 }
 
-async function setCornerRadius(params) {
+async function setCornerRadius(params: Record<string, unknown>) {
   const { nodeId, radius, corners } = params || {};
 
   if (!nodeId) {
@@ -1707,7 +1707,7 @@ async function setCornerRadius(params) {
   };
 }
 
-async function setTextContent(params) {
+async function setTextContent(params: Record<string, unknown>) {
   const { nodeId, text } = params || {};
 
   if (!nodeId) {
@@ -1982,7 +1982,7 @@ const setCharactersWithSmartMatchFont = async (
 };
 
 // Add the cloneNode function implementation
-async function cloneNode(params) {
+async function cloneNode(params: Record<string, unknown>) {
   const { nodeId, x, y, parentId } = params || {};
 
   if (!nodeId) {
@@ -2032,7 +2032,7 @@ async function cloneNode(params) {
   };
 }
 
-async function scanTextNodes(params) {
+async function scanTextNodes(params: Record<string, unknown>) {
   console.log(`Starting to scan text nodes from node ID: ${params.nodeId}`);
   const { nodeId, useChunking = true, chunkSize = 10, commandId = generateCommandId() } = params || {};
 
@@ -2426,7 +2426,7 @@ async function findTextNodes(node, parentPath = [], depth = 0, textNodes = []) {
 }
 
 // Replace text in a specific node
-async function setMultipleTextContents(params) {
+async function setMultipleTextContents(params: Record<string, unknown>) {
   const { nodeId, text } = params || {};
   const commandId = params.commandId || generateCommandId();
 
@@ -2686,7 +2686,7 @@ function generateCommandId() {
   return 'cmd_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
-async function setAutoLayout(params) {
+async function setAutoLayout(params: Record<string, unknown>) {
   const {
     nodeId,
     layoutMode,
@@ -2773,7 +2773,7 @@ async function setAutoLayout(params) {
 
 // Nuevas funciones para propiedades de texto
 
-async function setFontName(params) {
+async function setFontName(params: Record<string, unknown>) {
   const { nodeId, family, style } = params || {};
   if (!nodeId || !family) {
     throw new Error("Missing nodeId or font family");
@@ -2801,7 +2801,7 @@ async function setFontName(params) {
   }
 }
 
-async function setFontSize(params) {
+async function setFontSize(params: Record<string, unknown>) {
   const { nodeId, fontSize } = params || {};
   if (!nodeId || fontSize === undefined) {
     throw new Error("Missing nodeId or fontSize");
@@ -2829,7 +2829,7 @@ async function setFontSize(params) {
   }
 }
 
-async function setFontWeight(params) {
+async function setFontWeight(params: Record<string, unknown>) {
   const { nodeId, weight } = params || {};
   if (!nodeId || weight === undefined) {
     throw new Error("Missing nodeId or weight");
@@ -2876,7 +2876,7 @@ async function setFontWeight(params) {
   }
 }
 
-async function setLetterSpacing(params) {
+async function setLetterSpacing(params: Record<string, unknown>) {
   const { nodeId, letterSpacing, unit = "PIXELS" } = params || {};
   if (!nodeId || letterSpacing === undefined) {
     throw new Error("Missing nodeId or letterSpacing");
@@ -2904,7 +2904,7 @@ async function setLetterSpacing(params) {
   }
 }
 
-async function setLineHeight(params) {
+async function setLineHeight(params: Record<string, unknown>) {
   const { nodeId, lineHeight, unit = "PIXELS" } = params || {};
   if (!nodeId || lineHeight === undefined) {
     throw new Error("Missing nodeId or lineHeight");
@@ -2932,7 +2932,7 @@ async function setLineHeight(params) {
   }
 }
 
-async function setParagraphSpacing(params) {
+async function setParagraphSpacing(params: Record<string, unknown>) {
   const { nodeId, paragraphSpacing } = params || {};
   if (!nodeId || paragraphSpacing === undefined) {
     throw new Error("Missing nodeId or paragraphSpacing");
@@ -2960,7 +2960,7 @@ async function setParagraphSpacing(params) {
   }
 }
 
-async function setTextCase(params) {
+async function setTextCase(params: Record<string, unknown>) {
   const { nodeId, textCase } = params || {};
   if (!nodeId || textCase === undefined) {
     throw new Error("Missing nodeId or textCase");
@@ -2993,7 +2993,7 @@ async function setTextCase(params) {
   }
 }
 
-async function setTextDecoration(params) {
+async function setTextDecoration(params: Record<string, unknown>) {
   const { nodeId, textDecoration } = params || {};
   if (!nodeId || textDecoration === undefined) {
     throw new Error("Missing nodeId or textDecoration");
@@ -3026,7 +3026,7 @@ async function setTextDecoration(params) {
   }
 }
 
-async function setTextAlign(params) {
+async function setTextAlign(params: Record<string, unknown>) {
   const { nodeId, textAlignHorizontal, textAlignVertical } = params || {};
   if (!nodeId) {
     throw new Error("Missing nodeId");
@@ -3075,7 +3075,7 @@ async function setTextAlign(params) {
   }
 }
 
-async function getStyledTextSegments(params) {
+async function getStyledTextSegments(params: Record<string, unknown>) {
   const { nodeId, property } = params || {};
   if (!nodeId || !property) {
     throw new Error("Missing nodeId or property");
@@ -3155,7 +3155,7 @@ async function getStyledTextSegments(params) {
   }
 }
 
-async function loadFontAsyncWrapper(params) {
+async function loadFontAsyncWrapper(params: Record<string, unknown>) {
   const { family, style = "Regular" } = params || {};
   if (!family) {
     throw new Error("Missing font family");
@@ -3230,7 +3230,7 @@ async function getRemoteComponents() {
 }
 
 // Set Effects Tool
-async function setEffects(params) {
+async function setEffects(params: Record<string, unknown>) {
   const { nodeId, effects } = params || {};
 
   if (!nodeId) {
@@ -3297,7 +3297,7 @@ async function setEffects(params) {
 }
 
 // Set Effect Style ID Tool
-async function setEffectStyleId(params) {
+async function setEffectStyleId(params: Record<string, unknown>) {
   const { nodeId, effectStyleId } = params || {};
 
   if (!nodeId) {
@@ -3381,7 +3381,7 @@ async function setEffectStyleId(params) {
 }
 
 // Set Text Style ID Tool
-async function setTextStyleId(params) {
+async function setTextStyleId(params: Record<string, unknown>) {
   const { nodeId, textStyleId } = params || {};
 
   if (!nodeId) {
@@ -3472,7 +3472,7 @@ async function setTextStyleId(params) {
 }
 
 // Function to group nodes
-async function groupNodes(params) {
+async function groupNodes(params: Record<string, unknown>) {
   const { nodeIds, name } = params || {};
 
   if (!nodeIds || !Array.isArray(nodeIds) || nodeIds.length < 2) {
@@ -3518,7 +3518,7 @@ async function groupNodes(params) {
 }
 
 // Function to ungroup nodes
-async function ungroupNodes(params) {
+async function ungroupNodes(params: Record<string, unknown>) {
   const { nodeId } = params || {};
 
   if (!nodeId) {
@@ -3554,7 +3554,7 @@ async function ungroupNodes(params) {
 }
 
 // Function to flatten nodes (e.g., boolean operations, convert to path)
-async function flattenNode(params) {
+async function flattenNode(params: Record<string, unknown>) {
   const { nodeId } = params || {};
 
   if (!nodeId) {
@@ -3628,7 +3628,7 @@ async function flattenNode(params) {
 }
 
 // Function to insert a child into a parent node
-async function insertChild(params) {
+async function insertChild(params: Record<string, unknown>) {
   const { parentId, childId, index } = params || {};
 
   if (!parentId) {
@@ -3682,7 +3682,7 @@ async function insertChild(params) {
   }
 }
 
-async function createEllipse(params) {
+async function createEllipse(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
@@ -3745,7 +3745,7 @@ async function createEllipse(params) {
   };
 }
 
-async function createPolygon(params) {
+async function createPolygon(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
@@ -3817,7 +3817,7 @@ async function createPolygon(params) {
   };
 }
 
-async function createStar(params) {
+async function createStar(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
@@ -3896,7 +3896,7 @@ async function createStar(params) {
   };
 }
 
-async function createVector(params) {
+async function createVector(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
@@ -3990,7 +3990,7 @@ async function createVector(params) {
   };
 }
 
-async function createLine(params) {
+async function createLine(params: Record<string, unknown>) {
   const {
     x1 = 0,
     y1 = 0,
@@ -4090,7 +4090,7 @@ async function createLine(params) {
 }
 
 // Rename a node (frame, component, group, etc.)
-async function renameNode(params) {
+async function renameNode(params: Record<string, unknown>) {
   const { nodeId, name } = params || {};
 
   if (!nodeId) {
@@ -4122,7 +4122,7 @@ async function renameNode(params) {
 }
 
 // Create component from an existing node
-async function createComponentFromNode(params) {
+async function createComponentFromNode(params: Record<string, unknown>) {
   const { nodeId, name, parentId } = params || {};
 
   if (!nodeId) {
@@ -4257,7 +4257,7 @@ async function createComponentFromNode(params) {
 }
 
 // Create component set from multiple components
-async function createComponentSet(params) {
+async function createComponentSet(params: Record<string, unknown>) {
   const { componentIds, name } = params || {};
 
   if (!componentIds || !Array.isArray(componentIds) || componentIds.length === 0) {
@@ -4307,7 +4307,7 @@ async function createComponentSet(params) {
 }
 
 // Set variant properties of a component instance
-async function setInstanceVariant(params) {
+async function setInstanceVariant(params: Record<string, unknown>) {
   const { nodeId, properties } = params || {};
 
   if (!nodeId) {
@@ -4345,7 +4345,7 @@ async function setInstanceVariant(params) {
 }
 
 // Create a new page
-async function createPage(params) {
+async function createPage(params: Record<string, unknown>) {
   const { name } = params || {};
 
   if (!name) {
@@ -4362,7 +4362,7 @@ async function createPage(params) {
 }
 
 // Delete a page
-async function deletePage(params) {
+async function deletePage(params: Record<string, unknown>) {
   const { pageId } = params || {};
 
   if (!pageId) {
@@ -4398,7 +4398,7 @@ async function deletePage(params) {
 }
 
 // Rename a page
-async function renamePage(params) {
+async function renamePage(params: Record<string, unknown>) {
   const { pageId, name } = params || {};
 
   if (!pageId) {
@@ -4439,7 +4439,7 @@ async function getPages() {
 }
 
 // Set the current page
-async function setCurrentPage(params) {
+async function setCurrentPage(params: Record<string, unknown>) {
   const { pageId } = params || {};
 
   if (!pageId) {
@@ -4494,7 +4494,7 @@ function base64ToUint8Array(base64) {
 
 // Image manipulation commands
 
-async function setImageFill(params) {
+async function setImageFill(params: Record<string, unknown>) {
   try {
     const { nodeId, imageSource, sourceType, scaleMode } = params || {};
 
@@ -4544,7 +4544,7 @@ async function setImageFill(params) {
   }
 }
 
-async function getImageFromNode(params) {
+async function getImageFromNode(params: Record<string, unknown>) {
   try {
     const { nodeId } = params || {};
 
@@ -4588,7 +4588,7 @@ async function getImageFromNode(params) {
   }
 }
 
-async function replaceImageFill(params) {
+async function replaceImageFill(params: Record<string, unknown>) {
   try {
     const { nodeId, newImageSource, sourceType, preserveTransform } = params || {};
 
@@ -4678,7 +4678,7 @@ async function withExportTimeout(exportPromise, nodeId, format) {
   }
 }
 
-async function exportNodeBytes(params) {
+async function exportNodeBytes(params: Record<string, unknown>) {
   const { nodeId, format, scale } = params || {};
 
   if (!nodeId) {
@@ -4726,7 +4726,7 @@ async function exportNodeBytes(params) {
   };
 }
 
-async function applyImageTransform(params) {
+async function applyImageTransform(params: Record<string, unknown>) {
   try {
     const { nodeId, scaleMode, rotation, translateX, translateY, scale } = params || {};
 
@@ -4805,7 +4805,7 @@ async function applyImageTransform(params) {
   }
 }
 
-async function setImageFilters(params) {
+async function setImageFilters(params: Record<string, unknown>) {
   try {
     const nodeId = params.nodeId;
     const filters = params.filters;
@@ -4860,7 +4860,7 @@ async function setImageFilters(params) {
 }
 
 // Rotate a node
-async function rotateNode(params) {
+async function rotateNode(params: Record<string, unknown>) {
   const { nodeId, angle, relative } = params || {};
 
   if (!nodeId) {
@@ -4894,7 +4894,7 @@ async function rotateNode(params) {
 }
 
 // Set node properties (visibility, lock, opacity)
-async function setNodeProperties(params) {
+async function setNodeProperties(params: Record<string, unknown>) {
   const { nodeId, visible, locked, opacity } = params || {};
 
   if (!nodeId) {
@@ -4930,7 +4930,7 @@ async function setNodeProperties(params) {
   };
 }
 
-async function setConstraints(params) {
+async function setConstraints(params: Record<string, unknown>) {
   const node = await getNodeByIdSafe(params.nodeId);
   if (!node) {
     throw new Error(`Node not found with ID: ${params.nodeId}`);
@@ -4955,7 +4955,7 @@ async function setConstraints(params) {
 }
 
 // Reorder node within its parent (z-order)
-async function reorderNode(params) {
+async function reorderNode(params: Record<string, unknown>) {
   const { nodeId, position, index } = params || {};
 
   if (!nodeId) {
@@ -5011,7 +5011,7 @@ async function reorderNode(params) {
 }
 
 // Duplicate a page
-async function duplicatePage(params) {
+async function duplicatePage(params: Record<string, unknown>) {
   const { pageId, name } = params || {};
 
   if (!pageId) {
@@ -5041,7 +5041,7 @@ async function duplicatePage(params) {
 }
 
 // Convert a group or shape to a frame
-async function convertToFrame(params) {
+async function convertToFrame(params: Record<string, unknown>) {
   const { nodeId } = params || {};
 
   if (!nodeId) {
@@ -5130,7 +5130,7 @@ async function convertToFrame(params) {
 }
 
 // Set gradient fill on a node
-async function setGradient(params) {
+async function setGradient(params: Record<string, unknown>) {
   const { nodeId, type, stops, gradientTransform } = params || {};
 
   if (!nodeId) {
@@ -5176,7 +5176,7 @@ async function setGradient(params) {
 }
 
 // Boolean operation (union, subtract, intersect, exclude)
-async function booleanOperation(params) {
+async function booleanOperation(params: Record<string, unknown>) {
   const { nodeIds, operation, name } = params || {};
 
   if (!nodeIds || !Array.isArray(nodeIds) || nodeIds.length < 2) {
@@ -5257,7 +5257,7 @@ export function sanitizeSvg(svgString: string): string {
 }
 
 // Import SVG string as vector node
-async function setSvg(params) {
+async function setSvg(params: Record<string, unknown>) {
   const { svgString, x, y, name, parentId } = params || {};
 
   if (!svgString) {
@@ -5300,7 +5300,7 @@ async function setSvg(params) {
 }
 
 // Export a node as SVG string
-async function getSvg(params) {
+async function getSvg(params: Record<string, unknown>) {
   const { nodeId } = params || {};
 
   if (!nodeId) {
@@ -5331,7 +5331,7 @@ async function getSvg(params) {
 }
 
 // Set image fill on a node from base64-encoded image data
-async function setImage(params) {
+async function setImage(params: Record<string, unknown>) {
   const { nodeId, imageData, scaleMode } = params || {};
 
   if (!nodeId) {
@@ -5381,7 +5381,7 @@ async function setImage(params) {
 }
 
 // Set layout grids on a frame node
-async function setGrid(params) {
+async function setGrid(params: Record<string, unknown>) {
   const { nodeId, grids } = params || {};
 
   if (!nodeId) {
@@ -5449,7 +5449,7 @@ async function setGrid(params) {
 }
 
 // Get layout grids from a frame node
-async function getGrid(params) {
+async function getGrid(params: Record<string, unknown>) {
   const { nodeId } = params || {};
 
   if (!nodeId) {
@@ -5484,7 +5484,7 @@ async function getGrid(params) {
 }
 
 // Set guides on a page
-async function setGuide(params) {
+async function setGuide(params: Record<string, unknown>) {
   const { pageId, guides } = params || {};
 
   if (!pageId) {
@@ -5512,7 +5512,7 @@ async function setGuide(params) {
 }
 
 // Get guides from a page
-async function getGuide(params) {
+async function getGuide(params: Record<string, unknown>) {
   const { pageId } = params || {};
 
   if (!pageId) {
@@ -5535,7 +5535,7 @@ async function getGuide(params) {
 }
 
 // Set annotation on a node (proposed API)
-async function setAnnotation(params) {
+async function setAnnotation(params: Record<string, unknown>) {
   const { nodeId, label } = params || {};
 
   if (!nodeId) {
@@ -5581,7 +5581,7 @@ async function setAnnotation(params) {
 }
 
 // Get annotations from a node (proposed API)
-async function getAnnotation(params) {
+async function getAnnotation(params: Record<string, unknown>) {
   const { nodeId } = params || {};
 
   if (!nodeId) {
@@ -5649,7 +5649,7 @@ async function getVariables() {
 }
 
 // Create or update a variable
-async function setVariable(params) {
+async function setVariable(params: Record<string, unknown>) {
   const { collectionId, collectionName, name, resolvedType, value, modeId } = params || {};
 
   if (!figma.variables) {
@@ -5759,7 +5759,7 @@ async function setVariable(params) {
 }
 
 // Apply a variable binding to a node property
-async function applyVariableToNode(params) {
+async function applyVariableToNode(params: Record<string, unknown>) {
   const { nodeId, variableId, field } = params || {};
 
   if (!figma.variables) {
@@ -5826,7 +5826,7 @@ async function applyVariableToNode(params) {
 }
 
 // Switch variable mode on a node for a collection
-async function switchVariableMode(params) {
+async function switchVariableMode(params: Record<string, unknown>) {
   const { nodeId, collectionId, modeId } = params || {};
 
   if (!figma.variables) {
@@ -5877,7 +5877,7 @@ async function switchVariableMode(params) {
   };
 }
 
-async function getVariableDefs(params) {
+async function getVariableDefs(params: Record<string, unknown>) {
   const nodeId = params && params.nodeId;
   const tokens = { colors: [], spacing: [], typography: [], radius: [], others: [] };
   const seenIds = new Set();
@@ -6153,7 +6153,7 @@ async function getFigJamElements() {
 /**
  * Create a sticky note in FigJam.
  */
-async function createSticky(params) {
+async function createSticky(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
@@ -6228,7 +6228,7 @@ async function createSticky(params) {
 /**
  * Update the text on an existing sticky note.
  */
-async function setStickyText(params) {
+async function setStickyText(params: Record<string, unknown>) {
   const { nodeId, text } = params || {};
 
   if (!nodeId) {
@@ -6260,7 +6260,7 @@ async function setStickyText(params) {
 /**
  * Create a FigJam shape with text.
  */
-async function createShapeWithText(params) {
+async function createShapeWithText(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
@@ -6343,7 +6343,7 @@ async function createShapeWithText(params) {
  *   - { endpointNodeId, magnet } when connecting to an existing node
  *   - { position: { x, y } }   when connecting to a canvas position
  */
-async function createConnector(params) {
+async function createConnector(params: Record<string, unknown>) {
   const {
     startNodeId,
     startX,
@@ -6448,7 +6448,7 @@ async function createConnector(params) {
 /**
  * Create a FigJam section.
  */
-async function createSection(params) {
+async function createSection(params: Record<string, unknown>) {
   const {
     x = 0,
     y = 0,
@@ -6509,7 +6509,7 @@ async function createSection(params) {
 }
 
 // Set prototype reactions (interactions) on a node
-async function setReactions(params) {
+async function setReactions(params: Record<string, unknown>) {
   if (!params || !params.nodeId) {
     throw new Error("Missing nodeId parameter");
   }
@@ -6664,7 +6664,7 @@ async function setReactions(params) {
   };
 }
 
-async function getReactions(params) {
+async function getReactions(params: Record<string, unknown>) {
   if (!params || !params.nodeId) {
     throw new Error("Missing nodeId parameter");
   }
@@ -6685,7 +6685,7 @@ async function getReactions(params) {
 /**
  * Detach a component instance
  */
-async function detachInstance(params) {
+async function detachInstance(params: Record<string, unknown>) {
   const { nodeId } = params || {};
   if (!nodeId) {
     throw new Error("Missing nodeId parameter");
@@ -6713,7 +6713,7 @@ async function detachInstance(params) {
 /**
  * Create a reusable text style in Figma
  */
-async function createTextStyle(params) {
+async function createTextStyle(params: Record<string, unknown>) {
   const {
     name,
     fontFamily,
@@ -6756,7 +6756,7 @@ async function createTextStyle(params) {
 /**
  * Create a reusable solid paint style in Figma
  */
-async function createPaintStyle(params) {
+async function createPaintStyle(params: Record<string, unknown>) {
   const { name, r, g, b, a = 1 } = params || {};
 
   const style = figma.createPaintStyle();
@@ -6775,7 +6775,7 @@ async function createPaintStyle(params) {
 /**
  * Create a reusable effect style in Figma
  */
-async function createEffectStyle(params) {
+async function createEffectStyle(params: Record<string, unknown>) {
   const { name, effects } = params || {};
 
   const style = figma.createEffectStyle();
@@ -6804,7 +6804,7 @@ async function createEffectStyle(params) {
 /**
  * Create a reusable grid style in Figma
  */
-async function createGridStyle(params) {
+async function createGridStyle(params: Record<string, unknown>) {
   const { name, grids } = params || {};
 
   const style = figma.createGridStyle();
