@@ -3984,6 +3984,9 @@ async function createVector(params: Record<string, unknown>) {
   const widthNum = width as number;
   const heightNum = height as number;
   const nameStr = name as string;
+  const fillColorRec = fillColor as Record<string, unknown> | undefined;
+  const strokeColorRec = strokeColor as Record<string, unknown> | undefined;
+  const strokeWeightNum = strokeWeight as number;
 
   // Create the vector
   const vector = figma.createVector();
