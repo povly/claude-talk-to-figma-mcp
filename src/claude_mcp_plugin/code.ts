@@ -1133,11 +1133,11 @@ async function setSelectionColors(params: Record<string, unknown>) {
   }
 
   const newColor = {
-    r: parseFloat(r),
-    g: parseFloat(g),
-    b: parseFloat(b),
+    r: parseFloat(r as string),
+    g: parseFloat(g as string),
+    b: parseFloat(b as string),
   };
-  const opacity = a !== undefined ? parseFloat(a) : 1;
+  const opacity = a !== undefined ? parseFloat(a as string) : 1;
 
   // Get all descendant nodes + the target node itself
   let targets = [];
