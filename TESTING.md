@@ -57,6 +57,49 @@ bun run test:coverage
    - Create a file in the `tests/integration/` directory
    - Use the test fixtures in `tests/fixtures/` for test data
 
+## Plugin Tests (Vitest)
+
+The Figma plugin (`src/claude_mcp_plugin/code.ts`) has its own test suite using Vitest with a custom figma mock.
+
+### Running Plugin Tests
+
+```bash
+# Run plugin tests
+bun run test:plugin
+
+# Run in watch mode
+bun run test:plugin:watch
+```
+
+### Plugin Typecheck
+
+The plugin has a dedicated TypeScript strict-mode typecheck:
+
+```bash
+# Type-check plugin code (strict mode)
+bun run typecheck:plugin
+```
+
+This uses `tsconfig.plugin.json` with `strict: true` and `@figma/plugin-typings`. The typecheck runs as a CI gate (warn-only during migration, will become blocking).
+
+### Writing Plugin Tests
+
+Plugin tests live in `src/claude_mcp_plugin/__tests__/` and use the figma mock from `setup.ts`:
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { yourFunction } from '../code';
+
+describe('yourFunction', () => {
+  it('does something', () => {
+    // figma global is mocked via setup.ts
+    expect(yourFunction()).toBe(expected);
+  });
+});
+```
+
+The `setup.ts` mock provides: `figma.showUI`, `figma.ui.onmessage`, `figma.clientStorage`, `figma.loadFontAsync`, `figma.getNodeByIdAsync`, and other common Figma API stubs.
+
 ## Manual Integration Tests
 
 These tests verify the complete end-to-end workflow between Claude Desktop/Cursor, the MCP server, and Figma.

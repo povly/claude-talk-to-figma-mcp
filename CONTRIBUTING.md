@@ -41,8 +41,9 @@ src/
     utils/                  # Shared utilities
     types/                  # TypeScript definitions
   claude_mcp_plugin/        # Figma plugin
-    code.js                 # Plugin implementation
+    code.ts                 # Plugin implementation (TypeScript, strict mode)
     manifest.json           # Plugin configuration
+    __tests__/              # Vitest tests with figma mock
 ```
 
 ## Environment setup
