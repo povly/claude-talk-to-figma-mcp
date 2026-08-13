@@ -503,8 +503,8 @@ async function getNodeInfo(nodeId: string, depth?: number) {
 
   // Plugin-side depth pruning — reduces WS payload size.
   // MCP-side filterFigmaNode still runs on the pruned tree (defensive backwards-compat layer).
-  const pruned = typeof depth === "number" && depth >= 0
-    ? pruneTreeAtDepth(document, depth)
+  const pruned: Record<string, unknown> = typeof depth === "number" && depth >= 0
+    ? (pruneTreeAtDepth(document, depth) as Record<string, unknown>)
     : document;
 
   // Add local coordinates if node supports positioning
@@ -542,7 +542,7 @@ async function getNodesInfo(nodeIds: string[]) {
           const response = await node.exportAsync({
             format: "JSON_REST_V1",
           });
-          const doc = (response as Record<string, unknown>).document;
+          const doc = (response as Record<string, unknown>).document as Record<string, unknown>;
           // Add local coordinates if node supports positioning
           if ("x" in node && "y" in node) {
             doc.localPosition = {
@@ -937,7 +937,19 @@ async function createText(params: Record<string, unknown>) {
     textAlignHorizontal,
     textAutoResize,
     width,
-  } = params || {};
+  } = (params || {}) as {
+    x?: number;
+    y?: number;
+    text?: string;
+    fontSize?: string | number;
+    fontWeight?: string | number;
+    fontColor?: Record<string, unknown>;
+    name?: string;
+    parentId?: string;
+    textAlignHorizontal?: string;
+    textAutoResize?: string;
+    width?: number;
+  };
 
   const fontColor = fontColorParam as Record<string, unknown>;
   const xNum = x as number;
@@ -971,9 +983,9 @@ async function createText(params: Record<string, unknown>) {
   };
 
   const textNode = figma.createText();
-  textNode.x = x;
-  textNode.y = y;
-  textNode.name = name;
+  textNode.x = xNum;
+  textNode.y = yNum;
+  textNode.name = nameStr;
   try {
     await figma.loadFontAsync({
       family: "Inter",
@@ -984,17 +996,17 @@ async function createText(params: Record<string, unknown>) {
   } catch (error) {
     console.error("Error setting font size", error);
   }
-  await setCharacters(textNode, text, undefined);
+  await setCharacters(textNode as unknown as Record<string, unknown>, text, undefined);
 
   // Set text color
   const paintStyle = {
     type: "SOLID" as const,
     color: {
-      r: parseFloat(fontColor.r) || 0,
-      g: parseFloat(fontColor.g) || 0,
-      b: parseFloat(fontColor.b) || 0,
+      r: parseFloat(String(fontColor.r)) || 0,
+      g: parseFloat(String(fontColor.g)) || 0,
+      b: parseFloat(String(fontColor.b)) || 0,
     },
-    opacity: parseFloat(fontColor.a) || 1,
+    opacity: parseFloat(String(fontColor.a)) || 1,
   };
   textNode.fills = [paintStyle];
 
@@ -1048,7 +1060,10 @@ async function setFillColor(params: Record<string, unknown>) {
   const {
     nodeId,
     color,
-  } = params || {};
+  } = (params || {}) as {
+    nodeId?: string;
+    color?: Record<string, unknown>;
+  };
 
   if (!nodeId) {
     throw new Error("Missing nodeId parameter");
@@ -1082,7 +1097,11 @@ async function setStrokeColor(params: Record<string, unknown>) {
     nodeId,
     color,
     strokeWeight,
-  } = params || {};
+  } = (params || {}) as {
+    nodeId?: string;
+    color?: Record<string, unknown>;
+    strokeWeight?: string | number;
+  };
 
   if (!nodeId) {
     throw new Error("Missing nodeId parameter");
@@ -1105,7 +1124,7 @@ async function setStrokeColor(params: Record<string, unknown>) {
   node.strokes = [strokePaint];
 
   if (strokeWeight !== undefined) {
-    node.strokeWeight = parseFloat(strokeWeight);
+    node.strokeWeight = parseFloat(String(strokeWeight));
   }
 
   return {
@@ -1133,11 +1152,11 @@ async function setSelectionColors(params: Record<string, unknown>) {
   }
 
   const newColor = {
-    r: parseFloat(r as string),
-    g: parseFloat(g as string),
-    b: parseFloat(b as string),
+    r: parseFloat(String(r)),
+    g: parseFloat(String(g)),
+    b: parseFloat(String(b)),
   };
-  const opacity = a !== undefined ? parseFloat(a as string) : 1;
+  const opacity = a !== undefined ? parseFloat(String(a)) : 1;
 
   // Get all descendant nodes + the target node itself
   let targets = [];
@@ -1429,7 +1448,7 @@ async function createComponentInstance(params: Record<string, unknown>) {
       const currentPageComponents = figma.currentPage.findAllWithCriteria({
         types: ["COMPONENT"]
       });
-      component = currentPageComponents.find(c => c.key === componentKey);
+      component = (currentPageComponents.find(c => c.key === componentKey) as unknown as Record<string, unknown>) || null;
 
       if (!component) {
         // Load all pages and search entire document
@@ -1438,7 +1457,7 @@ async function createComponentInstance(params: Record<string, unknown>) {
         const allComponents = figma.root.findAllWithCriteria({
           types: ["COMPONENT"]
         });
-        component = allComponents.find(c => c.key === componentKey);
+        component = (allComponents.find(c => c.key === componentKey) as unknown as Record<string, unknown>) || null;
       }
 
       if (component) {
@@ -1464,7 +1483,7 @@ async function createComponentInstance(params: Record<string, unknown>) {
       component = await Promise.race([importPromise, timeoutPromise])
         .finally(() => {
           clearTimeout(timeoutId);
-        });
+        }) as unknown as Record<string, unknown>;
     }
 
     console.log(`Component ready, creating instance...`);
@@ -1563,9 +1582,9 @@ async function exportNodeAsImage(params: Record<string, unknown>) {
     const bytes = await Promise.race([exportPromise, timeoutPromise])
       .finally(() => {
         clearTimeout(timeoutId);
-      });
+      }) as Uint8Array;
 
-    console.log(`[exportNodeAsImage] Export completed in ${Date.now() - startTime}ms, bytes: ${(bytes as Uint8Array).length}`);
+    console.log(`[exportNodeAsImage] Export completed in ${Date.now() - startTime}ms, bytes: ${bytes.length}`);
 
     let mimeType;
     switch (format) {
@@ -1756,7 +1775,7 @@ async function setTextContent(params: Record<string, unknown>) {
   try {
     await figma.loadFontAsync(node.fontName as FontName);
 
-    await setCharacters(node, text, undefined);
+    await setCharacters(node as unknown as Record<string, unknown>, text, undefined);
 
     return {
       id: node.id,
@@ -1792,7 +1811,7 @@ async function setTextContent(params: Record<string, unknown>) {
 })();
 
 function uniqBy(arr: unknown[], predicate: string | ((item: unknown) => unknown)) {
-  const cb = typeof predicate === "function" ? predicate : (o: Record<string, unknown>) => o[predicate as string];
+  const cb = typeof predicate === "function" ? predicate : (o: unknown) => (o as Record<string, unknown>)[predicate as string];
   return [
     ...arr
       .reduce((map: Map<unknown, unknown>, item) => {
@@ -1871,7 +1890,7 @@ const setCharacters = async (node: Record<string, unknown>, characters: string, 
 const setCharactersWithStrictMatchFont = async (
   node: Record<string, unknown>,
   characters: string,
-  fallbackFont: Record<string, string>
+  fallbackFont: FontName
 ) => {
   const n = node as unknown as {
     fontName: FontName | typeof figma.mixed;
@@ -1894,7 +1913,7 @@ const setCharactersWithStrictMatchFont = async (
     fontHashTree[`${startIdx}_${i}`] = startCharFontVal;
   }
   await figma.loadFontAsync(fallbackFont);
-  n.fontName = fallbackFont as FontName;
+  n.fontName = fallbackFont;
   n.characters = characters;
   console.log(fontHashTree);
   await Promise.all(
@@ -1905,7 +1924,7 @@ const setCharactersWithStrictMatchFont = async (
       const matchedFont = {
         family,
         style,
-      };
+      } as FontName;
       await figma.loadFontAsync(matchedFont);
       return n.setRangeFontName(Number(start), Number(end), matchedFont);
     })
@@ -1991,7 +2010,7 @@ const buildLinearOrder = (node: Record<string, unknown>) => {
 const setCharactersWithSmartMatchFont = async (
   node: Record<string, unknown>,
   characters: string,
-  fallbackFont: Record<string, string>
+  fallbackFont: FontName
 ) => {
   const n = node as unknown as {
     fontName: FontName | typeof figma.mixed;
@@ -2001,28 +2020,35 @@ const setCharactersWithSmartMatchFont = async (
   const rangeTree = buildLinearOrder(node);
   const fontsToLoad = uniqBy(
     rangeTree,
-    ({ family, style }: Record<string, unknown>) => `${family}::${style}`
-  ).map(({ family, style }: Record<string, unknown>) => ({
-    family,
-    style,
-  }));
+    (item: unknown) => {
+      const r = item as Record<string, unknown>;
+      return `${r.family}::${r.style}`;
+    }
+  ).map((item: unknown) => {
+    const r = item as Record<string, unknown>;
+    return {
+      family: r.family,
+      style: r.style,
+    } as FontName;
+  });
 
-  await Promise.all([...fontsToLoad, fallbackFont].map(figma.loadFontAsync));
+  await Promise.all([...fontsToLoad, fallbackFont].map((f) => figma.loadFontAsync(f)));
 
-  n.fontName = fallbackFont as FontName;
+  n.fontName = fallbackFont;
   n.characters = characters;
 
   let prevPos = 0;
-  rangeTree.forEach(({ family, style, delimiter }: Record<string, unknown>) => {
+  rangeTree.forEach((entry: unknown) => {
+    const r = entry as Record<string, unknown>;
     if (prevPos < n.characters.length) {
-      const delimeterPos = n.characters.indexOf(delimiter as string, prevPos);
+      const delimeterPos = n.characters.indexOf(r.delimiter as string, prevPos);
       const endPos =
         delimeterPos > prevPos ? delimeterPos : n.characters.length;
       const matchedFont = {
-        family,
-        style,
-      };
-      n.setRangeFontName(prevPos, endPos, matchedFont as FontName);
+        family: r.family,
+        style: r.style,
+      } as FontName;
+      n.setRangeFontName(prevPos, endPos, matchedFont);
       prevPos = endPos + 1;
     }
   });
@@ -2118,7 +2144,7 @@ async function scanTextNodes(params: Record<string, unknown>) {
         null
       );
 
-      await findTextNodes(node, [], 0, textNodes);
+      await findTextNodes(node as unknown as Record<string, unknown>, [], 0, textNodes);
 
       // Send completed progress update
       sendProgressUpdate(
@@ -2176,7 +2202,7 @@ async function scanTextNodes(params: Record<string, unknown>) {
     { chunkSize }
   );
 
-  await collectNodesToProcess(node, [], 0, nodesToProcess);
+  await collectNodesToProcess(node as unknown as Record<string, unknown>, [], 0, nodesToProcess);
 
   const totalNodes = nodesToProcess.length;
   console.log(`Found ${totalNodes} total nodes to process`);
@@ -2231,9 +2257,10 @@ async function scanTextNodes(params: Record<string, unknown>) {
 
     // Process each node in this chunk
     for (const nodeInfo of chunkNodes) {
-      if (nodeInfo.node.type === "TEXT") {
+      const info = nodeInfo as { node: Record<string, unknown>; parentPath: string[]; depth: number };
+      if (info.node.type === "TEXT") {
         try {
-          const textNodeInfo = await processTextNode(nodeInfo.node, nodeInfo.parentPath, nodeInfo.depth);
+          const textNodeInfo = await processTextNode(info.node, info.parentPath, info.depth);
           if (textNodeInfo) {
             chunkTextNodes.push(textNodeInfo);
           }
@@ -2309,7 +2336,7 @@ async function collectNodesToProcess(node: Record<string, unknown>, parentPath: 
   if (node.visible === false) return;
 
   // Get the path to this node
-  const nodePath = [...parentPath, node.name || `Unnamed ${node.type}`];
+  const nodePath: string[] = [...parentPath, (node.name as string) || `Unnamed ${node.type}`];
 
   // Add this node to the processing list
   nodesToProcess.push({
@@ -2337,8 +2364,9 @@ async function processTextNode(node: Record<string, unknown>, parentPath: string
 
     if (node.fontName) {
       if (typeof node.fontName === "object") {
-        if ("family" in node.fontName) fontFamily = node.fontName.family;
-        if ("style" in node.fontName) fontStyle = node.fontName.style;
+        const fn = node.fontName as Record<string, unknown>;
+        if ("family" in fn) fontFamily = fn.family as string;
+        if ("style" in fn) fontStyle = fn.style as string;
       }
     }
 
@@ -2401,7 +2429,7 @@ async function findTextNodes(node: Record<string, unknown>, parentPath: string[]
   if (node.visible === false) return;
 
   // Get the path to this node including its name
-  const nodePath = [...parentPath, node.name || `Unnamed ${node.type}`];
+  const nodePath: string[] = [...parentPath, (node.name as string) || `Unnamed ${node.type}`];
 
   if (node.type === "TEXT") {
     try {
@@ -2411,8 +2439,9 @@ async function findTextNodes(node: Record<string, unknown>, parentPath: string[]
 
       if (node.fontName) {
         if (typeof node.fontName === "object") {
-          if ("family" in node.fontName) fontFamily = node.fontName.family;
-          if ("style" in node.fontName) fontStyle = node.fontName.style;
+          const fn = node.fontName as Record<string, unknown>;
+          if ("family" in fn) fontFamily = fn.family as string;
+          if ("style" in fn) fontStyle = fn.style as string;
         }
       }
 
@@ -2475,8 +2504,8 @@ async function findTextNodes(node: Record<string, unknown>, parentPath: string[]
 
 // Replace text in a specific node
 async function setMultipleTextContents(params: Record<string, unknown>) {
-  const { nodeId, text } = params as { nodeId: string; text: Array<Record<string, unknown>> };
-  const commandId = params.commandId || generateCommandId();
+  const { nodeId, text, commandId: commandIdParam } = params as { nodeId: string; text: Array<Record<string, unknown>>; commandId?: string };
+  const commandId: string = commandIdParam || generateCommandId();
 
   if (!nodeId || !text || !Array.isArray(text)) {
     const errorMsg = "Missing required parameters: nodeId and text array";
@@ -2580,7 +2609,7 @@ async function setMultipleTextContents(params: Record<string, unknown>) {
         console.log(`Attempting to replace text in node: ${replacement.nodeId}`);
 
         // Get the text node to update (just to check it exists and get original text)
-        const textNode = await getNodeByIdSafe(replacement.nodeId);
+        const textNode = await getNodeByIdSafe(replacement.nodeId as string);
 
         if (!textNode) {
           console.error(`Text node not found: ${replacement.nodeId}`);
@@ -2941,7 +2970,7 @@ async function setLetterSpacing(params: Record<string, unknown>) {
 
   try {
     await figma.loadFontAsync(node.fontName as FontName);
-    node.letterSpacing = { value: letterSpacing, unit };
+    node.letterSpacing = { value: letterSpacing, unit: unit as "PIXELS" | "PERCENT" };
     return {
       id: node.id,
       name: node.name,
@@ -2969,7 +2998,7 @@ async function setLineHeight(params: Record<string, unknown>) {
 
   try {
     await figma.loadFontAsync(node.fontName as FontName);
-    node.lineHeight = { value: lineHeight, unit };
+    node.lineHeight = { value: lineHeight, unit: unit as "PIXELS" | "PERCENT" | "AUTO" };
     return {
       id: node.id,
       name: node.name,
@@ -3030,7 +3059,7 @@ async function setTextCase(params: Record<string, unknown>) {
 
   try {
     await figma.loadFontAsync(node.fontName as FontName);
-    node.textCase = textCase;
+    node.textCase = textCase as TextCase;
     return {
       id: node.id,
       name: node.name,
@@ -3063,7 +3092,7 @@ async function setTextDecoration(params: Record<string, unknown>) {
 
   try {
     await figma.loadFontAsync(node.fontName as FontName);
-    node.textDecoration = textDecoration;
+    node.textDecoration = textDecoration as TextDecoration;
     return {
       id: node.id,
       name: node.name,
@@ -3107,10 +3136,10 @@ async function setTextAlign(params: Record<string, unknown>) {
   try {
     await figma.loadFontAsync(node.fontName as FontName);
     if (textAlignHorizontal) {
-      node.textAlignHorizontal = textAlignHorizontal;
+      node.textAlignHorizontal = textAlignHorizontal as "CENTER" | "LEFT" | "RIGHT" | "JUSTIFIED";
     }
     if (textAlignVertical) {
-      node.textAlignVertical = textAlignVertical;
+      node.textAlignVertical = textAlignVertical as "CENTER" | "TOP" | "BOTTOM";
     }
     return {
       id: node.id,
@@ -3151,20 +3180,21 @@ async function getStyledTextSegments(params: Record<string, unknown>) {
   }
 
   try {
-    const segments = node.getStyledTextSegments([property]);
+    const segments = node.getStyledTextSegments([property] as Array<"fontSize" | "fontName" | "fontWeight" | "fontStyle" | "letterSpacing" | "lineHeight" | "fills" | "fillStyleId" | "textCase" | "textDecoration" | "textStyleId" | "paragraphSpacing" | "paragraphIndent">);
 
     // Prepare segments data in a format safe for serialization
     const safeSegments = segments.map(segment => {
-      const safeSegment = {
+      const safeSegment: Record<string, unknown> = {
         characters: segment.characters,
         start: segment.start,
         end: segment.end
       };
+      const seg = segment as unknown as Record<string, unknown>;
 
       // Handle different property types for safe serialization
       if (property === "fontName") {
-        if (segment[property] && typeof segment[property] === "object") {
-          const fontValue = segment[property] as Record<string, unknown>;
+        if (seg[property] && typeof seg[property] === "object") {
+          const fontValue = seg[property] as Record<string, unknown>;
           safeSegment[property] = {
             family: fontValue.family || "",
             style: fontValue.style || ""
@@ -3174,8 +3204,8 @@ async function getStyledTextSegments(params: Record<string, unknown>) {
         }
       } else if (property === "letterSpacing" || property === "lineHeight") {
         // Handle spacing properties which have a value and unit
-        if (segment[property] && typeof segment[property] === "object") {
-          const propValue = segment[property] as Record<string, unknown>;
+        if (seg[property] && typeof seg[property] === "object") {
+          const propValue = seg[property] as Record<string, unknown>;
           safeSegment[property] = {
             value: propValue.value || 0,
             unit: propValue.unit || "PIXELS"
@@ -3185,10 +3215,10 @@ async function getStyledTextSegments(params: Record<string, unknown>) {
         }
       } else if (property === "fills") {
         // Handle fills which can be complex
-        safeSegment[property] = segment[property] ? JSON.parse(JSON.stringify(segment[property])) : [];
+        safeSegment[property] = seg[property] ? JSON.parse(JSON.stringify(seg[property])) : [];
       } else {
         // Handle simple properties
-        safeSegment[property] = segment[property];
+        safeSegment[property] = seg[property];
       }
 
       return safeSegment;
@@ -3545,6 +3575,9 @@ async function groupNodes(params: Record<string, unknown>) {
 
     // Verify that all nodes have the same parent
     const parent = nodesToGroup[0].parent;
+    if (!parent) {
+      throw new Error("Cannot group nodes without a parent");
+    }
     for (const node of nodesToGroup) {
       if (node.parent !== parent) {
         throw new Error("All nodes must have the same parent to be grouped");
@@ -3747,16 +3780,26 @@ async function createEllipse(params: Record<string, unknown>) {
     fillColor = { r: 0.8, g: 0.8, b: 0.8, a: 1 },
     strokeColor,
     strokeWeight
-  } = params || {};
+  } = (params || {}) as {
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    name?: string;
+    parentId?: string;
+    fillColor?: Record<string, unknown>;
+    strokeColor?: Record<string, unknown>;
+    strokeWeight?: number;
+  };
 
   // Create a new ellipse node
   const ellipse = figma.createEllipse();
-  ellipse.name = name;
+  ellipse.name = name as string;
 
   // Position and size the ellipse
-  ellipse.x = x;
-  ellipse.y = y;
-  ellipse.resize(width, height);
+  ellipse.x = x as number;
+  ellipse.y = y as number;
+  ellipse.resize(width as number, height as number);
 
   // Set fill color if provided
   if (fillColor) {
@@ -4037,7 +4080,7 @@ async function createVector(params: Record<string, unknown>) {
 
   // Set stroke weight if provided
   if (strokeWeight !== undefined) {
-    vector.strokeWeight = strokeWeight;
+    vector.strokeWeight = strokeWeight as number;
   }
 
   // If parentId is provided, append to that node, otherwise append to current page
@@ -4138,11 +4181,11 @@ async function createLine(params: Record<string, unknown>) {
   line.strokes = [strokeStyle];
 
   // Set stroke weight
-  line.strokeWeight = strokeWeight;
+  line.strokeWeight = strokeWeight as number;
 
   // Set stroke cap style if supported
-  if (["NONE", "ROUND", "SQUARE", "ARROW_LINES", "ARROW_EQUILATERAL"].includes(strokeCap)) {
-    line.strokeCap = strokeCap;
+  if (["NONE", "ROUND", "SQUARE", "ARROW_LINES", "ARROW_EQUILATERAL"].includes(strokeCap as string)) {
+    line.strokeCap = strokeCap as "NONE" | "ROUND" | "SQUARE" | "ARROW_LINES" | "ARROW_EQUILATERAL";
   }
 
   // Set fill to none (transparent) as lines typically don't have fills
@@ -4355,7 +4398,7 @@ async function createComponentSet(params: Record<string, unknown>) {
 
   const components = [];
   for (const id of componentIds) {
-    const node = await getNodeByIdSafe(id);
+    const node = await getNodeByIdSafe(id as string);
     if (!node) {
       throw new Error(`Node not found with ID: ${id}`);
     }
@@ -4368,7 +4411,7 @@ async function createComponentSet(params: Record<string, unknown>) {
   // Determine parent container
   let container: PageNode | SceneNode = figma.currentPage;
   if (params.parentId) {
-    const parentNode = await getNodeByIdSafe(params.parentId);
+    const parentNode = await getNodeByIdSafe(params.parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${params.parentId}`);
     }
@@ -4424,7 +4467,7 @@ async function setInstanceVariant(params: Record<string, unknown>) {
     throw new Error(`Node does not support variant properties`);
   }
 
-  node.setProperties(properties);
+  node.setProperties(properties as { [propertyName: string]: string | boolean | VariableAlias });
 
   return {
     id: node.id,
@@ -4617,7 +4660,7 @@ async function setImageFill(params: Record<string, unknown>) {
 
     const imageFill = {
       type: "IMAGE" as const,
-      scaleMode: scaleMode || "FILL",
+      scaleMode: (scaleMode || "FILL") as "FILL" | "FIT" | "CROP" | "TILE",
       imageHash: image.hash,
     };
 
@@ -4754,7 +4797,7 @@ async function replaceImageFill(params: Record<string, unknown>) {
 const EXPORT_TIMEOUT_MS = 60000; // matches exportNodeAsImage
 
 async function withExportTimeout(exportPromise: Promise<unknown>, nodeId: string, format: string) {
-  let timeoutId: ReturnType<typeof setTimeout>;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
       reject(new Error(`Export timed out after ${EXPORT_TIMEOUT_MS / 1000}s for node ${nodeId} (${format})`));
@@ -4763,7 +4806,7 @@ async function withExportTimeout(exportPromise: Promise<unknown>, nodeId: string
   try {
     return await Promise.race([exportPromise, timeoutPromise]);
   } finally {
-    clearTimeout(timeoutId);
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
   }
 }
 
@@ -4795,7 +4838,7 @@ async function exportNodeBytes(params: Record<string, unknown>) {
 
   let base64;
   if (typeof bytes === "object" && bytes !== null) {
-    base64 = customBase64Encode(bytes);
+    base64 = customBase64Encode(bytes as Uint8Array);
   } else {
     base64 = bytes;
   }
@@ -4896,7 +4939,7 @@ async function applyImageTransform(params: Record<string, unknown>) {
 
 async function setImageFilters(params: Record<string, unknown>) {
   try {
-    const nodeId = params.nodeId;
+    const nodeId = params.nodeId as string;
     const filters = params.filters as Record<string, unknown>;
 
     if (!nodeId || !filters) {
@@ -5020,9 +5063,10 @@ async function setNodeProperties(params: Record<string, unknown>) {
 }
 
 async function setConstraints(params: Record<string, unknown>) {
-  const node = await getNodeByIdSafe(params.nodeId);
+  const nodeId = params.nodeId as string;
+  const node = await getNodeByIdSafe(nodeId);
   if (!node) {
-    throw new Error(`Node not found with ID: ${params.nodeId}`);
+    throw new Error(`Node not found with ID: ${nodeId}`);
   }
 
   if (!("constraints" in node)) {
@@ -5031,8 +5075,8 @@ async function setConstraints(params: Record<string, unknown>) {
 
   const current = node.constraints || { horizontal: "MIN", vertical: "MIN" };
   const newConstraints = {
-    horizontal: params.horizontal || current.horizontal,
-    vertical: params.vertical || current.vertical,
+    horizontal: (params.horizontal as ConstraintType) || current.horizontal,
+    vertical: (params.vertical as ConstraintType) || current.vertical,
   };
 
   node.constraints = newConstraints;
@@ -5172,8 +5216,8 @@ async function convertToFrame(params: Record<string, unknown>) {
   if ("fills" in node) frame.fills = JSON.parse(JSON.stringify(node.fills));
   if ("strokes" in node) frame.strokes = JSON.parse(JSON.stringify(node.strokes));
   if ("strokeWeight" in node) frame.strokeWeight = node.strokeWeight;
-  if ("effects" in node) frame.effects = JSON.parse(JSON.stringify(node.effects));
-  if ("cornerRadius" in node) frame.cornerRadius = node.cornerRadius;
+  if ("effects" in node) frame.effects = JSON.parse(JSON.stringify(node.effects)) as Effect[];
+  if ("cornerRadius" in node) frame.cornerRadius = node.cornerRadius as number | typeof figma.mixed;
   if ("opacity" in node) frame.opacity = node.opacity;
   if ("rotation" in node) frame.rotation = node.rotation;
   if ("clipsContent" in node) frame.clipsContent = node.clipsContent;
@@ -5242,20 +5286,20 @@ async function setGradient(params: Record<string, unknown>) {
   const gradientStops = stops.map((stop: Record<string, unknown>) => {
     const color = stop.color as Record<string, unknown>;
     return {
-      position: stop.position,
+      position: stop.position as number,
       color: {
-        r: color.r,
-        g: color.g,
-        b: color.b,
-        a: color.a !== undefined ? color.a : 1,
+        r: color.r as number,
+        g: color.g as number,
+        b: color.b as number,
+        a: color.a !== undefined ? color.a as number : 1,
       },
     };
   });
 
-  const gradientFill = {
-    type: type,
+  const gradientFill: Paint = {
+    type: type as "GRADIENT_LINEAR" | "GRADIENT_RADIAL" | "GRADIENT_ANGULAR" | "GRADIENT_DIAMOND",
     gradientStops: gradientStops,
-    gradientTransform: gradientTransform || [[1, 0, 0], [0, 1, 0]],
+    gradientTransform: (gradientTransform || [[1, 0, 0], [0, 1, 0]]) as Transform,
   };
 
   node.fills = [gradientFill];
@@ -5459,7 +5503,7 @@ async function setImage(params: Record<string, unknown>) {
   node.fills = [{
     type: "IMAGE" as const,
     imageHash: image.hash,
-    scaleMode: scaleMode || "FILL",
+    scaleMode: (scaleMode || "FILL") as "FILL" | "FIT" | "CROP" | "TILE",
     visible: true,
     opacity: 1
   }];
@@ -5593,8 +5637,8 @@ async function setGuide(params: Record<string, unknown>) {
   }
 
   page.guides = guides.map(guide => ({
-    axis: guide.axis,
-    offset: guide.offset
+    axis: guide.axis as "X" | "Y",
+    offset: guide.offset as number
   }));
 
   return {
@@ -5792,7 +5836,7 @@ async function setVariable(params: Record<string, unknown>) {
   }
 
   if (!variable) {
-    variable = figma.variables.createVariable(name, collection, resolvedType as VariableResolvedType);
+    variable = figma.variables.createVariable(name, collection, resolvedType as VariableResolvedDataType);
   }
 
   // Determine mode
@@ -5839,7 +5883,7 @@ async function setVariable(params: Record<string, unknown>) {
   }
 
   // Set value for mode
-  variable.setValueForMode(targetModeId, finalValue);
+  variable.setValueForMode(targetModeId, finalValue as VariableValue);
 
   return {
     variableId: variable.id,
@@ -5890,21 +5934,23 @@ async function applyVariableToNode(params: Record<string, unknown>) {
   // Handle paint-level bindings (fills/N/color, strokes/N/color)
   const paintMatch = field.match(/^(fills|strokes)\/(\d+)\/color$/);
   if (paintMatch) {
-    const paintProp = paintMatch[1];
+    const paintProp = paintMatch[1] as "fills" | "strokes";
     const paintIndex = parseInt(paintMatch[2], 10);
 
     if (!(paintProp in node)) {
       throw new Error(`Node does not have ${paintProp} property`);
     }
-    const paints = [...node[paintProp]];
+    const nodeRec = node as unknown as Record<string, unknown>;
+    const paints = [...(nodeRec[paintProp] as unknown[])];
     if (paintIndex >= paints.length) {
       throw new Error(`${paintProp} index ${paintIndex} out of range (node has ${paints.length} ${paintProp})`);
     }
-    const paint = Object.assign({}, paints[paintIndex]);
-    paint.boundVariables = Object.assign({}, paint.boundVariables || {});
-    paint.boundVariables.color = { type: "VARIABLE_ALIAS", id: variable.id };
+    const paint = Object.assign({}, paints[paintIndex]) as Record<string, unknown>;
+    const boundVars = Object.assign({}, (paint.boundVariables as Record<string, unknown>) || {});
+    boundVars.color = { type: "VARIABLE_ALIAS", id: variable.id };
+    paint.boundVariables = boundVars;
     paints[paintIndex] = paint;
-    node[paintProp] = paints;
+    nodeRec[paintProp] = paints;
   } else {
     (node as unknown as { setBoundVariable: Function }).setBoundVariable(field, variable);
   }
@@ -5972,8 +6018,10 @@ async function switchVariableMode(params: Record<string, unknown>) {
 
 async function getVariableDefs(params: Record<string, unknown>) {
   const nodeId = params && params.nodeId;
-  const tokens = { colors: [], spacing: [], typography: [], radius: [], others: [] };
-  const seenIds = new Set();
+  type TokenEntry = { name: unknown; cssName: string; cssVar: string; value: string; type: unknown; codeSyntax: unknown; tokenType: string };
+  type TokenMap = { colors: TokenEntry[]; spacing: TokenEntry[]; typography: TokenEntry[]; radius: TokenEntry[]; others: TokenEntry[] };
+  const tokens: TokenMap = { colors: [], spacing: [], typography: [], radius: [], others: [] };
+  const seenIds = new Set<unknown>();
 
   // Helper: resolve a variable to its value for a consumer node
   async function resolveVariable(variable: Record<string, unknown>, node: Record<string, unknown>) {
@@ -6014,8 +6062,8 @@ async function getVariableDefs(params: Record<string, unknown>) {
     } else if (variable.resolvedType === "FLOAT") {
       valueStr = String(rawValue);
       // Heuristic: check name for spacing/radius
-      if (/space|gap|padding|margin/i.test(variable.name)) tokenType = "spacing";
-      else if (/radius|corner/i.test(variable.name)) tokenType = "radius";
+      if (/space|gap|padding|margin/i.test(variable.name as string)) tokenType = "spacing";
+      else if (/radius|corner/i.test(variable.name as string)) tokenType = "radius";
       else tokenType = "others";
     } else if (variable.resolvedType === "STRING") {
       valueStr = String(rawValue || "");
@@ -6039,7 +6087,7 @@ async function getVariableDefs(params: Record<string, unknown>) {
   }
 
   // Collect variables
-  let variablesToResolve = [];
+  let variablesToResolve: Array<{ variable: Record<string, unknown>; consumerNode: Record<string, unknown> | null }> = [];
 
   if (nodeId) {
     // Node-specific: find all bound variables in the subtree
@@ -6057,9 +6105,9 @@ async function getVariableDefs(params: Record<string, unknown>) {
       for (const key of Object.keys(obj)) {
         const val = obj[key];
         if (Array.isArray(val)) {
-          val.forEach(collectVarIds);
+          val.forEach((v: unknown) => collectVarIds(v as Record<string, unknown>));
         } else if (val && typeof val === "object") {
-          collectVarIds(val);
+          collectVarIds(val as Record<string, unknown>);
         }
       }
     }
@@ -6080,7 +6128,7 @@ async function getVariableDefs(params: Record<string, unknown>) {
     );
     nodeVarResults.forEach((result) => {
       if (result.status === "fulfilled" && result.value) {
-        variablesToResolve.push({ variable: result.value, consumerNode: node });
+        variablesToResolve.push({ variable: result.value as unknown as Record<string, unknown>, consumerNode: node as unknown as Record<string, unknown> });
       }
     });
   } else {
@@ -6093,7 +6141,7 @@ async function getVariableDefs(params: Record<string, unknown>) {
       );
       colResults.forEach((result) => {
         if (result.status === "fulfilled" && result.value) {
-          variablesToResolve.push({ variable: result.value, consumerNode: null });
+          variablesToResolve.push({ variable: result.value as unknown as Record<string, unknown>, consumerNode: null });
         }
       });
     }
@@ -6101,9 +6149,9 @@ async function getVariableDefs(params: Record<string, unknown>) {
 
   // Resolve all collected variables
   for (const { variable, consumerNode } of variablesToResolve) {
-    const token = await resolveVariable(variable, consumerNode);
-    if (token && tokens[token.tokenType]) {
-      tokens[token.tokenType].push(token);
+    const token = await resolveVariable(variable, consumerNode as Record<string, unknown>);
+    if (token && (tokens as Record<string, TokenEntry[]>)[token.tokenType]) {
+      (tokens as Record<string, TokenEntry[]>)[token.tokenType].push(token);
     } else if (token) {
       tokens.others.push(token);
     }
@@ -6128,7 +6176,7 @@ function stickyColorToFill(color: string) {
   // Figma's paint normaliser, which may try to extend the color object and
   // throw "object is not extensible" in the plugin sandbox.
   // Values sampled from native FigJam stickies via the plugin API.
-  var palette = {
+  var palette: Record<string, number[]> = {
     yellow:  [1.000, 0.886, 0.600],
     pink:    [1.000, 0.659, 0.859],
     green:   [0.702, 0.937, 0.741],
@@ -6155,11 +6203,12 @@ async function getFigJamElements() {
   await figma.currentPage.loadAsync();
 
   const figjamTypes = new Set(["STICKY", "CONNECTOR", "SHAPE_WITH_TEXT", "SECTION", "STAMP"]);
-  const results = { stickies: [], connectors: [], shapesWithText: [], sections: [], stamps: [] };
+  type FigjamEntry = Record<string, unknown>;
+  const results: { stickies: FigjamEntry[]; connectors: FigjamEntry[]; shapesWithText: FigjamEntry[]; sections: FigjamEntry[]; stamps: FigjamEntry[] } = { stickies: [], connectors: [], shapesWithText: [], sections: [], stamps: [] };
 
   function walk(node: Record<string, unknown>) {
-    if (figjamTypes.has(node.type)) {
-      const base = { id: node.id, name: node.name, type: node.type, x: node.x, y: node.y };
+    if (figjamTypes.has(node.type as string)) {
+      const base: FigjamEntry = { id: node.id, name: node.name, type: node.type, x: node.x, y: node.y };
 
       switch (node.type) {
         case "STICKY":
@@ -6223,7 +6272,7 @@ async function getFigJamElements() {
   }
 
   for (const child of figma.currentPage.children) {
-    walk(child);
+    walk(child as unknown as Record<string, unknown>);
   }
 
   return {
@@ -6284,24 +6333,24 @@ async function createSticky(params: Record<string, unknown>) {
   }
 
   try {
-    sticky.x = x;
-    sticky.y = y;
+    sticky.x = x as number;
+    sticky.y = y as number;
     try { (sticky as unknown as Record<string, unknown>).isWide = isWide; } catch (e) { /* isWide may not be settable in all FigJam versions */ }
-    if (name) { sticky.name = name; }
+    if (name) { sticky.name = name as string; }
     try {
       // Prefer the native NodeColor API (uses FigJam's exact palette colours).
       // Fall back to manual fills if the property isn't settable.
       (sticky as unknown as Record<string, unknown>).color = colorStr.toUpperCase();
     } catch (e) {
       try {
-        sticky.fills = stickyColorToFill(color);
+        sticky.fills = stickyColorToFill(color as string);
       } catch (fillErr) {
         console.warn("create_sticky: could not apply color '" + color + "':", fillErr);
       }
     }
     if (text) {
       await figma.loadFontAsync(sticky.text.fontName as FontName);
-      sticky.text.characters = text;
+      sticky.text.characters = text as string;
     }
   } catch (propErr) {
     throw new Error("create_sticky failed: " + (propErr instanceof Error ? propErr.message : String(propErr)));
@@ -6387,13 +6436,13 @@ async function createShapeWithText(params: Record<string, unknown>) {
   }
 
   const shape = figma.createShapeWithText();
-  shape.x = x;
-  shape.y = y;
-  shape.resize(width, height);
-  shape.shapeType = shapeType;
+  shape.x = x as number;
+  shape.y = y as number;
+  shape.resize(width as number, height as number);
+  shape.shapeType = shapeType as ShapeWithTextNode["shapeType"];
 
   if (name) {
-    shape.name = name;
+    shape.name = name as string;
   }
 
   // Set fill color if provided
@@ -6414,7 +6463,7 @@ async function createShapeWithText(params: Record<string, unknown>) {
   // Set text via the text sub-layer
   if (text) {
     await figma.loadFontAsync(shape.text.fontName as FontName);
-    shape.text.characters = text;
+    shape.text.characters = text as string;
   }
 
   if (parentId) {
@@ -6484,33 +6533,33 @@ async function createConnector(params: Record<string, unknown>) {
 
   // ── Start endpoint ────────────────────────────────────────────────────────
   if (startNodeId) {
-    const startNode = await getNodeByIdSafe(startNodeId);
+    const startNode = await getNodeByIdSafe(startNodeId as string);
     if (!startNode) {
       throw new Error(`Start node not found with ID: ${startNodeId}`);
     }
-    connector.connectorStart = { endpointNodeId: startNodeId, magnet: "AUTO" };
+    connector.connectorStart = { endpointNodeId: startNodeId as string, magnet: "AUTO" };
   } else if (startX !== undefined && startY !== undefined) {
-    connector.connectorStart = { position: { x: startX, y: startY } };
+    connector.connectorStart = { position: { x: startX as number, y: startY as number } };
   } else {
     throw new Error("Either startNodeId or both startX and startY must be provided");
   }
 
   // ── End endpoint ──────────────────────────────────────────────────────────
   if (endNodeId) {
-    const endNode = await getNodeByIdSafe(endNodeId);
+    const endNode = await getNodeByIdSafe(endNodeId as string);
     if (!endNode) {
       throw new Error(`End node not found with ID: ${endNodeId}`);
     }
-    connector.connectorEnd = { endpointNodeId: endNodeId, magnet: "AUTO" };
+    connector.connectorEnd = { endpointNodeId: endNodeId as string, magnet: "AUTO" };
   } else if (endX !== undefined && endY !== undefined) {
-    connector.connectorEnd = { position: { x: endX, y: endY } };
+    connector.connectorEnd = { position: { x: endX as number, y: endY as number } };
   } else {
     throw new Error("Either endNodeId or both endX and endY must be provided");
   }
 
-  connector.connectorLineType = connectorLineTypeStr;
-  connector.connectorStartStrokeCap = startStrokeCapStr;
-  connector.connectorEndStrokeCap = endStrokeCap;
+  connector.connectorLineType = connectorLineTypeStr as ConnectorNode["connectorLineType"];
+  connector.connectorStartStrokeCap = startStrokeCapStr as ConnectorStrokeCap;
+  connector.connectorEndStrokeCap = endStrokeCap as ConnectorStrokeCap;
 
   if (strokeColor) {
     connector.strokes = [
@@ -6527,11 +6576,11 @@ async function createConnector(params: Record<string, unknown>) {
   }
 
   if (strokeWeight !== undefined) {
-    connector.strokeWeight = strokeWeight;
+    connector.strokeWeight = strokeWeight as number;
   }
 
   if (name) {
-    connector.name = name;
+    connector.name = name as string;
   }
 
   if (parentId) {
@@ -6587,10 +6636,10 @@ async function createSection(params: Record<string, unknown>) {
   }
 
   const section = figma.createSection();
-  section.x = x;
-  section.y = y;
-  section.resizeWithoutConstraints(width, height);
-  section.name = name;
+  section.x = x as number;
+  section.y = y as number;
+  section.resizeWithoutConstraints(width as number, height as number);
+  section.name = name as string;
 
   if (fillColor) {
     section.fills = [
@@ -6640,7 +6689,7 @@ async function setReactions(params: Record<string, unknown>) {
     throw new Error("Missing or invalid reactions parameter");
   }
 
-  const node = await getNodeByIdSafe(params.nodeId);
+  const node = await getNodeByIdSafe(params.nodeId as string);
   if (!node) {
     throw new Error(`Node not found: ${params.nodeId}`);
   }
@@ -6723,7 +6772,7 @@ async function setReactions(params: Record<string, unknown>) {
             type: "NODE",
             destinationId: a.destinationId || null,
             navigation: nav,
-            transition: buildTransition(a.transition),
+            transition: buildTransition(a.transition as Record<string, unknown>),
             preserveScrollPosition: a.preserveScrollPosition || false,
             resetVideoPosition: a.resetVideoPosition || false,
             resetScrollPosition: a.resetScrollPosition || false,
@@ -6734,7 +6783,7 @@ async function setReactions(params: Record<string, unknown>) {
           }
           return nodeAction;
         } else if (a.type === "BACK") {
-          return { type: "BACK", transition: buildTransition(a.transition) };
+          return { type: "BACK", transition: buildTransition(a.transition as Record<string, unknown>) };
         } else if (a.type === "CLOSE") {
           return { type: "CLOSE" };
         } else if (a.type === "URL") {
@@ -6758,9 +6807,9 @@ async function setReactions(params: Record<string, unknown>) {
   } catch (e) {
     // Try with singular "action" format (older Figma API)
     try {
-      const reactionsOldFormat = reactions.map((r) => ({
+      const reactionsOldFormat = reactions.map((r: Record<string, unknown>) => ({
         trigger: r.trigger,
-        action: r.actions ? r.actions[0] : r.action,
+        action: r.actions ? (r.actions as unknown[])[0] : r.action,
       }));
       await (node as unknown as { setReactionsAsync: Function }).setReactionsAsync(reactionsOldFormat);
     } catch (e2) {
@@ -6791,7 +6840,7 @@ async function getReactions(params: Record<string, unknown>) {
   if (!params || !params.nodeId) {
     throw new Error("Missing nodeId parameter");
   }
-  const node = await getNodeByIdSafe(params.nodeId);
+  const node = await getNodeByIdSafe(params.nodeId as string);
   if (!node) {
     throw new Error(`Node not found: ${params.nodeId}`);
   }
@@ -6848,30 +6897,41 @@ async function createTextStyle(params: Record<string, unknown>) {
     lineHeightUnit = "PIXELS",
     textCase = "ORIGINAL",
     textDecoration = "NONE",
-  } = params || {};
+  } = (params || {}) as {
+    name?: string;
+    fontFamily?: string;
+    fontStyle?: string;
+    fontSize?: number;
+    letterSpacing?: number;
+    letterSpacingUnit?: string;
+    lineHeight?: number;
+    lineHeightUnit?: string;
+    textCase?: string;
+    textDecoration?: string;
+  };
 
   const style = figma.createTextStyle();
-  style.name = name;
+  style.name = name as string;
 
   // Load and apply font
-  await figma.loadFontAsync({ family: fontFamily, style: fontStyle });
-  style.fontName = { family: fontFamily, style: fontStyle };
-  style.fontSize = fontSize;
+  await figma.loadFontAsync({ family: fontFamily as string, style: fontStyle });
+  style.fontName = { family: fontFamily as string, style: fontStyle };
+  style.fontSize = fontSize as number;
 
   if (letterSpacing !== undefined) {
-    style.letterSpacing = { value: letterSpacing, unit: letterSpacingUnit };
+    style.letterSpacing = { value: letterSpacing, unit: letterSpacingUnit as "PIXELS" | "PERCENT" };
   }
 
   if (lineHeight !== undefined) {
     if (lineHeightUnit === "AUTO") {
       style.lineHeight = { unit: "AUTO" };
     } else {
-      style.lineHeight = { value: lineHeight, unit: lineHeightUnit };
+      style.lineHeight = { value: lineHeight, unit: lineHeightUnit as "PIXELS" | "PERCENT" | "AUTO" };
     }
   }
 
-  style.textCase = textCase;
-  style.textDecoration = textDecoration;
+  style.textCase = textCase as TextCase;
+  style.textDecoration = textDecoration as TextDecoration;
 
   return { id: style.id, name: style.name, key: style.key };
 }
@@ -6905,16 +6965,16 @@ async function createEffectStyle(params: Record<string, unknown>) {
   style.name = name;
 
   style.effects = (effects || []).map((effect) => ({
-    type: effect.type,
-    radius: effect.radius || 0,
+    type: effect.type as "DROP_SHADOW" | "INNER_SHADOW" | "LAYER_BLUR" | "BACKGROUND_BLUR",
+    radius: (effect.radius as number) || 0,
     visible: effect.visible !== false,
     color: effect.color
       ? { r: (effect.color as Record<string, unknown>).r as number, g: (effect.color as Record<string, unknown>).g as number, b: (effect.color as Record<string, unknown>).b as number, a: (effect.color as Record<string, unknown>).a !== undefined ? (effect.color as Record<string, unknown>).a as number : 1 }
       : { r: 0, g: 0, b: 0, a: 0.25 },
     offset: effect.offset ? { x: (effect.offset as Record<string, unknown>).x as number, y: (effect.offset as Record<string, unknown>).y as number } : { x: 0, y: 0 },
-    spread: effect.spread || 0,
-    blendMode: effect.blendMode || "NORMAL",
-  }));
+    spread: (effect.spread as number) || 0,
+    blendMode: (effect.blendMode as string) || "NORMAL",
+  })) as unknown as readonly Effect[];
 
   return {
     id: style.id,
@@ -6935,7 +6995,7 @@ async function createGridStyle(params: Record<string, unknown>) {
 
   style.layoutGrids = (grids || []).map((grid) => {
     const layoutGrid: Record<string, unknown> = {
-      pattern: grid.pattern,
+      pattern: grid.pattern as "ROWS" | "COLUMNS" | "GRID",
       visible: grid.visible !== undefined ? grid.visible : true,
     };
 
@@ -6955,7 +7015,7 @@ async function createGridStyle(params: Record<string, unknown>) {
     if (grid.alignment !== undefined) layoutGrid.alignment = grid.alignment;
 
     return layoutGrid;
-  });
+  }) as unknown as readonly LayoutGrid[];
 
   console.log(`createGridStyle: name=${name} grids=${(grids || []).length}`);
 
