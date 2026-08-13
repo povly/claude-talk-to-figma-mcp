@@ -616,7 +616,7 @@ async function getBoundVariables(nodeId: string) {
       if (Array.isArray(val)) {
         val.forEach(collectVarIds);
       } else if (val && typeof val === "object") {
-        collectVarIds(val);
+        collectVarIds(val as Record<string, unknown>);
       }
     }
   }
@@ -706,7 +706,7 @@ async function findNodes(params: Record<string, unknown>) {
       parts.unshift(current.name as string);
       current = current.parent as Record<string, unknown>;
     }
-    parts.unshift(current.name);
+    parts.unshift(current.name as string);
     return parts.join("/");
   }
 
@@ -977,10 +977,10 @@ async function createText(params: Record<string, unknown>) {
   try {
     await figma.loadFontAsync({
       family: "Inter",
-      style: getFontStyle(fontWeight),
+      style: getFontStyle(fontWeight as number),
     });
-    textNode.fontName = { family: "Inter", style: getFontStyle(fontWeight) };
-    textNode.fontSize = parseInt(fontSize);
+    textNode.fontName = { family: "Inter", style: getFontStyle(fontWeight as number) };
+    textNode.fontSize = parseInt(fontSize as string);
   } catch (error) {
     console.error("Error setting font size", error);
   }
