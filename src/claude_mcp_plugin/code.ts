@@ -1857,7 +1857,7 @@ const setCharacters = async (node: Record<string, unknown>, characters: string, 
       errMsg
     );
     await figma.loadFontAsync(fallbackFont);
-    n.fontName = fallbackFont;
+  n.fontName = fallbackFont as FontName;
   }
   try {
     n.characters = characters;
@@ -1894,7 +1894,7 @@ const setCharactersWithStrictMatchFont = async (
     fontHashTree[`${startIdx}_${i}`] = startCharFontVal;
   }
   await figma.loadFontAsync(fallbackFont);
-  n.fontName = fallbackFont;
+  n.fontName = fallbackFont as FontName;
   n.characters = characters;
   console.log(fontHashTree);
   await Promise.all(
@@ -2009,7 +2009,7 @@ const setCharactersWithSmartMatchFont = async (
 
   await Promise.all([...fontsToLoad, fallbackFont].map(figma.loadFontAsync));
 
-  n.fontName = fallbackFont;
+  n.fontName = fallbackFont as FontName;
   n.characters = characters;
 
   let prevPos = 0;
