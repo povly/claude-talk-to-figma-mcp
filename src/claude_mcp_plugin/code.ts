@@ -152,7 +152,7 @@ figma.on("run", ({ command }) => {
 
 // Update plugin settings
 // Update plugin settings
-async function updateSettings(settings) {
+async function updateSettings(settings: Record<string, unknown>) {
   if (settings.serverPort) {
     state.serverPort = settings.serverPort;
   }
@@ -468,7 +468,7 @@ async function getSelection() {
  * Stubs let the AI agent discover child IDs and call get_node_info on them
  * for progressive disclosure.
  */
-export function pruneTreeAtDepth(node, maxDepth, currentDepth = 0) {
+export function pruneTreeAtDepth(node: Record<string, unknown>, maxDepth: number, currentDepth: number = 0) {
   if (!node || typeof node !== "object") return node;
   if (!Array.isArray(node.children) || node.children.length === 0) return node;
 
@@ -488,7 +488,7 @@ export function pruneTreeAtDepth(node, maxDepth, currentDepth = 0) {
   return node;
 }
 
-async function getNodeInfo(nodeId, depth) {
+async function getNodeInfo(nodeId: string, depth?: number) {
   const node = await getNodeByIdSafe(nodeId);
 
   if (!node) {
@@ -521,7 +521,7 @@ async function getNodeInfo(nodeId, depth) {
   return pruned;
 }
 
-async function getNodesInfo(nodeIds) {
+async function getNodesInfo(nodeIds: string[]) {
   try {
     // Load all nodes in parallel
     const nodes = await Promise.all(
@@ -568,7 +568,7 @@ async function getNodesInfo(nodeIds) {
   }
 }
 
-async function getComponentProperties(nodeId) {
+async function getComponentProperties(nodeId: string) {
   const node = await getNodeByIdSafe(nodeId);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
@@ -594,7 +594,7 @@ async function getComponentProperties(nodeId) {
   return result;
 }
 
-async function getBoundVariables(nodeId) {
+async function getBoundVariables(nodeId: string) {
   const node = await getNodeByIdSafe(nodeId);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
@@ -606,7 +606,7 @@ async function getBoundVariables(nodeId) {
 
   // Collect all unique variable IDs from boundVariables
   const variableIds = new Set();
-  function collectVarIds(obj) {
+  function collectVarIds(obj: Record<string, unknown>) {
     if (!obj || typeof obj !== "object") return;
     if (obj.type === "VARIABLE_ALIAS" && obj.id) {
       variableIds.add(obj.id);
@@ -653,7 +653,7 @@ async function getBoundVariables(nodeId) {
   };
 }
 
-async function getCSS(nodeId) {
+async function getCSS(nodeId: string) {
   const node = await getNodeByIdSafe(nodeId);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
@@ -691,14 +691,14 @@ async function findNodes(params: Record<string, unknown>) {
   const results = [];
   let allMatches = [];
 
-  function matches(node) {
+  function matches(node: Record<string, unknown>) {
     if (params.name && node.name !== params.name) return false;
     if (params.nameContains && !node.name.includes(params.nameContains)) return false;
     if (params.types && params.types.length > 0 && !params.types.includes(node.type)) return false;
     return true;
   }
 
-  function buildPath(node) {
+  function buildPath(node: Record<string, unknown>) {
     const parts = [];
     let current = node;
     while (current && current.parent && current.parent.type !== "DOCUMENT" && current.parent.type !== "PAGE") {
@@ -720,7 +720,7 @@ async function findNodes(params: Record<string, unknown>) {
 
     if (params.maxDepth !== undefined) {
       const rootDepth = "depth" in root ? (root.depth as number) || 0 : 0;
-      allMatches = allMatches.filter((n) => {
+      allMatches = allMatches.filter((n: Record<string, unknown>) => {
         if (!("depth" in n)) return true;
         return ((n as unknown as { depth: number }).depth - rootDepth) <= (params.maxDepth as number);
       });
@@ -944,7 +944,7 @@ async function createText(params: Record<string, unknown>) {
   const nameStr = name as string;
 
   // Map common font weights to Figma font styles
-  const getFontStyle = (weight) => {
+  const getFontStyle = (weight: number) => {
     switch (weight) {
       case 100:
         return "Thin";
@@ -1599,7 +1599,7 @@ async function exportNodeAsImage(params: Record<string, unknown>) {
     throw new Error(`Error exporting node as image: ${(error instanceof Error ? error.message : String(error))}`);
   }
 }
-function customBase64Encode(bytes) {
+function customBase64Encode(bytes: Uint8Array) {
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   let base64 = "";
@@ -1652,7 +1652,7 @@ function customBase64Encode(bytes) {
 }
 
 // Decode base64 string to Uint8Array (mirror of customBase64Encode)
-function customBase64Decode(base64) {
+function customBase64Decode(base64: string) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   const lookup = new Uint8Array(256);
   for (let i = 0; i < chars.length; i++) {
@@ -1790,8 +1790,8 @@ async function setTextContent(params: Record<string, unknown>) {
   }
 })();
 
-function uniqBy(arr, predicate) {
-  const cb = typeof predicate === "function" ? predicate : (o) => o[predicate];
+function uniqBy(arr: unknown[], predicate: string | ((item: unknown) => unknown)) {
+  const cb = typeof predicate === "function" ? predicate : (o: Record<string, unknown>) => o[predicate as string];
   return [
     ...arr
       .reduce((map, item) => {
@@ -1804,7 +1804,7 @@ function uniqBy(arr, predicate) {
       .values(),
   ];
 }
-const setCharacters = async (node, characters, options) => {
+const setCharacters = async (node: Record<string, unknown>, characters: string, options?: Record<string, unknown>) => {
   const fallbackFont = (options && options.fallbackFont) || {
     family: "Inter",
     style: "Regular",
@@ -1861,9 +1861,9 @@ const setCharacters = async (node, characters, options) => {
 };
 
 const setCharactersWithStrictMatchFont = async (
-  node,
-  characters,
-  fallbackFont
+  node: Record<string, unknown>,
+  characters: string,
+  fallbackFont: Record<string, string>
 ) => {
   const fontHashTree = {};
   for (let i = 1; i < node.characters.length; i++) {
@@ -1899,7 +1899,7 @@ const setCharactersWithStrictMatchFont = async (
   return true;
 };
 
-const getDelimiterPos = (str, delimiter, startIdx = 0, endIdx = str.length) => {
+const getDelimiterPos = (str: string, delimiter: string, startIdx: number = 0, endIdx: number = str.length) => {
   const indices = [];
   let temp = startIdx;
   for (let i = 0; i < endIdx; i++) {
@@ -1916,7 +1916,7 @@ const getDelimiterPos = (str, delimiter, startIdx = 0, endIdx = str.length) => {
   return indices.filter(Boolean);
 };
 
-const buildLinearOrder = (node) => {
+const buildLinearOrder = (node: Record<string, unknown>) => {
   const fontTree = [];
   const newLinesPos = getDelimiterPos(node.characters, "\n");
   newLinesPos.forEach(([newLinesRangeStart, newLinesRangeEnd], n) => {
@@ -1971,9 +1971,9 @@ const buildLinearOrder = (node) => {
 };
 
 const setCharactersWithSmartMatchFont = async (
-  node,
-  characters,
-  fallbackFont
+  node: Record<string, unknown>,
+  characters: string,
+  fallbackFont: Record<string, string>
 ) => {
   const rangeTree = buildLinearOrder(node);
   const fontsToLoad = uniqBy(
@@ -2281,7 +2281,7 @@ async function scanTextNodes(params: Record<string, unknown>) {
 }
 
 // Helper function to collect all nodes that need to be processed
-async function collectNodesToProcess(node, parentPath = [], depth = 0, nodesToProcess = []) {
+async function collectNodesToProcess(node: Record<string, unknown>, parentPath: string[] = [], depth: number = 0, nodesToProcess: Record<string, unknown>[] = []) {
   // Skip invisible nodes
   if (node.visible === false) return;
 
@@ -2304,7 +2304,7 @@ async function collectNodesToProcess(node, parentPath = [], depth = 0, nodesToPr
 }
 
 // Process a single text node
-async function processTextNode(node, parentPath, depth) {
+async function processTextNode(node: Record<string, unknown>, parentPath: string[], depth: number) {
   if (node.type !== "TEXT") return null;
 
   try {
@@ -2368,12 +2368,12 @@ async function processTextNode(node, parentPath, depth) {
 }
 
 // A delay function that returns a promise
-function delay(ms) {
+function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // Keep the original findTextNodes for backward compatibility
-async function findTextNodes(node, parentPath = [], depth = 0, textNodes = []) {
+async function findTextNodes(node: Record<string, unknown>, parentPath: string[] = [], depth: number = 0, textNodes: Record<string, unknown>[] = []) {
   // Skip invisible nodes
   if (node.visible === false) return;
 
@@ -2543,7 +2543,7 @@ async function setMultipleTextContents(params: Record<string, unknown>) {
     );
 
     // Process replacements within a chunk in parallel
-    const chunkPromises = chunk.map(async (replacement) => {
+    const chunkPromises = chunk.map(async (replacement: Record<string, unknown>) => {
       if (!replacement.nodeId || replacement.text === undefined) {
         console.error(`Missing nodeId or text for replacement`);
         return {
@@ -2638,7 +2638,7 @@ async function setMultipleTextContents(params: Record<string, unknown>) {
     const chunkResults = await Promise.all(chunkPromises);
 
     // Process results for this chunk
-    chunkResults.forEach(result => {
+    chunkResults.forEach((result: Record<string, unknown>) => {
       if (result.success) {
         successCount++;
       } else {
@@ -2861,7 +2861,7 @@ async function setFontWeight(params: Record<string, unknown>) {
   }
 
   // Map weight to font style
-  const getFontStyle = (weight) => {
+  const getFontStyle = (weight: number) => {
     switch (weight) {
       case 100: return "Thin";
       case 200: return "Extra Light";
@@ -3238,7 +3238,7 @@ async function getRemoteComponents() {
     return {
       success: true,
       count: teamComponents.length,
-      components: teamComponents.map(component => ({
+      components: teamComponents.map((component: Record<string, unknown>) => ({
         key: component.key,
         name: component.name,
         description: component.description || "",
@@ -3948,7 +3948,7 @@ async function createVector(params: Record<string, unknown>) {
 
   // Set vector paths if provided
   if (vectorPaths && vectorPaths.length > 0) {
-    vector.vectorPaths = vectorPaths.map(path => {
+    vector.vectorPaths = vectorPaths.map((path: Record<string, unknown>) => {
       return {
         windingRule: path.windingRule || "EVENODD",
         data: path.data || ""
@@ -4489,7 +4489,7 @@ async function setCurrentPage(params: Record<string, unknown>) {
 }
 
 // Helper function: base64 to Uint8Array decoder
-function base64ToUint8Array(base64) {
+function base64ToUint8Array(base64: string) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   const lookup = new Uint8Array(256);
   for (let i = 0; i < chars.length; i++) {
@@ -4693,7 +4693,7 @@ async function replaceImageFill(params: Record<string, unknown>) {
  */
 const EXPORT_TIMEOUT_MS = 60000; // matches exportNodeAsImage
 
-async function withExportTimeout(exportPromise, nodeId, format) {
+async function withExportTimeout(exportPromise: Promise<unknown>, nodeId: string, format: string) {
   let timeoutId;
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
@@ -5912,7 +5912,7 @@ async function getVariableDefs(params: Record<string, unknown>) {
   const seenIds = new Set();
 
   // Helper: resolve a variable to its value for a consumer node
-  async function resolveVariable(variable, node) {
+  async function resolveVariable(variable: Record<string, unknown>, node: Record<string, unknown>) {
     if (seenIds.has(variable.id)) return null;
     seenIds.add(variable.id);
 
@@ -5985,7 +5985,7 @@ async function getVariableDefs(params: Record<string, unknown>) {
     }
 
     const varIds = new Set();
-    function collectVarIds(obj) {
+  function collectVarIds(obj: Record<string, unknown>) {
       if (!obj || typeof obj !== "object") return;
       if (obj.type === "VARIABLE_ALIAS" && obj.id) {
         varIds.add(obj.id);
@@ -6059,7 +6059,7 @@ async function getVariableDefs(params: Record<string, unknown>) {
  * Map a colour name to an RGBA fill paint object.
  * These match the default colour palette shown in FigJam.
  */
-function stickyColorToFill(color) {
+function stickyColorToFill(color: string) {
   // Values stored as arrays to avoid passing const-object references into
   // Figma's paint normaliser, which may try to extend the color object and
   // throw "object is not extensible" in the plugin sandbox.
@@ -6093,7 +6093,7 @@ async function getFigJamElements() {
   const figjamTypes = new Set(["STICKY", "CONNECTOR", "SHAPE_WITH_TEXT", "SECTION", "STAMP"]);
   const results = { stickies: [], connectors: [], shapesWithText: [], sections: [], stamps: [] };
 
-  function walk(node) {
+  function walk(node: Record<string, unknown>) {
     if (figjamTypes.has(node.type)) {
       const base = { id: node.id, name: node.name, type: node.type, x: node.x, y: node.y };
 
@@ -6611,7 +6611,7 @@ async function setReactions(params: Record<string, unknown>) {
     }
 
     // Build transition object helper
-    const buildTransition = (t) => {
+    const buildTransition = (t: Record<string, unknown>) => {
       if (!t) return null;
       return {
         type: t.type || "DISSOLVE",
@@ -6622,7 +6622,7 @@ async function setReactions(params: Record<string, unknown>) {
 
     // Set actions - support both "actions" (array, new API) and "action" (single, old API)
     if (r.actions && Array.isArray(r.actions)) {
-      const mappedActions = r.actions.map((a) => {
+      const mappedActions = r.actions.map((a: Record<string, unknown>) => {
         if (a.type === "NODE") {
           const nav = a.navigation || "NAVIGATE";
           const nodeAction: Record<string, unknown> = {
