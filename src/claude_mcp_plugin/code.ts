@@ -630,7 +630,7 @@ async function getBoundVariables(nodeId: string) {
   const varResults = await Promise.allSettled(
     variableIdsArr.map((id) => figma.variables.getVariableByIdAsync(id as string))
   );
-  const variableDetails = [];
+  const variableDetails: Record<string, unknown>[] = [];
   varResults.forEach((result) => {
     if (result.status === "fulfilled" && result.value) {
       const variable = result.value;
@@ -1452,7 +1452,7 @@ async function createComponentInstance(params: Record<string, unknown>) {
     if (!component) {
       console.log(`Component not found locally, trying import...`);
 
-      let timeoutId;
+      let timeoutId: ReturnType<typeof setTimeout>;
       const timeoutPromise = new Promise((_, reject) => {
         timeoutId = setTimeout(() => {
           reject(new Error("Timeout while importing component (10s). The component may be in a team library you don't have access to."));
@@ -1551,7 +1551,7 @@ async function exportNodeAsImage(params: Record<string, unknown>) {
     };
 
     // Set up a timeout for large exports
-    let timeoutId;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
         reject(new Error(`Export timed out after 60s for node ${nodeId} (${node.name}, ${node.width}x${node.height})`));
@@ -2104,7 +2104,7 @@ async function scanTextNodes(params: Record<string, unknown>) {
 
   // If chunking is not enabled, use the original implementation
   if (!useChunking) {
-    const textNodes = [];
+    const textNodes: Record<string, unknown>[] = [];
     try {
       // Send started progress update
       sendProgressUpdate(
@@ -2162,7 +2162,7 @@ async function scanTextNodes(params: Record<string, unknown>) {
   console.log(`Using chunked scanning with chunk size: ${chunkSize}`);
 
   // First, collect all nodes to process (without processing them yet)
-  const nodesToProcess = [];
+  const nodesToProcess: Record<string, unknown>[] = [];
 
   // Send started progress update
   sendProgressUpdate(
@@ -2513,7 +2513,7 @@ async function setMultipleTextContents(params: Record<string, unknown>) {
   );
 
   // Define the results array and counters
-  const results = [];
+  const results: Record<string, unknown>[] = [];
   let successCount = 0;
   let failureCount = 0;
 
@@ -3164,9 +3164,10 @@ async function getStyledTextSegments(params: Record<string, unknown>) {
       // Handle different property types for safe serialization
       if (property === "fontName") {
         if (segment[property] && typeof segment[property] === "object") {
+          const fontValue = segment[property] as Record<string, unknown>;
           safeSegment[property] = {
-            family: segment[property].family || "",
-            style: segment[property].style || ""
+            family: fontValue.family || "",
+            style: fontValue.style || ""
           };
         } else {
           safeSegment[property] = { family: "", style: "" };
@@ -3241,7 +3242,7 @@ async function getRemoteComponents() {
     console.log("Starting remote components retrieval...");
 
     // Set up a manual timeout to detect deadlocks
-    let timeoutId;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
         reject(new Error("Internal timeout while retrieving remote components (45s)"));
@@ -3360,7 +3361,7 @@ async function setEffectStyleId(params: Record<string, unknown>) {
 
   try {
     // Set up a manual timeout to detect long operations
-    let timeoutId;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
         reject(new Error("Timeout while setting effect style ID (20s). The operation took too long to complete."));
@@ -3445,7 +3446,7 @@ async function setTextStyleId(params: Record<string, unknown>) {
 
   try {
     // Set up a manual timeout to detect long operations
-    let timeoutId;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
         reject(new Error("Timeout while setting text style ID (8s). The operation took too long to complete."));
@@ -3633,7 +3634,7 @@ async function flattenNode(params: Record<string, unknown>) {
     }
 
     // Implement a timeout mechanism
-    let timeoutId;
+    let timeoutId: ReturnType<typeof setTimeout>;
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
         reject(new Error("Flatten operation timed out after 20 seconds. The node may be too complex."));
@@ -4753,7 +4754,7 @@ async function replaceImageFill(params: Record<string, unknown>) {
 const EXPORT_TIMEOUT_MS = 60000; // matches exportNodeAsImage
 
 async function withExportTimeout(exportPromise: Promise<unknown>, nodeId: string, format: string) {
-  let timeoutId;
+  let timeoutId: ReturnType<typeof setTimeout>;
   const timeoutPromise = new Promise((_, reject) => {
     timeoutId = setTimeout(() => {
       reject(new Error(`Export timed out after ${EXPORT_TIMEOUT_MS / 1000}s for node ${nodeId} (${format})`));
