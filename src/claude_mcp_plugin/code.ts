@@ -1548,7 +1548,7 @@ async function exportNodeAsImage(params: Record<string, unknown>) {
     const settings = {
       format: format,
       constraint: { type: "SCALE", value: scale },
-    };
+    } as ExportSettingsImage;
 
     // Set up a timeout for large exports
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -4785,7 +4785,7 @@ async function exportNodeBytes(params: Record<string, unknown>) {
   const exportSettings = {
     format: exportFormat,
     constraint: { type: "SCALE", value: exportScale },
-  };
+  } as ExportSettingsImage;
 
   const bytes = await withExportTimeout(
     node.exportAsync(exportSettings),
@@ -5045,7 +5045,7 @@ async function setConstraints(params: Record<string, unknown>) {
 
 // Reorder node within its parent (z-order)
 async function reorderNode(params: Record<string, unknown>) {
-  const { nodeId, position, index } = params as { nodeId: string; position: number; index: number };
+  const { nodeId, position, index } = params as { nodeId: string; position: string; index: number };
 
   if (!nodeId) {
     throw new Error("Missing nodeId parameter");
@@ -5792,7 +5792,7 @@ async function setVariable(params: Record<string, unknown>) {
   }
 
   if (!variable) {
-    variable = figma.variables.createVariable(name, collection, resolvedType);
+    variable = figma.variables.createVariable(name, collection, resolvedType as VariableResolvedType);
   }
 
   // Determine mode
@@ -5906,7 +5906,7 @@ async function applyVariableToNode(params: Record<string, unknown>) {
     paints[paintIndex] = paint;
     node[paintProp] = paints;
   } else {
-    node.setBoundVariable(field, variable);
+    (node as unknown as { setBoundVariable: Function }).setBoundVariable(field, variable);
   }
 
   return {
