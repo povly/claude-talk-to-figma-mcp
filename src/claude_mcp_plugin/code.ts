@@ -154,7 +154,7 @@ figma.on("run", ({ command }) => {
 // Update plugin settings
 async function updateSettings(settings: Record<string, unknown>) {
   if (settings.serverPort) {
-    state.serverPort = settings.serverPort;
+    state.serverPort = settings.serverPort as number;
   }
 
   try {
