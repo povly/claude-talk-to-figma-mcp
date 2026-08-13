@@ -807,7 +807,7 @@ async function createRectangle(params: Record<string, unknown>) {
 
   // Set stroke weight if provided
   if (strokeWeight !== undefined) {
-    rect.strokeWeight = strokeWeight;
+    rect.strokeWeight = strokeWeight as number;
   }
 
   // If parentId is provided, append to that node, otherwise append to current page
@@ -874,7 +874,7 @@ async function createFrame(params: Record<string, unknown>) {
 
   // Set stroke weight if provided
   if (strokeWeight !== undefined) {
-    frame.strokeWeight = strokeWeight;
+    frame.strokeWeight = strokeWeight as number;
   }
 
   // If parentId is provided, append to that node, otherwise append to current page
@@ -1000,12 +1000,12 @@ async function createText(params: Record<string, unknown>) {
 
   // Set text alignment if provided
   if (textAlignHorizontal && ["LEFT", "CENTER", "RIGHT", "JUSTIFIED"].includes(textAlignHorizontal)) {
-    textNode.textAlignHorizontal = textAlignHorizontal;
+    textNode.textAlignHorizontal = textAlignHorizontal as "CENTER" | "LEFT" | "RIGHT" | "JUSTIFIED";
   }
 
   // Set text auto resize if provided (WIDTH_AND_HEIGHT, HEIGHT, NONE, TRUNCATE)
   if (textAutoResize && ["WIDTH_AND_HEIGHT", "HEIGHT", "NONE", "TRUNCATE"].includes(textAutoResize)) {
-    textNode.textAutoResize = textAutoResize;
+    textNode.textAutoResize = textAutoResize as "NONE" | "WIDTH_AND_HEIGHT" | "HEIGHT" | "TRUNCATE";
   }
 
   // Set width if provided (useful with textAutoResize "HEIGHT" for fixed-width wrapping text)
@@ -2772,34 +2772,34 @@ async function setAutoLayout(params: Record<string, unknown>) {
     node.layoutMode = "NONE";
   } else {
     // Set auto layout properties
-    node.layoutMode = layoutMode;
+    node.layoutMode = layoutMode as "NONE" | "HORIZONTAL" | "VERTICAL" | "GRID";
 
     // Configure padding if provided
-    if (paddingTop !== undefined) node.paddingTop = paddingTop;
-    if (paddingBottom !== undefined) node.paddingBottom = paddingBottom;
-    if (paddingLeft !== undefined) node.paddingLeft = paddingLeft;
-    if (paddingRight !== undefined) node.paddingRight = paddingRight;
+    if (paddingTop !== undefined) node.paddingTop = paddingTop as number;
+    if (paddingBottom !== undefined) node.paddingBottom = paddingBottom as number;
+    if (paddingLeft !== undefined) node.paddingLeft = paddingLeft as number;
+    if (paddingRight !== undefined) node.paddingRight = paddingRight as number;
 
     // Configure item spacing
-    if (itemSpacing !== undefined) node.itemSpacing = itemSpacing;
+    if (itemSpacing !== undefined) node.itemSpacing = itemSpacing as number;
 
     // Configure alignment
     if (primaryAxisAlignItems !== undefined) {
-      node.primaryAxisAlignItems = primaryAxisAlignItems;
+      node.primaryAxisAlignItems = primaryAxisAlignItems as "CENTER" | "MIN" | "MAX" | "SPACE_BETWEEN";
     }
 
     if (counterAxisAlignItems !== undefined) {
-      node.counterAxisAlignItems = counterAxisAlignItems;
+      node.counterAxisAlignItems = counterAxisAlignItems as "CENTER" | "MIN" | "MAX" | "BASELINE";
     }
 
     // Configure wrap
     if (layoutWrap !== undefined) {
-      node.layoutWrap = layoutWrap;
+      node.layoutWrap = layoutWrap as "NO_WRAP" | "WRAP";
     }
 
     // Configure stroke inclusion
     if (strokesIncludedInLayout !== undefined) {
-      node.strokesIncludedInLayout = strokesIncludedInLayout;
+      node.strokesIncludedInLayout = strokesIncludedInLayout as boolean;
     }
   }
 
@@ -3771,7 +3771,7 @@ async function createEllipse(params: Record<string, unknown>) {
   }
 
   if (strokeWeight !== undefined) {
-    ellipse.strokeWeight = strokeWeight;
+    ellipse.strokeWeight = strokeWeight as number;
   }
 
   // If parentId is provided, append to that node, otherwise append to current page
@@ -3845,7 +3845,7 @@ async function createPolygon(params: Record<string, unknown>) {
   }
 
   if (strokeWeight !== undefined) {
-    polygon.strokeWeight = strokeWeight;
+    polygon.strokeWeight = strokeWeight as number;
   }
 
   // If parentId is provided, append to that node, otherwise append to current page
@@ -3931,7 +3931,7 @@ async function createStar(params: Record<string, unknown>) {
   }
 
   if (strokeWeight !== undefined) {
-    star.strokeWeight = strokeWeight;
+    star.strokeWeight = strokeWeight as number;
   }
 
   // If parentId is provided, append to that node, otherwise append to current page
@@ -4001,10 +4001,10 @@ async function createVector(params: Record<string, unknown>) {
     vector.vectorPaths = vectorPathsArr.map((path: unknown) => {
       const p = path as Record<string, unknown>;
       return {
-        windingRule: p.windingRule || "EVENODD",
-        data: p.data || ""
+        windingRule: (p.windingRule as string) || "EVENODD",
+        data: (p.data as string) || ""
       };
-    });
+    }) as VectorPaths;
   }
 
   // Set fill color if provided
