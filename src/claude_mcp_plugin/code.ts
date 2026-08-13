@@ -542,7 +542,7 @@ async function getNodesInfo(nodeIds: string[]) {
           const response = await node.exportAsync({
             format: "JSON_REST_V1",
           });
-          const doc = response.document;
+          const doc = (response as Record<string, unknown>).document;
           // Add local coordinates if node supports positioning
           if ("x" in node && "y" in node) {
             doc.localPosition = {
@@ -695,16 +695,16 @@ async function findNodes(params: Record<string, unknown>) {
     const name = node.name as string;
     if (params.name && name !== params.name) return false;
     if (params.nameContains && !name.includes(params.nameContains as string)) return false;
-    if (params.types && params.types.length > 0 && !params.types.includes(node.type)) return false;
+    if (params.types && (params.types as unknown[]).length > 0 && !(params.types as unknown[]).includes(node.type)) return false;
     return true;
   }
 
   function buildPath(node: Record<string, unknown>) {
-    const parts = [];
+    const parts: string[] = [];
     let current = node;
-    while (current && current.parent && current.parent.type !== "DOCUMENT" && current.parent.type !== "PAGE") {
-      parts.unshift(current.name);
-      current = current.parent;
+    while (current && current.parent && (current.parent as Record<string, unknown>).type !== "DOCUMENT" && (current.parent as Record<string, unknown>).type !== "PAGE") {
+      parts.unshift(current.name as string);
+      current = current.parent as Record<string, unknown>;
     }
     parts.unshift(current.name);
     return parts.join("/");
@@ -712,7 +712,7 @@ async function findNodes(params: Record<string, unknown>) {
 
   const rootWithFind = root as unknown as { findAll: Function; findAllWithCriteria?: Function };
   if (typeof rootWithFind.findAll === "function") {
-    if (params.types && params.types.length > 0 && typeof rootWithFind.findAllWithCriteria === "function") {
+    if (params.types && (params.types as unknown[]).length > 0 && typeof rootWithFind.findAllWithCriteria === "function") {
       allMatches = rootWithFind.findAllWithCriteria({ types: params.types });
       allMatches = allMatches.filter(matches);
     } else {
@@ -1812,10 +1812,10 @@ const setCharacters = async (node: Record<string, unknown>, characters: string, 
     getRangeFontName: (start: number, end: number) => FontName;
     setRangeFontName: (start: number, end: number, font: FontName) => void;
   };
-  const fallbackFont = (options && options.fallbackFont) || {
+  const fallbackFont = ((options && options.fallbackFont) || {
     family: "Inter",
     style: "Regular",
-  };
+  }) as FontName;
   try {
     if (n.fontName === figma.mixed) {
       if (options && options.smartStrategy === "prevail") {
@@ -1955,15 +1955,15 @@ const buildLinearOrder = (node: Record<string, unknown>) => {
           spacesRangeEnd
         );
         if (spacesRangeFont === figma.mixed) {
-          const fallbackFont = n.getRangeFontName(
+          const fallback = n.getRangeFontName(
             spacesRangeStart,
             spacesRangeStart
           );
           fontTree.push({
             start: spacesRangeStart,
             delimiter: " ",
-            family: fallbackFont.family,
-            style: fallbackFont.style,
+            family: (fallback as FontName).family,
+            style: (fallback as FontName).style,
           });
         } else {
           fontTree.push({
@@ -2475,7 +2475,7 @@ async function findTextNodes(node: Record<string, unknown>, parentPath: string[]
 
 // Replace text in a specific node
 async function setMultipleTextContents(params: Record<string, unknown>) {
-  const { nodeId, text } = params as { nodeId: string; text: string };
+  const { nodeId, text } = params as { nodeId: string; text: Array<Record<string, unknown>> };
   const commandId = params.commandId || generateCommandId();
 
   if (!nodeId || !text || !Array.isArray(text)) {
@@ -3174,9 +3174,10 @@ async function getStyledTextSegments(params: Record<string, unknown>) {
       } else if (property === "letterSpacing" || property === "lineHeight") {
         // Handle spacing properties which have a value and unit
         if (segment[property] && typeof segment[property] === "object") {
+          const propValue = segment[property] as Record<string, unknown>;
           safeSegment[property] = {
-            value: segment[property].value || 0,
-            unit: segment[property].unit || "PIXELS"
+            value: propValue.value || 0,
+            unit: propValue.unit || "PIXELS"
           };
         } else {
           safeSegment[property] = { value: 0, unit: "PIXELS" };
@@ -3977,19 +3978,27 @@ async function createVector(params: Record<string, unknown>) {
     strokeWeight
   } = params || {};
 
+  const vectorPathsArr = vectorPaths as unknown[];
+  const xNum = x as number;
+  const yNum = y as number;
+  const widthNum = width as number;
+  const heightNum = height as number;
+  const nameStr = name as string;
+
   // Create the vector
   const vector = figma.createVector();
-  vector.x = x;
-  vector.y = y;
-  vector.resize(width, height);
-  vector.name = name;
+  vector.x = xNum;
+  vector.y = yNum;
+  vector.resize(widthNum, heightNum);
+  vector.name = nameStr;
 
   // Set vector paths if provided
-  if (vectorPaths && vectorPaths.length > 0) {
-    vector.vectorPaths = vectorPaths.map((path: Record<string, unknown>) => {
+  if (vectorPathsArr && vectorPathsArr.length > 0) {
+    vector.vectorPaths = vectorPathsArr.map((path: unknown) => {
+      const p = path as Record<string, unknown>;
       return {
-        windingRule: path.windingRule || "EVENODD",
-        data: path.data || ""
+        windingRule: p.windingRule || "EVENODD",
+        data: p.data || ""
       };
     });
   }
@@ -3999,11 +4008,11 @@ async function createVector(params: Record<string, unknown>) {
     const paintStyle = {
       type: "SOLID" as const,
       color: {
-        r: parseFloat(fillColor.r) || 0,
-        g: parseFloat(fillColor.g) || 0,
-        b: parseFloat(fillColor.b) || 0,
+        r: parseFloat(fillColorRec?.r as string) || 0,
+        g: parseFloat(fillColorRec?.g as string) || 0,
+        b: parseFloat(fillColorRec?.b as string) || 0,
       },
-      opacity: parseFloat(fillColor.a) || 1,
+      opacity: parseFloat(fillColorRec?.a as string) || 1,
     };
     vector.fills = [paintStyle];
   }
@@ -4013,11 +4022,11 @@ async function createVector(params: Record<string, unknown>) {
     const strokeStyle = {
       type: "SOLID" as const,
       color: {
-        r: parseFloat(strokeColor.r) || 0,
-        g: parseFloat(strokeColor.g) || 0,
-        b: parseFloat(strokeColor.b) || 0,
+        r: parseFloat(strokeColorRec?.r as string) || 0,
+        g: parseFloat(strokeColorRec?.g as string) || 0,
+        b: parseFloat(strokeColorRec?.b as string) || 0,
       },
-      opacity: parseFloat(strokeColor.a) || 1,
+      opacity: parseFloat(strokeColorRec?.a as string) || 1,
     };
     vector.strokes = [strokeStyle];
   }
@@ -4884,7 +4893,7 @@ async function applyImageTransform(params: Record<string, unknown>) {
 async function setImageFilters(params: Record<string, unknown>) {
   try {
     const nodeId = params.nodeId;
-    const filters = params.filters;
+    const filters = params.filters as Record<string, unknown>;
 
     if (!nodeId || !filters) {
       throw new Error("Missing required parameters: nodeId, filters");
