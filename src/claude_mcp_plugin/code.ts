@@ -5519,11 +5519,12 @@ async function setGrid(params: Record<string, unknown>) {
     }
 
     if (grid.color) {
+      const gridColor = grid.color as Record<string, unknown>;
       layoutGrid.color = {
-        r: grid.color.r,
-        g: grid.color.g,
-        b: grid.color.b,
-        a: grid.color.a !== undefined ? grid.color.a : 0.1
+        r: gridColor.r as number,
+        g: gridColor.g as number,
+        b: gridColor.b as number,
+        a: gridColor.a !== undefined ? gridColor.a as number : 0.1
       };
     }
 
@@ -5819,7 +5820,7 @@ async function setVariable(params: Record<string, unknown>) {
 
   // Validate value type matches resolvedType
   if (resolvedType === "COLOR") {
-    if (typeof finalValue !== "object" || finalValue === null || finalValue.r === undefined) {
+    if (typeof finalValue !== "object" || finalValue === null || (finalValue as Record<string, unknown>).r === undefined) {
       throw new Error("Value does not match resolvedType. Expected COLOR object {r, g, b, a}, got " + typeof finalValue);
     }
   } else if (resolvedType === "FLOAT") {
@@ -6164,7 +6165,7 @@ async function getFigJamElements() {
           results.stickies.push(Object.assign({}, base, {
             width: node.width,
             height: node.height,
-            text: node.text ? node.text.characters : "",
+            text: node.text ? (node.text as Record<string, unknown>).characters : "",
             fills: node.fills,
             isWide: node.isWide,
             authorName: node.authorName,
@@ -6188,7 +6189,7 @@ async function getFigJamElements() {
             width: node.width,
             height: node.height,
             shapeType: node.shapeType,
-            text: node.text ? node.text.characters : "",
+            text: node.text ? (node.text as Record<string, unknown>).characters : "",
             fills: node.fills,
           }));
           break;
@@ -6371,6 +6372,15 @@ async function createShapeWithText(params: Record<string, unknown>) {
     parentId,
   } = params || {};
 
+  const fillColorRec = fillColor as Record<string, unknown> | undefined;
+  const xNum = x as number;
+  const yNum = y as number;
+  const widthNum = width as number;
+  const heightNum = height as number;
+  const shapeTypeStr = shapeType as string;
+  const textStr = text as string;
+  const nameStr = name as string;
+
   if (!figma.createShapeWithText) {
     throw new Error("createShapeWithText is not available. This command requires a FigJam document.");
   }
@@ -6386,16 +6396,16 @@ async function createShapeWithText(params: Record<string, unknown>) {
   }
 
   // Set fill color if provided
-  if (fillColor) {
+  if (fillColorRec) {
     shape.fills = [
       {
         type: "SOLID" as const,
         color: {
-          r: parseFloat(fillColor.r) || 0,
-          g: parseFloat(fillColor.g) || 0,
-          b: parseFloat(fillColor.b) || 0,
+          r: parseFloat(fillColorRec.r as string) || 0,
+          g: parseFloat(fillColorRec.g as string) || 0,
+          b: parseFloat(fillColorRec.b as string) || 0,
         },
-        opacity: fillColor.a !== undefined ? parseFloat(fillColor.a) : 1,
+        opacity: fillColorRec.a !== undefined ? parseFloat(fillColorRec.a as string) : 1,
       },
     ];
   }
@@ -6458,6 +6468,13 @@ async function createConnector(params: Record<string, unknown>) {
     parentId,
   } = params || {};
 
+  const strokeColorRec = strokeColor as Record<string, unknown> | undefined;
+  const strokeWeightNum = strokeWeight as number;
+  const connectorLineTypeStr = connectorLineType as string;
+  const startStrokeCapStr = startStrokeCap as string;
+  const endStrokeCapStr = endStrokeCap as string;
+  const nameStr = name as string;
+
   if (!figma.createConnector) {
     throw new Error("createConnector is not available. This command requires a FigJam document.");
   }
@@ -6490,8 +6507,8 @@ async function createConnector(params: Record<string, unknown>) {
     throw new Error("Either endNodeId or both endX and endY must be provided");
   }
 
-  connector.connectorLineType = connectorLineType;
-  connector.connectorStartStrokeCap = startStrokeCap;
+  connector.connectorLineType = connectorLineTypeStr;
+  connector.connectorStartStrokeCap = startStrokeCapStr;
   connector.connectorEndStrokeCap = endStrokeCap;
 
   if (strokeColor) {
@@ -6499,11 +6516,11 @@ async function createConnector(params: Record<string, unknown>) {
       {
         type: "SOLID" as const,
         color: {
-          r: parseFloat(strokeColor.r) || 0,
-          g: parseFloat(strokeColor.g) || 0,
-          b: parseFloat(strokeColor.b) || 0,
+          r: parseFloat(strokeColorRec?.r as string) || 0,
+          g: parseFloat(strokeColorRec?.g as string) || 0,
+          b: parseFloat(strokeColorRec?.b as string) || 0,
         },
-        opacity: strokeColor.a !== undefined ? parseFloat(strokeColor.a) : 1,
+        opacity: strokeColorRec?.a !== undefined ? parseFloat(strokeColorRec.a as string) : 1,
       },
     ];
   }
@@ -6557,6 +6574,13 @@ async function createSection(params: Record<string, unknown>) {
     parentId,
   } = params || {};
 
+  const fillColorRec = fillColor as Record<string, unknown> | undefined;
+  const xNum = x as number;
+  const yNum = y as number;
+  const widthNum = width as number;
+  const heightNum = height as number;
+  const nameStr = name as string;
+
   if (!figma.createSection) {
     throw new Error("createSection is not available. This command requires a FigJam document.");
   }
@@ -6572,11 +6596,11 @@ async function createSection(params: Record<string, unknown>) {
       {
         type: "SOLID" as const,
         color: {
-          r: parseFloat(fillColor.r) || 0,
-          g: parseFloat(fillColor.g) || 0,
-          b: parseFloat(fillColor.b) || 0,
+          r: parseFloat(fillColorRec?.r as string) || 0,
+          g: parseFloat(fillColorRec?.g as string) || 0,
+          b: parseFloat(fillColorRec?.b as string) || 0,
         },
-        opacity: fillColor.a !== undefined ? parseFloat(fillColor.a) : 1,
+        opacity: fillColorRec?.a !== undefined ? parseFloat(fillColorRec.a as string) : 1,
       },
     ];
   }
@@ -6739,8 +6763,8 @@ async function setReactions(params: Record<string, unknown>) {
       }));
       await (node as unknown as { setReactionsAsync: Function }).setReactionsAsync(reactionsOldFormat);
     } catch (e2) {
-      const errStr = e ? (e.message || e.toString() || JSON.stringify(e)) : "unknown";
-      const errStr2 = e2 ? (e2.message || e2.toString() || JSON.stringify(e2)) : "unknown";
+      const errStr = e ? ((e instanceof Error ? e.message : null) || e.toString() || JSON.stringify(e)) : "unknown";
+      const errStr2 = e2 ? ((e2 instanceof Error ? e2.message : null) || e2.toString() || JSON.stringify(e2)) : "unknown";
       throw new Error(`setReactionsAsync failed.\nNew API error: ${errStr}\nOld API error: ${errStr2}\nInput: ${debugJson}`);
     }
   }
@@ -6884,9 +6908,9 @@ async function createEffectStyle(params: Record<string, unknown>) {
     radius: effect.radius || 0,
     visible: effect.visible !== false,
     color: effect.color
-      ? { r: effect.color.r, g: effect.color.g, b: effect.color.b, a: effect.color.a !== undefined ? effect.color.a : 1 }
+      ? { r: (effect.color as Record<string, unknown>).r as number, g: (effect.color as Record<string, unknown>).g as number, b: (effect.color as Record<string, unknown>).b as number, a: (effect.color as Record<string, unknown>).a !== undefined ? (effect.color as Record<string, unknown>).a as number : 1 }
       : { r: 0, g: 0, b: 0, a: 0.25 },
-    offset: effect.offset ? { x: effect.offset.x, y: effect.offset.y } : { x: 0, y: 0 },
+    offset: effect.offset ? { x: (effect.offset as Record<string, unknown>).x as number, y: (effect.offset as Record<string, unknown>).y as number } : { x: 0, y: 0 },
     spread: effect.spread || 0,
     blendMode: effect.blendMode || "NORMAL",
   }));
@@ -6916,11 +6940,12 @@ async function createGridStyle(params: Record<string, unknown>) {
 
     if (grid.sectionSize !== undefined) layoutGrid.sectionSize = grid.sectionSize;
     if (grid.color) {
+      const gridColor = grid.color as Record<string, unknown>;
       layoutGrid.color = {
-        r: grid.color.r,
-        g: grid.color.g,
-        b: grid.color.b,
-        a: grid.color.a !== undefined ? grid.color.a : 1,
+        r: gridColor.r as number,
+        g: gridColor.g as number,
+        b: gridColor.b as number,
+        a: gridColor.a !== undefined ? gridColor.a as number : 1,
       };
     }
     if (grid.count !== undefined) layoutGrid.count = grid.count;
