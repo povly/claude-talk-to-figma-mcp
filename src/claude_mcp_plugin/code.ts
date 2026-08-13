@@ -499,7 +499,7 @@ async function getNodeInfo(nodeId: string, depth?: number) {
     format: "JSON_REST_V1",
   });
 
-  const document = (response as Record<string, unknown>).document;
+  const document = (response as Record<string, unknown>).document as Record<string, unknown>;
 
   // Plugin-side depth pruning — reduces WS payload size.
   // MCP-side filterFigmaNode still runs on the pruned tree (defensive backwards-compat layer).

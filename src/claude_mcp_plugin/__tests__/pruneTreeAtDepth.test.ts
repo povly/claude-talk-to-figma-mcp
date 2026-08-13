@@ -23,7 +23,7 @@ describe('pruneTreeAtDepth', () => {
       ],
     };
 
-    const result = pruneTreeAtDepth(tree, 0);
+    const result = pruneTreeAtDepth(tree, 0) as unknown as { _childrenTruncated: boolean; children: unknown[] };
 
     expect(result._childrenTruncated).toBe(true);
     expect(result.children).toHaveLength(2);
@@ -48,7 +48,7 @@ describe('pruneTreeAtDepth', () => {
       ],
     };
 
-    const result = pruneTreeAtDepth(tree, 1);
+    const result = pruneTreeAtDepth(tree, 1) as unknown as { _childrenTruncated?: boolean; fills: unknown[]; children: Array<{ fills: unknown[]; _childrenTruncated?: boolean; children: unknown[] }> };
 
     expect(result._childrenTruncated).toBeUndefined();
     expect(result.fills).toEqual([{ type: 'SOLID' }]);
@@ -69,7 +69,7 @@ describe('pruneTreeAtDepth', () => {
       children: [{ id: '1', type: 'RECTANGLE' }],
     };
 
-    const result = pruneTreeAtDepth(tree, 5);
+    const result = pruneTreeAtDepth(tree, 5) as unknown as { _childrenTruncated?: boolean; children: unknown[] };
 
     expect(result.children[0]).toEqual({ id: '1', type: 'RECTANGLE' });
     expect(result._childrenTruncated).toBeUndefined();
