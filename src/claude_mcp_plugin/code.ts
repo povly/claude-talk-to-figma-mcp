@@ -692,8 +692,9 @@ async function findNodes(params: Record<string, unknown>) {
   let allMatches = [];
 
   function matches(node: Record<string, unknown>) {
-    if (params.name && node.name !== params.name) return false;
-    if (params.nameContains && !node.name.includes(params.nameContains)) return false;
+    const name = node.name as string;
+    if (params.name && name !== params.name) return false;
+    if (params.nameContains && !name.includes(params.nameContains as string)) return false;
     if (params.types && params.types.length > 0 && !params.types.includes(node.type)) return false;
     return true;
   }
@@ -1794,7 +1795,7 @@ function uniqBy(arr: unknown[], predicate: string | ((item: unknown) => unknown)
   const cb = typeof predicate === "function" ? predicate : (o: Record<string, unknown>) => o[predicate as string];
   return [
     ...arr
-      .reduce((map, item) => {
+      .reduce((map: Map<unknown, unknown>, item) => {
         const key = item === null || item === undefined ? item : cb(item);
 
         map.has(key) || map.set(key, item);
@@ -1983,7 +1984,7 @@ const buildLinearOrder = (node: Record<string, unknown>) => {
     }
   });
   return fontTree
-    .sort((a, b) => +a.start - +b.start)
+    .sort((a, b) => +(a.start as number) - +(b.start as number))
     .map(({ family, style, delimiter }) => ({ family, style, delimiter }));
 };
 
@@ -2319,7 +2320,7 @@ async function collectNodesToProcess(node: Record<string, unknown>, parentPath: 
 
   // Recursively add children
   if ("children" in node) {
-    for (const child of node.children) {
+    for (const child of (node.children as Record<string, unknown>[])) {
       await collectNodesToProcess(child, nodePath, depth + 1, nodesToProcess);
     }
   }
@@ -2466,7 +2467,7 @@ async function findTextNodes(node: Record<string, unknown>, parentPath: string[]
 
   // Recursively process children of container nodes
   if ("children" in node) {
-    for (const child of node.children) {
+    for (const child of (node.children as Record<string, unknown>[])) {
       await findTextNodes(child, nodePath, depth + 1, textNodes);
     }
   }
@@ -3810,16 +3811,23 @@ async function createPolygon(params: Record<string, unknown>) {
     strokeWeight
   } = params || {};
 
+  const sidesNum = sides as number;
+  const xNum = x as number;
+  const yNum = y as number;
+  const widthNum = width as number;
+  const heightNum = height as number;
+  const nameStr = name as string;
+
   // Create the polygon
   const polygon = figma.createPolygon();
-  polygon.x = x;
-  polygon.y = y;
-  polygon.resize(width, height);
-  polygon.name = name;
+  polygon.x = xNum;
+  polygon.y = yNum;
+  polygon.resize(widthNum, heightNum);
+  polygon.name = nameStr;
 
   // Set the number of sides
-  if (sides >= 3) {
-    polygon.pointCount = sides;
+  if (sidesNum >= 3) {
+    polygon.pointCount = sidesNum;
   }
 
   // Set fill color if provided
@@ -3883,21 +3891,29 @@ async function createStar(params: Record<string, unknown>) {
     strokeWeight
   } = params || {};
 
+  const pointsNum = points as number;
+  const innerRadiusNum = innerRadius as number;
+  const xNum = x as number;
+  const yNum = y as number;
+  const widthNum = width as number;
+  const heightNum = height as number;
+  const nameStr = name as string;
+
   // Create the star
   const star = figma.createStar();
-  star.x = x;
-  star.y = y;
-  star.resize(width, height);
-  star.name = name;
+  star.x = xNum;
+  star.y = yNum;
+  star.resize(widthNum, heightNum);
+  star.name = nameStr;
 
   // Set the number of points
-  if (points >= 3) {
-    star.pointCount = points;
+  if (pointsNum >= 3) {
+    star.pointCount = pointsNum;
   }
 
   // Set the inner radius ratio
-  if (innerRadius > 0 && innerRadius < 1) {
-    star.innerRadius = innerRadius;
+  if (innerRadiusNum > 0 && innerRadiusNum < 1) {
+    star.innerRadius = innerRadiusNum;
   }
 
   // Set fill color if provided
@@ -4054,23 +4070,32 @@ async function createLine(params: Record<string, unknown>) {
     strokeCap = "NONE" // Can be "NONE", "ROUND", "SQUARE", "ARROW_LINES", or "ARROW_EQUILATERAL"
   } = params || {};
 
+  const x1Num = x1 as number;
+  const y1Num = y1 as number;
+  const x2Num = x2 as number;
+  const y2Num = y2 as number;
+  const nameStr = name as string;
+  const strokeColorRec = strokeColor as Record<string, unknown>;
+  const strokeWeightNum = strokeWeight as number;
+  const strokeCapStr = strokeCap as string;
+
   // Create a vector node to represent the line
   const line = figma.createVector();
-  line.name = name;
+  line.name = nameStr;
 
   // Position the line at the starting point
-  line.x = x1;
-  line.y = y1;
+  line.x = x1Num;
+  line.y = y1Num;
 
   // Calculate the vector size
-  const width = Math.abs(x2 - x1);
-  const height = Math.abs(y2 - y1);
+  const width = Math.abs(x2Num - x1Num);
+  const height = Math.abs(y2Num - y1Num);
   line.resize(width > 0 ? width : 1, height > 0 ? height : 1);
 
   // Create vector path data for a straight line
   // SVG path data format: M (move to) starting point, L (line to) ending point
-  const dx = x2 - x1;
-  const dy = y2 - y1;
+  const dx = x2Num - x1Num;
+  const dy = y2Num - y1Num;
 
   // Calculate relative endpoint coordinates in the vector's local coordinate system
   const endX = dx > 0 ? width : 0;
@@ -4091,11 +4116,11 @@ async function createLine(params: Record<string, unknown>) {
   const strokeStyle = {
     type: "SOLID" as const,
     color: {
-      r: parseFloat(strokeColor.r) || 0,
-      g: parseFloat(strokeColor.g) || 0,
-      b: parseFloat(strokeColor.b) || 0,
+      r: parseFloat(strokeColorRec.r as string) || 0,
+      g: parseFloat(strokeColorRec.g as string) || 0,
+      b: parseFloat(strokeColorRec.b as string) || 0,
     },
-    opacity: parseFloat(strokeColor.a) || 1
+    opacity: parseFloat(strokeColorRec.a as string) || 1
   };
   line.strokes = [strokeStyle];
 
@@ -4767,7 +4792,7 @@ async function exportNodeBytes(params: Record<string, unknown>) {
     : exportFormat === "SVG" ? "image/svg+xml"
     : "image/png";
 
-  console.log(`exportNodeBytes: node=${nodeId} format=${exportFormat} bytes=${base64.length}`);
+  console.log(`exportNodeBytes: node=${nodeId} format=${exportFormat} bytes=${(base64 as string).length}`);
 
   return {
     nodeId: node.id,
@@ -5201,15 +5226,18 @@ async function setGradient(params: Record<string, unknown>) {
     throw new Error("Gradient requires at least 2 color stops");
   }
 
-  const gradientStops = stops.map(stop => ({
-    position: stop.position,
-    color: {
-      r: stop.color.r,
-      g: stop.color.g,
-      b: stop.color.b,
-      a: stop.color.a !== undefined ? stop.color.a : 1,
-    },
-  }));
+  const gradientStops = stops.map((stop: Record<string, unknown>) => {
+    const color = stop.color as Record<string, unknown>;
+    return {
+      position: stop.position,
+      color: {
+        r: color.r,
+        g: color.g,
+        b: color.b,
+        a: color.a !== undefined ? color.a : 1,
+      },
+    };
+  });
 
   const gradientFill = {
     type: type,
@@ -5939,12 +5967,12 @@ async function getVariableDefs(params: Record<string, unknown>) {
     seenIds.add(variable.id);
 
     // Sanitize name for CSS custom property: replace ./ with -
-    const cssName = variable.name.replace(/[./]/g, "-").replace(/[^a-zA-Z0-9-]/g, "").toLowerCase();
+    const cssName = (variable.name as string).replace(/[./]/g, "-").replace(/[^a-zA-Z0-9-]/g, "").toLowerCase();
 
     let resolvedValue;
     try {
       if (node) {
-        resolvedValue = variable.resolveForConsumer(node);
+        resolvedValue = (variable.resolveForConsumer as Function)(node);
       } else {
         resolvedValue = variable.valuesPerMode;
       }
@@ -6158,7 +6186,7 @@ async function getFigJamElements() {
             width: node.width,
             height: node.height,
             fills: node.fills,
-            childCount: "children" in node ? node.children.length : 0,
+            childCount: "children" in node ? (node.children as unknown[]).length : 0,
           }));
           break;
 
@@ -6174,7 +6202,7 @@ async function getFigJamElements() {
 
     // Recurse into children (sections, frames, groups, etc.)
     if ("children" in node) {
-      for (const child of node.children) {
+      for (const child of (node.children as Record<string, unknown>[])) {
         walk(child);
       }
     }
@@ -6215,6 +6243,13 @@ async function createSticky(params: Record<string, unknown>) {
     parentId,
   } = params || {};
 
+  const colorStr = color as string;
+  const xNum = x as number;
+  const yNum = y as number;
+  const textStr = text as string;
+  const isWideBool = isWide as boolean;
+  const nameStr = name as string;
+
   if (!figma.createSticky) {
     throw new Error("createSticky is not available. This command requires a FigJam document.");
   }
@@ -6242,7 +6277,7 @@ async function createSticky(params: Record<string, unknown>) {
     try {
       // Prefer the native NodeColor API (uses FigJam's exact palette colours).
       // Fall back to manual fills if the property isn't settable.
-      (sticky as unknown as Record<string, unknown>).color = color.toUpperCase();
+      (sticky as unknown as Record<string, unknown>).color = colorStr.toUpperCase();
     } catch (e) {
       try {
         sticky.fills = stickyColorToFill(color);
@@ -6255,7 +6290,7 @@ async function createSticky(params: Record<string, unknown>) {
       sticky.text.characters = text;
     }
   } catch (propErr) {
-    throw new Error("create_sticky failed: " + propErr.message);
+    throw new Error("create_sticky failed: " + (propErr instanceof Error ? propErr.message : String(propErr)));
   }
 
   var resultFills;
@@ -6601,18 +6636,18 @@ async function setReactions(params: Record<string, unknown>) {
                 t.overlayPositionType = a.overlayPositionType || "CENTER";
                 info.afterPositionType = t.overlayPositionType;
               } catch (e) {
-                info.positionTypeError = e.message || String(e);
+                info.positionTypeError = (e instanceof Error ? e.message : String(e)) || String(e);
               }
               try {
                 t.overlayBackgroundInteraction = a.overlayBackgroundInteraction || "CLOSE_ON_CLICK_OUTSIDE";
                 info.afterBgInteraction = t.overlayBackgroundInteraction;
               } catch (e) {
-                info.bgInteractionError = e.message || String(e);
+                info.bgInteractionError = (e instanceof Error ? e.message : String(e)) || String(e);
               }
             }
             overlayDebug.push(info);
           } catch (e) {
-            overlayDebug.push({ destId: a.destinationId, error: e.message || String(e) });
+            overlayDebug.push({ destId: a.destinationId, error: (e instanceof Error ? e.message : String(e)) || String(e) });
           }
         }
       }
