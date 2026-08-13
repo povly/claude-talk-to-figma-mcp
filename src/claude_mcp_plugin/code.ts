@@ -468,7 +468,7 @@ async function getSelection() {
  * Stubs let the AI agent discover child IDs and call get_node_info on them
  * for progressive disclosure.
  */
-export function pruneTreeAtDepth(node: Record<string, unknown>, maxDepth: number, currentDepth: number = 0) {
+export function pruneTreeAtDepth(node: Record<string, unknown> | null | undefined, maxDepth: number, currentDepth: number = 0) {
   if (!node || typeof node !== "object") return node;
   if (!Array.isArray(node.children) || node.children.length === 0) return node;
 
