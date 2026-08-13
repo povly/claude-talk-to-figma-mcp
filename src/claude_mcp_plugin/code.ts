@@ -489,7 +489,7 @@ export function pruneTreeAtDepth(node: Record<string, unknown> | null | undefine
 }
 
 async function getNodeInfo(nodeId: string, depth?: number) {
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
 
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
@@ -569,7 +569,7 @@ async function getNodesInfo(nodeIds: string[]) {
 }
 
 async function getComponentProperties(nodeId: string) {
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -595,7 +595,7 @@ async function getComponentProperties(nodeId: string) {
 }
 
 async function getBoundVariables(nodeId: string) {
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -654,7 +654,7 @@ async function getBoundVariables(nodeId: string) {
 }
 
 async function getCSS(nodeId: string) {
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -680,14 +680,14 @@ async function getCSS(nodeId: string) {
 
 async function findNodes(params: Record<string, unknown>) {
   const root = params.nodeId
-    ? await getNodeByIdSafe(params.nodeId)
+    ? await getNodeByIdSafe(params.nodeId as string)
     : figma.currentPage;
 
   if (!root) {
     throw new Error(`Root node not found with ID: ${params.nodeId}`);
   }
 
-  const limit = Math.min(params.limit || 50, 200);
+  const limit = Math.min((params.limit as number) || 50, 200);
   const results = [];
   let allMatches = [];
 
@@ -812,7 +812,7 @@ async function createRectangle(params: Record<string, unknown>) {
 
   // If parentId is provided, append to that node, otherwise append to current page
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -880,7 +880,7 @@ async function createFrame(params: Record<string, unknown>) {
   // If parentId is provided, append to that node, otherwise append to current page
   var targetParent: PageNode | SceneNode = figma.currentPage;
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -999,12 +999,12 @@ async function createText(params: Record<string, unknown>) {
   textNode.fills = [paintStyle];
 
   // Set text alignment if provided
-  if (textAlignHorizontal && ["LEFT", "CENTER", "RIGHT", "JUSTIFIED"].includes(textAlignHorizontal)) {
+  if (textAlignHorizontal && ["LEFT", "CENTER", "RIGHT", "JUSTIFIED"].includes(textAlignHorizontal as string)) {
     textNode.textAlignHorizontal = textAlignHorizontal as "CENTER" | "LEFT" | "RIGHT" | "JUSTIFIED";
   }
 
   // Set text auto resize if provided (WIDTH_AND_HEIGHT, HEIGHT, NONE, TRUNCATE)
-  if (textAutoResize && ["WIDTH_AND_HEIGHT", "HEIGHT", "NONE", "TRUNCATE"].includes(textAutoResize)) {
+  if (textAutoResize && ["WIDTH_AND_HEIGHT", "HEIGHT", "NONE", "TRUNCATE"].includes(textAutoResize as string)) {
     textNode.textAutoResize = textAutoResize as "NONE" | "WIDTH_AND_HEIGHT" | "HEIGHT" | "TRUNCATE";
   }
 
@@ -1015,7 +1015,7 @@ async function createText(params: Record<string, unknown>) {
 
   // If parentId is provided, append to that node, otherwise append to current page
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -1054,7 +1054,7 @@ async function setFillColor(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -1088,7 +1088,7 @@ async function setStrokeColor(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -1123,7 +1123,7 @@ async function setSelectionColors(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -1233,7 +1233,7 @@ async function moveNode(params: Record<string, unknown>) {
     throw new Error("Missing x or y parameters");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -1264,7 +1264,7 @@ async function resizeNode(params: Record<string, unknown>) {
     throw new Error("Missing width or height parameters");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -1290,7 +1290,7 @@ async function deleteNode(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -1477,9 +1477,9 @@ async function createComponentInstance(params: Record<string, unknown>) {
 
       // Add to parent (explicit parentId or currentPage fallback)
       if (parentId) {
-        const parentNode = await getNodeByIdSafe(parentId);
-        if (!parentNode) {
-          throw new Error(`Parent node not found with ID: ${parentId}`);
+    const parentNode = await getNodeByIdSafe(parentId as string);
+    if (!parentNode) {
+      throw new Error(`Parent node not found with ID: ${parentId}`);
         }
         if (!("appendChild" in parentNode)) {
           throw new Error(`Parent node does not support children: ${parentId}`);
@@ -1533,7 +1533,7 @@ async function exportNodeAsImage(params: Record<string, unknown>) {
   console.log(`[exportNodeAsImage] Starting export for node ${nodeId}, scale: ${scale}, format: ${format}`);
   const startTime = Date.now();
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -1693,7 +1693,7 @@ async function setCornerRadius(params: Record<string, unknown>) {
     throw new Error("Missing radius parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -1744,7 +1744,7 @@ async function setTextContent(params: Record<string, unknown>) {
     throw new Error("Missing text parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -2037,7 +2037,7 @@ async function cloneNode(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -2056,7 +2056,7 @@ async function cloneNode(params: Record<string, unknown>) {
 
   // Add the clone to the target parent, or fall back to the original node's parent
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -2084,7 +2084,7 @@ async function scanTextNodes(params: Record<string, unknown>) {
   console.log(`Starting to scan text nodes from node ID: ${params.nodeId}`);
   const { nodeId, useChunking = true, chunkSize = 10, commandId = generateCommandId() } = params as { nodeId: string; useChunking?: boolean; chunkSize?: number; commandId?: string };
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
 
   if (!node) {
     console.error(`Node with ID ${nodeId} not found`);
@@ -2757,7 +2757,7 @@ async function setAutoLayout(params: Record<string, unknown>) {
     throw new Error("Missing layoutMode parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -2827,7 +2827,7 @@ async function setFontName(params: Record<string, unknown>) {
     throw new Error("Missing nodeId or font family");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -2855,7 +2855,7 @@ async function setFontSize(params: Record<string, unknown>) {
     throw new Error("Missing nodeId or fontSize");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -2899,7 +2899,7 @@ async function setFontWeight(params: Record<string, unknown>) {
     }
   };
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -2930,7 +2930,7 @@ async function setLetterSpacing(params: Record<string, unknown>) {
     throw new Error("Missing nodeId or letterSpacing");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -2958,7 +2958,7 @@ async function setLineHeight(params: Record<string, unknown>) {
     throw new Error("Missing nodeId or lineHeight");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -2986,7 +2986,7 @@ async function setParagraphSpacing(params: Record<string, unknown>) {
     throw new Error("Missing nodeId or paragraphSpacing");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -3019,7 +3019,7 @@ async function setTextCase(params: Record<string, unknown>) {
     throw new Error("Invalid textCase value. Must be one of: ORIGINAL, UPPER, LOWER, TITLE");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -3052,7 +3052,7 @@ async function setTextDecoration(params: Record<string, unknown>) {
     throw new Error("Invalid textDecoration value. Must be one of: NONE, UNDERLINE, STRIKETHROUGH");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -3095,7 +3095,7 @@ async function setTextAlign(params: Record<string, unknown>) {
     throw new Error("Must provide textAlignHorizontal or textAlignVertical");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -3141,7 +3141,7 @@ async function getStyledTextSegments(params: Record<string, unknown>) {
     throw new Error(`Invalid property. Must be one of: ${validProperties.join(", ")}`);
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -3292,7 +3292,7 @@ async function setEffects(params: Record<string, unknown>) {
     throw new Error("Missing or invalid effects parameter. Must be an array.");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -3372,7 +3372,7 @@ async function setEffectStyleId(params: Record<string, unknown>) {
 
     // Get node and validate in a promise
     const nodePromise = (async () => {
-      const node = await getNodeByIdSafe(nodeId);
+      const node = await getNodeByIdSafe(nodeId as string);
       if (!node) {
         throw new Error(`Node not found with ID: ${nodeId}`);
       }
@@ -3457,7 +3457,7 @@ async function setTextStyleId(params: Record<string, unknown>) {
 
     // Get node and validate in a promise
     const nodePromise = (async () => {
-      const node = await getNodeByIdSafe(nodeId);
+      const node = await getNodeByIdSafe(nodeId as string);
       if (!node) {
         throw new Error(`Node not found with ID: ${nodeId}`);
       }
@@ -3536,7 +3536,7 @@ async function groupNodes(params: Record<string, unknown>) {
     // Get all nodes to be grouped
     const nodesToGroup = [];
     for (const nodeId of nodeIds) {
-      const node = await getNodeByIdSafe(nodeId);
+      const node = await getNodeByIdSafe(nodeId as string);
       if (!node) {
         throw new Error(`Node not found with ID: ${nodeId}`);
       }
@@ -3579,7 +3579,7 @@ async function ungroupNodes(params: Record<string, unknown>) {
   }
 
   try {
-    const node = await getNodeByIdSafe(nodeId);
+    const node = await getNodeByIdSafe(nodeId as string);
     if (!node) {
       throw new Error(`Node not found with ID: ${nodeId}`);
     }
@@ -3615,7 +3615,7 @@ async function flattenNode(params: Record<string, unknown>) {
   }
 
   try {
-    const node = await getNodeByIdSafe(nodeId);
+    const node = await getNodeByIdSafe(nodeId as string);
     if (!node) {
       throw new Error(`Node not found with ID: ${nodeId}`);
     }
@@ -3695,7 +3695,7 @@ async function insertChild(params: Record<string, unknown>) {
 
   try {
     // Get the parent and child nodes
-    const parent = await getNodeByIdSafe(parentId);
+    const parent = await getNodeByIdSafe(parentId as string);
     if (!parent) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -3776,7 +3776,7 @@ async function createEllipse(params: Record<string, unknown>) {
 
   // If parentId is provided, append to that node, otherwise append to current page
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -3850,7 +3850,7 @@ async function createPolygon(params: Record<string, unknown>) {
 
   // If parentId is provided, append to that node, otherwise append to current page
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -3936,7 +3936,7 @@ async function createStar(params: Record<string, unknown>) {
 
   // If parentId is provided, append to that node, otherwise append to current page
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -4042,7 +4042,7 @@ async function createVector(params: Record<string, unknown>) {
 
   // If parentId is provided, append to that node, otherwise append to current page
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -4150,7 +4150,7 @@ async function createLine(params: Record<string, unknown>) {
 
   // If parentId is provided, append to that node, otherwise append to current page
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -4190,7 +4190,7 @@ async function renameNode(params: Record<string, unknown>) {
     throw new Error("Missing name parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -4218,7 +4218,7 @@ async function createComponentFromNode(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -4265,9 +4265,9 @@ async function createComponentFromNode(params: Record<string, unknown>) {
       clone.x = 0;
       clone.y = 0;
 
-      // If parentId is provided, append to that node, otherwise append to current page
-      if (parentId) {
-        const parentNode = await getNodeByIdSafe(parentId);
+  // If parentId is provided, append to that node, otherwise append to current page
+  if (parentId) {
+    const parentNode = await getNodeByIdSafe(parentId as string);
         if (!parentNode) {
           throw new Error(`Parent node not found with ID: ${parentId}`);
         }
@@ -4411,7 +4411,7 @@ async function setInstanceVariant(params: Record<string, unknown>) {
     throw new Error("Properties object cannot be empty");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -4774,7 +4774,7 @@ async function exportNodeBytes(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -4960,7 +4960,7 @@ async function rotateNode(params: Record<string, unknown>) {
     throw new Error("Missing angle parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -4990,7 +4990,7 @@ async function setNodeProperties(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5051,7 +5051,7 @@ async function reorderNode(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5137,7 +5137,7 @@ async function convertToFrame(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5226,7 +5226,7 @@ async function setGradient(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5372,7 +5372,7 @@ async function setSvg(params: Record<string, unknown>) {
 
   // If parentId is provided, move into that parent
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -5399,7 +5399,7 @@ async function getSvg(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5433,7 +5433,7 @@ async function setImage(params: Record<string, unknown>) {
     throw new Error("Missing imageData parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5483,7 +5483,7 @@ async function setGrid(params: Record<string, unknown>) {
     throw new Error("Missing or invalid grids parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5549,7 +5549,7 @@ async function getGrid(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5638,7 +5638,7 @@ async function setAnnotation(params: Record<string, unknown>) {
     throw new Error("Missing label parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5681,7 +5681,7 @@ async function getAnnotation(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5871,7 +5871,7 @@ async function applyVariableToNode(params: Record<string, unknown>) {
     throw new Error("Missing field parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -5938,7 +5938,7 @@ async function switchVariableMode(params: Record<string, unknown>) {
     throw new Error("Missing modeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -6043,7 +6043,7 @@ async function getVariableDefs(params: Record<string, unknown>) {
 
   if (nodeId) {
     // Node-specific: find all bound variables in the subtree
-    const node = await getNodeByIdSafe(nodeId);
+    const node = await getNodeByIdSafe(nodeId as string);
     if (!node) {
       throw new Error(`Node not found with ID: ${nodeId}`);
     }
@@ -6273,7 +6273,7 @@ async function createSticky(params: Record<string, unknown>) {
   // appendChild needed for the default case.  If a specific parent was
   // requested, move the sticky into it (this re-parents, not double-appends).
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error("Parent node not found with ID: " + parentId);
     }
@@ -6338,7 +6338,7 @@ async function setStickyText(params: Record<string, unknown>) {
     throw new Error("Missing text parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
@@ -6418,7 +6418,7 @@ async function createShapeWithText(params: Record<string, unknown>) {
   }
 
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error(`Parent node not found with ID: ${parentId}`);
     }
@@ -6535,7 +6535,7 @@ async function createConnector(params: Record<string, unknown>) {
   }
 
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error("Parent node not found with ID: " + parentId);
     }
@@ -6607,7 +6607,7 @@ async function createSection(params: Record<string, unknown>) {
   }
 
   if (parentId) {
-    const parentNode = await getNodeByIdSafe(parentId);
+    const parentNode = await getNodeByIdSafe(parentId as string);
     if (!parentNode) {
       throw new Error("Parent node not found with ID: " + parentId);
     }
@@ -6814,7 +6814,7 @@ async function detachInstance(params: Record<string, unknown>) {
     throw new Error("Missing nodeId parameter");
   }
 
-  const node = await getNodeByIdSafe(nodeId);
+  const node = await getNodeByIdSafe(nodeId as string);
   if (!node) {
     throw new Error(`Node not found with ID: ${nodeId}`);
   }
